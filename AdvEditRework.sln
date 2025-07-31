@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvEditRework", "AdvEditRework\AdvEditRework.csproj", "{6E0D1A89-6412-4B2A-B837-151BF1A65E0C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvancedLib", "AdvancedLib\AdvancedLib.csproj", "{CEA642B9-65D1-488E-BA34-94A4EB0717B3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6E0D1A89-6412-4B2A-B837-151BF1A65E0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E0D1A89-6412-4B2A-B837-151BF1A65E0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E0D1A89-6412-4B2A-B837-151BF1A65E0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E0D1A89-6412-4B2A-B837-151BF1A65E0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CEA642B9-65D1-488E-BA34-94A4EB0717B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CEA642B9-65D1-488E-BA34-94A4EB0717B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CEA642B9-65D1-488E-BA34-94A4EB0717B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CEA642B9-65D1-488E-BA34-94A4EB0717B3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
