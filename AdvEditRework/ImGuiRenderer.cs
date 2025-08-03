@@ -18,7 +18,7 @@ using System.Runtime.InteropServices;
 using Hexa.NET.ImGui;
 using Raylib_cs;
 
-namespace AdvancedEdit
+namespace AdvEditRework
 {
     public static class ImGuiRenderer
     {

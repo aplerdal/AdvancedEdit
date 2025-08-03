@@ -1,6 +1,4 @@
 ﻿using System.Numerics;
-using AdvancedEdit;
-using AdvancedEdit.UI;
 using AdvancedLib.Project;
 using AdvEditRework.Scenes;
 using Hexa.NET.ImGui;
@@ -12,21 +10,33 @@ static class Program
 {
     private static Scene _scene = new MainMenu();
 
+    public static void SetScene(Scene scene)
+    {
+        _scene = scene;
+        _scene.Init(ref _project);
+    }
+    
     private static Project? _project;
-    private static Font scFont = FontLoader.LoadMkscFont();
+    public static ImFontPtr ImFont;
+    public static float UIScale;
     
     static void Main(string[] args)
     {
-        Raylib.SetConfigFlags(ConfigFlags.ResizableWindow | ConfigFlags.Msaa4xHint);
+        Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
         
         Raylib.InitWindow(800, 600, "AdvEditRework");
-        
-        
         
         Raylib.SetTargetFPS(60);
         Raylib.SetExitKey(KeyboardKey.Null);
         ImGuiRenderer.Setup(true, false);
+        var dpiScale = Raylib.GetWindowScaleDPI();
+        UIScale = (dpiScale.X + dpiScale.Y) / 2;
+        Console.WriteLine($"UI Scale: {UIScale*100:F0}%");
+        ImFont = ImGui.GetIO().Fonts.AddFontFromFileTTF("Resources/Mksc.ttf", 18 * UIScale);
+        ImGuiRenderer.ReloadFonts();
+        ImGui.GetIO().FontDefault = ImFont;
         
+        _scene.Init(ref _project);
         while (!Raylib.WindowShouldClose())
         {
             Update();
@@ -39,20 +49,14 @@ static class Program
     {
         Raylib.BeginDrawing();
         Raylib.ClearBackground(Color.White);
-        ImGuiRenderer.Begin(Raylib.GetFrameTime());
-        
-        MenuBar.Update(ref _project);
-        
-        Raylib.DrawTextEx(scFont, " !\"#$%\'&()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[¥]^_`abcdefghijklmnopqrstuvwxyz{|}~ ", new Vector2(0, 128), 32, 0, Color.White);
-        Raylib.DrawTextEx(scFont, "ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎをん", new Vector2(0, 128 + 32), 32, 0, Color.White);
-        Raylib.DrawTextEx(scFont, "ァアィイゥウェエォオカガキギクグケゲコゴサザシジスズセゼソゾタダチヂッツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモャヤュユョヨラリルレロヮワン", new Vector2(0, 128 + 64), 32, 0, Color.White);
-
+        ImGuiRenderer.Begin();
+        _scene.Update(ref _project);
         ImGuiRenderer.End();
         Raylib.EndDrawing();
     }
 
     static void Close()
     {
-        
+        ImGuiRenderer.Shutdown();
     }
 }
