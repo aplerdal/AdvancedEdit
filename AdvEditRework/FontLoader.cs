@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Hexa.NET.ImGui;
 using Raylib_cs;
 
 namespace AdvEditRework;
@@ -12,8 +13,7 @@ public static class FontLoader
     }
 
     private const string CharMap =
-        /*Latin   */
-        " !\"#$%\'&()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[¥]^_`abcdefghijklmnopqrstuvwxyz{|}~ " +
+        /*Latin   */" !\"#$%\'&()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[¥]^_`abcdefghijklmnopqrstuvwxyz{|}~ " +
         /*Hiragana*/"ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎをん" +
         /*Katakana*/"ァアィイゥウェエォオカガキギクグケゲコゴサザシジスズセゼソゾタダチヂッツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモャヤュユョヨラリルレロヮワン" +
         /*Icons   */"\uE000\uE001\uE002\uE003\uE004\uE005\uE006";
@@ -59,5 +59,10 @@ public static class FontLoader
         font.BaseSize = 16;
         
         return font;
+    }
+
+    public static Font LoadOpenSans()
+    {
+        return Raylib.LoadFontEx("Resources/OpenSans.ttf", 16, null, 0);
     }
 }

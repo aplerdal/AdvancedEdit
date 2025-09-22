@@ -1,12 +1,14 @@
 using AdvancedLib.Serialization.Tracks;
+using MessagePack;
 
 namespace AdvancedLib.Serialization.AI;
 
+[MessagePackObject(keyAsPropertyName: true)]
 public class TrackAi : ISerializable
 {
     private const int DefaultSets = 3;
     public List<AiZone> Zones { get; set; } = new();
-    public List<AiTarget[]> TargetSets { get; set; } = new();
+    public List<List<AiTarget>> TargetSets { get; set; } = new();
     public void Serialize(Stream stream)
     {
         var header = new AiHeader
@@ -33,10 +35,10 @@ public class TrackAi : ISerializable
         stream.Seek(basePos + header.TargetsOffset, SeekOrigin.Begin);
         for (int i = 0; i < DefaultSets; i++)
         {
-            var set = new AiTarget[header.ZoneCount];
-            for (var j = 0; j < set.Length; j++)
+            var set = new List<AiTarget>(header.ZoneCount);
+            for (var j = 0; j < header.ZoneCount; j++)
             {
-                set[j] = stream.Read<AiTarget>();
+                set.Add(stream.Read<AiTarget>());
             }
             TargetSets.Add(set);
         }

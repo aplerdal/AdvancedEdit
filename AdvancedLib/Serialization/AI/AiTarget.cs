@@ -1,13 +1,16 @@
 using AuroraLib.Core.IO;
+using MessagePack;
 
 namespace AdvancedLib.Serialization.AI;
 
+[MessagePackObject(keyAsPropertyName: true)]
 public class AiTarget : ISerializable
 {
     public ushort X { get; set; }
     public ushort Y { get; set; }
     public byte Speed { get; set; }
     public bool Intersection { get; set; }
+    public static AiTarget Default => new AiTarget { X = 0, Y = 0, Speed = 1, Intersection = false };
 
     public void Serialize(Stream stream)
     {

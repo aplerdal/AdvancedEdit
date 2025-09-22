@@ -1,5 +1,8 @@
+using MessagePack;
+
 namespace AdvancedLib.Game;
 
+[MessagePackObject(keyAsPropertyName: true)]
 public class TrackConfig
 {
     public required Vec2I Size { get; set; }

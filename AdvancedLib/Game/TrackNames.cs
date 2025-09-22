@@ -60,37 +60,37 @@ public static class TrackNames
     ];
 
     private static readonly string[] TrackNameMap =
-    [
+    [ 
         // SNES Mushroom
-        "Mario Circuit 1",
-        "Donut Plains 1",
-        "Ghost Valley 1",
-        "Bowser Castle 1",
+        "SNES Mario Circuit 1",
+        "SNES Donut Plains 1",
+        "SNES Ghost Valley 1",
+        "SNES Bowser Castle 1",
     // SNES Flower
-        "Mario Circuit 2",
-        "Choco Island 1",
-        "Ghost Valley 2",
-        "Donut Plains 2",
+        "SNES Mario Circuit 2",
+        "SNES Choco Island 1",
+        "SNES Ghost Valley 2",
+        "SNES Donut Plains 2",
     // SNES Lightning
-        "Bowser Castle 2",
-        "Mario Circuit 3",
-        "Koopa Beach 1",
-        "Choco Island 2",
+        "SNES Bowser Castle 2",
+        "SNES Mario Circuit 3",
+        "SNES Koopa Beach 1",
+        "SNES Choco Island 2",
     // SNES Star
-        "Vanilla Lake 1",
-        "Bowser Castle 3",
-        "Mario Circuit 4",
-        "Donut Plains 3",
+        "SNES Vanilla Lake 1",
+        "SNES Bowser Castle 3",
+        "SNES Mario Circuit 4",
+        "SNES Donut Plains 3",
     // SNES Special
-        "Koopa Beach 2",
-        "Ghost Valley 3",
-        "Vanilla Lake 2",
-        "Rainbow Road",
+        "SNES Koopa Beach 2",
+        "SNES Ghost Valley 3",
+        "SNES Vanilla Lake 2",
+        "SNES Rainbow Road",
     // SNES Battle
-        "Battle Course 1",
-        "Battle Course 2",
-        "Battle Course 3",
-        "Battle Course 4",
+        "SNES Battle Course 1",
+        "SNES Battle Course 2",
+        "SNES Battle Course 3",
+        "SNES Battle Course 4",
     // Mushroom Cup
         "Peach Circuit",
         "Shy Guy Beach",
@@ -128,7 +128,7 @@ public static class TrackNames
     public static string GetTrackNameFromHeaderIndex(int headerIdx)
     {
         var cupIdx = GetHeaderCupIndex(headerIdx);
-        if (cupIdx == -1) return "";
+        if (cupIdx == -1) throw new IndexOutOfRangeException("Header index not found");
         return TrackNameMap[cupIdx];
     }
 }

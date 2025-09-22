@@ -1,5 +1,8 @@
+using MessagePack;
+
 namespace AdvancedLib.Serialization.Objects;
 
+[MessagePackObject(keyAsPropertyName: true)]
 public class Obstacle(short type, short parameter) : IEquatable<Obstacle>
 {
     public short Type { get; set; } = type;

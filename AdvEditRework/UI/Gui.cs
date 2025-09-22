@@ -10,7 +10,9 @@ namespace AdvEditRework.UI;
 /// </summary>
 public static class Gui
 {
-    private static readonly Font _font = FontLoader.LoadMkscFont();
+    private static readonly Font MkscFont = FontLoader.LoadMkscFont();
+    private static readonly Font OpenSans = FontLoader.LoadOpenSans();
+    public static Font ActiveFont = MkscFont;
     private static float Scale => Style.FontSize / 16.0f;
     private static Vector2 _cursor;
     
@@ -43,20 +45,21 @@ public static class Gui
         }
     }
     
-    private static Vector2 MeasureText(string text)
+    public static Vector2 MeasureText(string text)
     {
-        float height = 16.0f;
-        float width = 0.0f;
-        foreach (char c in text)
-        {
-            // Icons have double width
-            if (c >= 0xE000 && c <= 0xF8FF) width += 16.0f;
-            else if (c == '\n') height += 16.0f;
-            else width += 8.0f;
-        }
-        return new Vector2(width, height) * Scale;
+        return Raylib.MeasureTextEx(ActiveFont, text, Style.FontSize * Scale, 0.0f);
     }
 
+    public static void SetFontMksc()
+    {
+        Style.TextTint = Color.White;
+        ActiveFont = MkscFont;
+    }
+    public static void SetFontOpenSans()
+    {
+        Style.TextTint = Color.Black;
+        ActiveFont = OpenSans;
+    }
     public static void SetCursorPos(Vector2 pos)
     {
         _cursor = pos * Scale;
@@ -71,10 +74,9 @@ public static class Gui
         Label(title);
         _cursor += new Vector2(4*Scale);
     }
-    
     public static void Label(string text)
     {
-        Raylib.DrawTextEx(_font, text, _cursor, Style.FontSize, 0, Style.TextTint);
+        Raylib.DrawTextEx(ActiveFont, text, _cursor, ActiveFont.BaseSize, 0, Style.TextTint);
         _cursor.Y += MeasureText(text).Y;
     }
     

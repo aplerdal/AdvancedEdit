@@ -1,4 +1,5 @@
 using AuroraLib.Core.IO;
+using MessagePack;
 
 namespace AdvancedLib.Serialization.AI;
 
@@ -11,6 +12,7 @@ public enum ZoneShape
     TriangleBottomLeft,
 }
 
+[MessagePackObject(keyAsPropertyName: true)]
 public class AiZone : ISerializable, IEquatable<AiZone>
 {
     public static int Precision = 2;
@@ -20,6 +22,16 @@ public class AiZone : ISerializable, IEquatable<AiZone>
     public ushort Y { get; set; }
     public ushort Width { get; set; }
     public ushort Height { get; set; }
+    public AiZone() { }
+    public static AiZone Default => new(0, 0, 16, 16, ZoneShape.Rectangle);
+    public AiZone(ushort x, ushort y, ushort width, ushort height, ZoneShape shape)
+    {
+        X = x;
+        Y = y;
+        Width = width;
+        Height = height;
+        Shape = shape;
+    }
     
     public void Serialize(Stream stream)
     {

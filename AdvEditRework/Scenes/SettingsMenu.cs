@@ -1,12 +1,13 @@
 using System.Numerics;
 using AdvancedLib.Project;
+using AdvEditRework.DearImGui;
 using AdvEditRework.UI;
 using Hexa.NET.ImGui;
 using Raylib_cs;
 
 namespace AdvEditRework.Scenes;
 
-public class Settings : Scene
+public class SettingsMenu : Scene
 {
     public override void Init(ref Project? project)
     {
@@ -17,23 +18,22 @@ public class Settings : Scene
     {
         var viewport = ImGui.GetMainViewport();
         
-        ImGui.SetNextWindowSize(viewport.WorkSize);
-        ImGui.SetNextWindowPos(viewport.WorkPos);
-        ImGui.SetNextWindowViewport(viewport.ID);
-        ImGui.Begin("Settings",
-            ImGuiWindowFlags.NoResize |
-            ImGuiWindowFlags.NoTitleBar |
-            ImGuiWindowFlags.NoCollapse |
-            ImGuiWindowFlags.NoMove
-        );
+        Raylib.ClearBackground(Color.RayWhite);
+        ImHelper.BeginEmptyWindow("Settings",new Rectangle(viewport.Pos, viewport.Size));
         {
             ImGui.Text("Settings");
+            ImGui.Separator();
+            ImGui.InputInt("UI Scale", ref Settings.Shared.UIScale);
+            if (ImGui.Button("Exit"))
+            {
+                Program.SetScene(new MainMenu());
+            }
         }
         ImGui.End();
     }
 
     public override void Dispose()
     {
-        throw new NotImplementedException();
+        //
     }
 }

@@ -10,11 +10,13 @@
 
     <ItemGroup>
       <PackageReference Include="Hexa.NET.ImGui" Version="2.2.7" />
+      <PackageReference Include="MessagePack" Version="3.1.4" />
       <PackageReference Include="NativeFileDialogs.Net" Version="1.2.1" />
       <PackageReference Include="Raylib-cs" Version="7.0.1" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\AdvancedLib.RaylibExt\AdvancedLib.RaylibExt.csproj" />
       <ProjectReference Include="..\AdvancedLib\AdvancedLib.csproj" />
     </ItemGroup>
 
@@ -28,10 +30,13 @@
       <None Update="Resources\OpenSans.ttf">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="Resources\MkscRegular.ttf">
+      <None Update="Resources\tools.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Resources\shapes.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="Resources\Mksc.ttf">
+      <None Update="Resources\zoneIcons.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>

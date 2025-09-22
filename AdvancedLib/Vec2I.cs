@@ -1,5 +1,8 @@
+using MessagePack;
+
 namespace AdvancedLib;
 
+[MessagePackObject(keyAsPropertyName: true)]
 public class Vec2I(int x, int y) : IEquatable<Vec2I>
 {
     public int X { get; set; } = x;

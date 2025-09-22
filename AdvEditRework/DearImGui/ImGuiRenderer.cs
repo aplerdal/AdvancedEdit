@@ -11,14 +11,12 @@
 *
 ********************************************************************************************/
 
-using System;
-using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Hexa.NET.ImGui;
 using Raylib_cs;
 
-namespace AdvEditRework
+namespace AdvEditRework.DearImGui
 {
     public static class ImGuiRenderer
     {
@@ -26,7 +24,7 @@ namespace AdvEditRework
 
         private static ImGuiMouseCursor _currentMouseCursor = ImGuiMouseCursor.Count;
         private static Dictionary<ImGuiMouseCursor, MouseCursor> _mouseCursorMap = new Dictionary<ImGuiMouseCursor, MouseCursor>();
-        private static Texture2D _fontTexture;
+        public static Texture2D _fontTexture;
 
         private static Dictionary<KeyboardKey, ImGuiKey> _raylibKeyMap = new Dictionary<KeyboardKey, ImGuiKey>();
 
@@ -748,12 +746,40 @@ namespace AdvEditRework
         /// </summary>
         /// <param name="name">The display name and ImGui ID for the button</param>
         /// <param name="image">The texture to draw</param>
-        /// <param name="size">The size of the button/param>
+        /// <param name="size">The size of the button</param>
         /// <returns>True if the button was clicked</returns>
         public static bool ImageButtonSize(string name, Texture2D image, Vector2 size)
         {
             return ImGui.ImageButton(name, new ImTextureID(image.Id), size);
         }
 
+        public static bool ImageButtonRect(string name, Texture2D image, Vector2 size, Rectangle sourceRect)
+        {
+            Vector2 uv0 = new Vector2();
+            Vector2 uv1 = new Vector2();
+
+            if (sourceRect.Width < 0)
+            {
+                uv0.X = -((float)sourceRect.X / image.Width);
+                uv1.X = (uv0.X - (float)(Math.Abs(sourceRect.Width) / image.Width));
+            }
+            else
+            {
+                uv0.X = (float)sourceRect.X / image.Width;
+                uv1.X = uv0.X + (float)(sourceRect.Width / image.Width);
+            }
+
+            if (sourceRect.Height < 0)
+            {
+                uv0.Y = -((float)sourceRect.Y / image.Height);
+                uv1.Y = (uv0.Y - (float)(Math.Abs(sourceRect.Height) / image.Height));
+            }
+            else
+            {
+                uv0.Y = (float)sourceRect.Y / image.Height;
+                uv1.Y = uv0.Y + (float)(sourceRect.Height / image.Height);
+            }
+            return ImGui.ImageButton(name ,new ImTextureID(image.Id), size, uv0, uv1);
+        }
     }
 }

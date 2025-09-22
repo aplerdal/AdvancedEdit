@@ -10,13 +10,11 @@ namespace AdvEditRework.Scenes;
 
 public class MainMenu : Scene
 {
-    private static readonly Dictionary<string, string> RomFilter = new() {{"MKSC Rom","gba"},{"All files","*"}};
-
-    private static readonly Dictionary<string, string> ProjectFilter = new() { { "Advanced Project", "amkp" }, { "All files", "*" } };
+    public static readonly Dictionary<string, string> ProjectFilter = new() { { "Advanced Project", "amkp" }, { "All files", "*" } };
 
     public override void Init(ref Project? project)
     {
-        //
+        Gui.SetFontMksc();
     }
     
     public override void Update(ref Project? project)
@@ -24,34 +22,30 @@ public class MainMenu : Scene
         Raylib.ClearBackground(Gui.Style.BgColor);
         Gui.SetCursorPos(new Vector2(8));
         Gui.TitleBox("Start", new (256.0f, 512.0f));
-        if (Gui.LabelButton((char)Icon.FileOpen + "Open Project"))
+        if (Gui.LabelButton((char)MapEditIcon.FileOpen + "Open Project"))
         {
             var status = Nfd.OpenDialog(out var path, ProjectFilter, null);
             if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
             {
                 project = Project.Unpack(path);
+                Program.SetScene(new TrackEditorScene());
             }
         }
-        if (Gui.LabelButton((char)Icon.FileNew + "New Project"))
+        if (Gui.LabelButton((char)MapEditIcon.FileNew + "New Project"))
         {
-            var status = Nfd.OpenDialog(out var path, RomFilter, null);
-            if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
-            {
-                using var romStream = File.OpenRead(path);
-                project = Project.FromRom(romStream, Path.GetFileNameWithoutExtension(path));
-            }
+            Program.SetScene(new CreateProject());
         }
 
-        if (Gui.LabelButton((char)Icon.Settings + "Settings"))
+        if (Gui.LabelButton((char)MapEditIcon.Settings + "Settings"))
         {
-            Program.SetScene(new Settings());
+            Program.SetScene(new SettingsMenu());
         }
-        Gui.LabelButton((char)Icon.Help + "Help");
-        Gui.LabelLink((char)Icon.Discord + "Discord", "https://discord.gg/tDNDgfC5sD");
+        Gui.LabelButton((char)MapEditIcon.Help + "Help");
+        Gui.LabelLink((char)MapEditIcon.Discord + "Discord", "https://discord.gg/tDNDgfC5sD");
     }
     
     public override void Dispose()
     {
-        throw new NotImplementedException();
+        // 
     }
 }

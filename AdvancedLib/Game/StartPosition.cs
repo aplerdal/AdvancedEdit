@@ -1,3 +1,5 @@
+using MessagePack;
+
 namespace AdvancedLib.Game;
 
 public enum StartingPlace
@@ -14,8 +16,10 @@ public enum StartingPlace
     SinglePakSecond = 10,
 }
 
+[MessagePackObject(keyAsPropertyName: true)]
 public class StartPosition(Vec2I position, StartingPlace startingPlace)
 {
+    public StartPosition() : this(new Vec2I(0, 0), StartingPlace.First) {}
     public StartingPlace Place { get; set; } = startingPlace;
     public Vec2I Position { get; set; } = position;
 }

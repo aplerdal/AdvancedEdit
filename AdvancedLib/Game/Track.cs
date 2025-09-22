@@ -37,7 +37,7 @@ public class Track
     {
         var definition = LoadDefinition(stream, headerIndex);
         var header = LoadHeader(stream, definition.HeaderIndex);
-        return new Track()
+        return new Track
         {
             Config = LoadConfig(header, definition),
             TilesetPalette = LoadTilesetPalette(stream, header), // TODO: Do this for the other constructor and writing palette to rom
@@ -267,10 +267,10 @@ public class Track
         reader.Seek(targetsAddress, SeekOrigin.Begin);
         for (int set = 0; set < targetOptions.SetCount; set++)
         {
-            var currentSet = new AiTarget[aiHeader.ZoneCount];
+            var currentSet = new List<AiTarget>(aiHeader.ZoneCount);
             for (int i = 0; i < aiHeader.ZoneCount; i++)
             {
-                currentSet[i] = reader.Read<AiTarget>();
+                currentSet.Add(reader.Read<AiTarget>());
             }
             trackAi.TargetSets.Add(currentSet);
         }

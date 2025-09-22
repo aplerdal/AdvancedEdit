@@ -18,7 +18,7 @@ public class Tile4Bpp : Tile
     {
         for (int i = 0; i < 32; i++)
         {
-            stream.Write((byte)(((_indicies[i * 2] & 0b1111) << 4) | (_indicies[i * 2 + 1] & 0b1111)));
+            stream.Write((byte)(((_indicies[i * 2 + 1] & 0b1111) << 4) | (_indicies[i * 2] & 0b1111)));
         }
     }
 
@@ -28,8 +28,8 @@ public class Tile4Bpp : Tile
         stream.ReadExactly(data);
         for (int i = 0; i < 32; i++)
         {
-            _indicies[i * 2 + 1] = (byte)(data[i] & 0xF);
-            _indicies[i * 2] = (byte)(data[i] >> 4);
+            _indicies[i * 2] = (byte)(data[i] & 0xF);
+            _indicies[i * 2 + 1] = (byte)(data[i] >> 4);
         }
     }
 }

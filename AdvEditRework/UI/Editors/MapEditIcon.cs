@@ -1,6 +1,6 @@
 namespace AdvEditRework;
 
-public enum Icon
+public enum MapEditIcon
 {
     FileOpen = '\uE000',
     FileSave = '\uE001',

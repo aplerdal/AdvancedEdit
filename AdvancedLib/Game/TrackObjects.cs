@@ -1,7 +1,9 @@
 using AdvancedLib.Serialization.Objects;
+using MessagePack;
 
 namespace AdvancedLib.Game;
 
+[MessagePackObject(keyAsPropertyName: true)]
 public class TrackObjects
 {
     public List<ObstaclePlacement> ObstaclePlacements { get; set; } = new();
