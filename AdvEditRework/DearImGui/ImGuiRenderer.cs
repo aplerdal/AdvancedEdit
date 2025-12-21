@@ -297,7 +297,7 @@ namespace AdvEditRework.DearImGui
 
             ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
 
-            if (SetupUserFonts != null)
+            if (SetupUserFonts is not null)
                 SetupUserFonts(io);
 
             io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors | ImGuiBackendFlags.HasSetMousePos | ImGuiBackendFlags.HasGamepad;

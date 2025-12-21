@@ -110,7 +110,7 @@ public class AiEditor : Editor
         foreach (var shape in Enum.GetValues(typeof(ZoneShape)).Cast<ZoneShape>())
         {
             if (ZoneShapeButton(dest, shape, _selectedZone?.Shape == shape))
-                if (_selectedZone != null)
+                if (_selectedZone is not null)
                     UndoManager.Push(ModifyZoneShapeUndoable(_selectedZone, shape));
             dest.X += 32 * scale;
             if (dest.X + (32 * scale) - position.X > width) dest = new Vector2(position.X, position.Y + 32 * scale);
@@ -128,7 +128,7 @@ public class AiEditor : Editor
 
         if (ZoneOptionsButton(dest + new Vector2(1 * 32 * scale, 0), AiEditorIcon.DeleteZone) || Raylib.IsKeyPressed(KeyboardKey.Delete))
         {
-            if (_selectedZone != null)
+            if (_selectedZone is not null)
             {
                 UndoManager.Push(DeleteZoneUndoable(_selectedZone));
                 _selectedZone = null;
@@ -152,7 +152,7 @@ public class AiEditor : Editor
         Gui.Label("AI Options");
         pos.Y += Gui.MeasureText("AI Options").Y + 3 * scale;
         ZoneOptions(pos);
-        if (_selectedZone != null)
+        if (_selectedZone is not null)
         {
             pos.Y += 32 * scale + 6 * scale;
             var selectionRect = new Rectangle(pos, panelWidth - 6 * scale, 256);
@@ -180,7 +180,7 @@ public class AiEditor : Editor
         var hoveredZone = _drag is not null ? _drag.Zone : (_panelFocused || _resetConfirmationShown ? null : GetHoveredZone());
         var handle = hoveredZone?.GetResizeHandle(View.MouseTilePos) ?? DragHandle.None;
         DrawZones(hoveredZone);
-        if (Raylib.IsMouseButtonPressed(MouseButton.Left) && hoveredZone == null && !(_panelFocused || _resetConfirmationShown) && _selectedZone != null)
+        if (Raylib.IsMouseButtonPressed(MouseButton.Left) && hoveredZone is null && !(_panelFocused || _resetConfirmationShown) && _selectedZone is not null)
         {
             _selectedZone = null;
         }
@@ -267,7 +267,7 @@ public class AiEditor : Editor
 
     private AiZone? GetHoveredZone()
     {
-        if (_selectedZone != null && _selectedZone.IsHovered(View.MouseTilePos)) return _selectedZone;
+        if (_selectedZone is not null && _selectedZone.IsHovered(View.MouseTilePos)) return _selectedZone;
         return View.Track.Ai.Zones.FirstOrDefault(zone => zone.IsHovered(View.MouseTilePos));
     }
 
@@ -313,7 +313,7 @@ public class AiEditor : Editor
         var ai = View.Track.Ai;
         AiZone newZone;
         int newIndex;
-        if (_selectedZone != null)
+        if (_selectedZone is not null)
         {
             newZone = new AiZone((ushort)(_selectedZone.X + 2), (ushort)(_selectedZone.Y + 2), _selectedZone.Width, _selectedZone.Height, ZoneShape.Rectangle);
             newIndex = ai.Zones.IndexOf(_selectedZone) + 1;

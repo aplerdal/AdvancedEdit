@@ -51,7 +51,7 @@ public class TrackEditorScene : Scene
                     var status = Nfd.SaveDialog(out var path, MainMenu.ProjectFilter, name + ".amkp");
                     if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
                     {
-                        if (_currentTrack != null) _projectTrack?.SaveTrackData(_currentTrack);
+                        if (_currentTrack is not null) _projectTrack?.SaveTrackData(_currentTrack);
                         project.Save(path);
                     }
                 }
@@ -81,6 +81,9 @@ public class TrackEditorScene : Scene
 
                 if (ImGui.MenuItem("Create Rom"))
                 {
+                    // Save active track
+                    if (_currentTrack is not null) _projectTrack?.SaveTrackData(_currentTrack);
+                    
                     var openStatus = Nfd.OpenDialog(out var romPath, CreateProject.RomFilter, null);
                     if (openStatus == NfdStatus.Ok && !string.IsNullOrEmpty(romPath))
                     {
@@ -178,7 +181,7 @@ public class TrackEditorScene : Scene
                             if (string.IsNullOrEmpty(track.Name)) continue;
                             if (ImGui.MenuItem(track.Name))
                             {
-                                if (_currentTrack != null) _projectTrack?.SaveTrackData(_currentTrack);
+                                if (_currentTrack is not null) _projectTrack?.SaveTrackData(_currentTrack);
                                 _projectTrack = track;
                                 _currentTrack = track.LoadTrackData();
                                 SetView(new TrackView(_currentTrack));

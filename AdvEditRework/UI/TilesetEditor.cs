@@ -3,6 +3,8 @@ using System.Numerics;
 using AdvancedLib.Graphics;
 using AdvancedLib.RaylibExt;
 using AdvEditRework.Shaders;
+using AdvEditRework.UI.Undo;
+using AuroraLib.Core;
 using Hexa.NET.ImGui;
 using Raylib_cs;
 
@@ -16,7 +18,8 @@ public class TilesetEditor : IDisposable
     private readonly Image _tilesetImage;
     private int _selectedColor = 0;
     private readonly RenderTexture2D _viewport;
-    private readonly Camera2D _viewCamera;
+    private Camera2D _viewCamera;
+    private readonly UndoManager _undoManager;
 
     private const int ViewportSize = 512;
     private const int IconSize = ViewportSize / 16;
@@ -28,13 +31,14 @@ public class TilesetEditor : IDisposable
     {
         _tileset = tileset;
         _palette = palette;
-        Debug.Assert(Math.Sqrt(tileset.Length) % 1 == 0, "Tileset size is not square");
+        Debug.Assert(Math.Sqrt(tileset.Length) % 1 == 0, "Tileset size is not square. This is unsupported.");
         var sqrtLen = (int)Math.Sqrt(tileset.Length);
         _texture = _tileset.TilePaletteTexture(sqrtLen, sqrtLen);
         _tilesetImage = Raylib.LoadImageFromTexture(_texture);
         PaletteShader.SetPalette(palette.ToIVec3());
         _viewport = Raylib.LoadRenderTexture(ViewportSize, ViewportSize);
         _viewCamera = new Camera2D(Vector2.Zero, Vector2.Zero, 0, 4);
+        _undoManager = new UndoManager();
     }
 
     public void Update(Vector2 position, bool hasFocus)
@@ -45,6 +49,7 @@ public class TilesetEditor : IDisposable
 
     void UpdateViewport(Vector2 position, bool hasFocus)
     {
+        if (hasFocus) UpdateCamera(position);
         Raylib.BeginTextureMode(_viewport);
         Raylib.ClearBackground(Color.Black);
         Raylib.BeginMode2D(_viewCamera);
@@ -54,9 +59,9 @@ public class TilesetEditor : IDisposable
             PaletteShader.End();
             if (hasFocus)
             {
-                var tilesetRect = new Rectangle(0, 0, _texture.Width, _texture.Height);
+                var viewportRect = new Rectangle(Vector2.Zero, _viewport.Texture.Width, _viewport.Texture.Height);
                 var mousePos = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition(), _viewCamera) - position / _viewCamera.Zoom;
-                var hovered = Raylib.CheckCollisionPointRec(mousePos, tilesetRect);
+                var hovered = Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), viewportRect);
                 if (hovered)
                 {
                     var pixelPos = new Vector2((int)mousePos.X, (int)mousePos.Y);
@@ -77,6 +82,52 @@ public class TilesetEditor : IDisposable
         Raylib.EndTextureMode();
 
         Raylib.DrawTextureRec(_viewport.Texture, new Rectangle(Vector2.Zero, _viewport.Texture.Width, -_viewport.Texture.Height), position, Color.White);
+    }
+
+    private bool _isPanning;
+    private Vector2 _lastMousePosition = Vector2.Zero;
+    void UpdateCamera(Vector2 viewportPos)
+    {
+        var mouseOffs = viewportPos / _viewCamera.Zoom;
+        var viewportRect = new Rectangle(Vector2.Zero, _viewport.Texture.Width, _viewport.Texture.Height);
+
+        var hovered = Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), viewportRect);
+        
+        float wheel = Raylib.GetMouseWheelMove();
+        if (wheel != 0.0f && hovered)
+        {
+            float zoomFactor = 1.05f;
+            Vector2 mouseWorldPosBeforeZoom = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition(), _viewCamera);
+            _viewCamera.Zoom *= (wheel > 0) ? zoomFactor : 1.0f / zoomFactor;
+            Vector2 mouseWorldPosAfterZoom = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition(), _viewCamera);
+            _viewCamera.Target += mouseWorldPosBeforeZoom - mouseWorldPosAfterZoom;
+        }
+
+        // Handle pan
+        if (Raylib.IsMouseButtonPressed(MouseButton.Middle) && hovered)
+        {
+            _isPanning = true;
+            _lastMousePosition = Raylib.GetMousePosition();
+        }
+        else if (Raylib.IsMouseButtonReleased(MouseButton.Middle))
+        {
+            _isPanning = false;
+        }
+
+        if (_isPanning)
+        {
+            Vector2 currentMousePosition = Raylib.GetMousePosition();
+            Vector2 delta = Raylib.GetScreenToWorld2D(_lastMousePosition, _viewCamera) - Raylib.GetScreenToWorld2D(currentMousePosition, _viewCamera);
+            _viewCamera.Target += delta;
+            _lastMousePosition = currentMousePosition;
+        }
+        // Limit camera position to size of tileset
+        // First, make sure it can all fit with current zoom level
+        Debug.Assert(_texture.Width == _texture.Height); // Assuming square texture
+        _viewCamera.Zoom = _viewCamera.Zoom.Clamp(ViewportSize / (float)_texture.Width, float.MaxValue);
+        // Clamp view target to texture
+        var viewportSizePx = new Vector2(ViewportSize / _viewCamera.Zoom);
+        _viewCamera.Target = Vector2.Clamp(_viewCamera.Target, Vector2.Zero, new Vector2(_texture.Width, _texture.Height) - viewportSizePx);
     }
 
     void ColorPicker(Vector2 position, bool hasFocus)
