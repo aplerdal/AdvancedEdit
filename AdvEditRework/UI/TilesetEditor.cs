@@ -72,7 +72,7 @@ public class TilesetEditor : IDisposable
                         // Convert the index to a grayscale color
                         int indexI32 = BitConverter.ToInt32([(byte)(_selectedColor), (byte)(_selectedColor), (byte)(_selectedColor), 0xFF]);
                         Raylib.UpdateTextureRec(_texture, new Rectangle(pixelPos, 1, 1), [indexI32]);
-                        var tile = (int)((int)pixelPos.X / 8) + 8 * (int)((int)pixelPos.Y / 8);
+                        var tile = (int)((int)pixelPos.X / 8) + (_texture.Width / 8) * (int)((int)pixelPos.Y / 8);
                         _tileset[tile][(int)pixelPos.X % 8, (int)pixelPos.Y % 8] = (byte)_selectedColor;
                     }
                 }
