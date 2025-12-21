@@ -10,10 +10,10 @@ public static class ImHelper
         ImGui.SetNextWindowPos(bounds.Position);
         ImGui.SetNextWindowSize(bounds.Size);
         const ImGuiWindowFlags flags =
-            ImGuiWindowFlags.NoBackground | 
-            ImGuiWindowFlags.NoResize | 
-            ImGuiWindowFlags.NoCollapse | 
-            ImGuiWindowFlags.NoMove | 
+            ImGuiWindowFlags.NoBackground |
+            ImGuiWindowFlags.NoResize |
+            ImGuiWindowFlags.NoCollapse |
+            ImGuiWindowFlags.NoMove |
             ImGuiWindowFlags.NoTitleBar;
         return ImGui.Begin(name, flags);
     }

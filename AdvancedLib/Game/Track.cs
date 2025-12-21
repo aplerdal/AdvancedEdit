@@ -28,8 +28,10 @@ public class Track
     /// <summary>
     /// Initialize empty <see cref="Track"/> object
     /// </summary>
-    public Track() { }
-    
+    public Track()
+    {
+    }
+
     /// <summary>
     /// Load <see cref="Track"/> from stream
     /// </summary>
@@ -54,7 +56,7 @@ public class Track
             Ai = LoadAi(stream, header, definition),
         };
     }
-    
+
     /// <summary>
     /// Default track object
     /// </summary>
@@ -72,9 +74,9 @@ public class Track
         Coins = new List<Vec2I>(),
         Ai = new TrackAi(),
     };
-    
+
     #region Load Track Data
-    
+
     private static TrackDefinition LoadDefinition(Stream reader, int index)
     {
         const uint definitionPointerTableAddress = 0x0E7FEC;
@@ -84,6 +86,7 @@ public class Track
         reader.Seek(definitionAddress);
         return reader.Read<TrackDefinition>();
     }
+
     private static TrackHeader LoadHeader(Stream reader, int index)
     {
         const uint trackTableAddress = 0x258000;
@@ -92,6 +95,7 @@ public class Track
         reader.Seek(trackTableAddress + offset, SeekOrigin.Begin);
         return reader.Read<TrackHeader>();
     }
+
     private static TrackConfig LoadConfig(TrackHeader header, TrackDefinition definition)
     {
         return new TrackConfig
@@ -118,11 +122,11 @@ public class Track
         reader.Seek(palAddress, SeekOrigin.Begin);
         return new Palette(reader, 64);
     }
-    
+
     private static Tileset LoadTileset(Stream reader, TrackHeader header, int headerIndex)
     {
         const int tilesetSize = 256;
-        
+
         using var tilesetStream = new MemoryPoolStream(tilesetSize * Tile.Size * Tile.Size, true);
         if (header.SharedTileset != 0)
         {
@@ -148,12 +152,12 @@ public class Track
         tilesetStream.Seek(0, SeekOrigin.Begin);
         return new Tileset(tilesetStream, tilesetSize, PixelFormat.Bpp8);
     }
-    
+
     private static AffineTilemap LoadTilemap(Stream reader, TrackHeader header)
     {
         var trackWidth = (header.TrackWidth * 128);
         var trackHeight = (header.TrackHeight * 128);
-        
+
         using var tilemapStream = new MemoryPoolStream(trackWidth * trackHeight, true);
         var tilemapAddress = header.Address + header.TilemapOffset;
         reader.Seek(tilemapAddress, SeekOrigin.Begin);
@@ -164,7 +168,7 @@ public class Track
         tilemapStream.Seek(0, SeekOrigin.Begin);
         return new AffineTilemap(tilemapStream, trackWidth, trackHeight);
     }
-    
+
     private static Tileset LoadMinimap(Stream reader, TrackHeader header)
     {
         const int minimapTiles = 64;
@@ -191,7 +195,7 @@ public class Track
         reader.Seek(palAddress, SeekOrigin.Begin);
         return new Palette(reader, 48);
     }
-    
+
     private static Tileset? LoadObstacleGraphics(Stream reader, TrackHeader header, int headerIndex)
     {
         using var obstacleGraphicsStream = new MemoryPoolStream(256 * Tile4Bpp.DataSize, true);
@@ -225,7 +229,7 @@ public class Track
 
         return null;
     }
-    
+
     private static TrackObjects LoadObjects(Stream reader, TrackHeader header, int headerIndex)
     {
         var obstacles = ObstacleTable.ReadTable(reader, headerIndex);
@@ -282,7 +286,7 @@ public class Track
 
         return coins;
     }
-    
+
     private static TrackAi LoadAi(Stream reader, TrackHeader header, TrackDefinition definition)
     {
         var trackAi = new TrackAi();
@@ -291,7 +295,7 @@ public class Track
         var aiHeader = reader.Read<AiHeader>();
         var zonesAddress = aiAddress + aiHeader.ZonesOffset;
         var targetsAddress = aiAddress + aiHeader.TargetsOffset;
-        
+
         reader.Seek(zonesAddress, SeekOrigin.Begin);
         for (int i = 0; i < aiHeader.ZoneCount; i++)
         {
@@ -300,7 +304,7 @@ public class Track
 
         reader.Seek(definition.TargetOptions);
         var targetOptions = reader.Read<TargetOptions>();
-        
+
         reader.Seek(targetsAddress, SeekOrigin.Begin);
         for (int set = 0; set < targetOptions.SetCount; set++)
         {
@@ -309,18 +313,19 @@ public class Track
             {
                 currentSet.Add(reader.Read<AiTarget>());
             }
+
             trackAi.TargetSets.Add(currentSet);
         }
 
         //reader.Seek(definition.Turns);
         //while (reader.PeekByte() != 0xff)
-            //trackAi.Add(reader.Read<TurnMarker>());
-        
+        //trackAi.Add(reader.Read<TurnMarker>());
+
         return trackAi;
     }
 
     #endregion
-    
+
     /// <summary>
     /// Write track to the ROM
     /// </summary>
@@ -331,10 +336,10 @@ public class Track
         var trackAddress = stream.Position;
         var trackStream = new MemoryStream();
 
-        var trackDefinition = new TrackDefinition {HeaderIndex = headerIndex};
+        var trackDefinition = new TrackDefinition { HeaderIndex = headerIndex };
         var trackHeader = new TrackHeader();
         trackStream.Skip(0x100);
-        
+
         WriteConfig(Config, ref trackDefinition, ref trackHeader);
         WriteTileset(trackStream, ref trackHeader);
         AlignStream(trackStream);
@@ -371,6 +376,7 @@ public class Track
     }
 
     #region Write Track Data
+
     private void WriteConfig(TrackConfig config, ref TrackDefinition definition, ref TrackHeader header)
     {
         definition.BackgroundIndex = config.BackgroundIndex;
@@ -380,7 +386,7 @@ public class Track
         definition.SongID = config.SongID;
         definition.LapsCount = config.Laps;
 
-        definition.Turns = new (config.TurnsPointer);
+        definition.Turns = new(config.TurnsPointer);
         definition.TargetOptions = new(config.TargetOptionsPointer);
         definition.CoverGfx = new(config.CoverGfxPointer);
         definition.CoverPal = new(config.CoverPalPointer);
@@ -403,6 +409,7 @@ public class Track
             romStream.Write(newDefAddress.Raw);
             definitionAddress = newDefAddress;
         }
+
         romStream.Seek(definitionAddress);
         romStream.Write(definition);
     }
@@ -420,12 +427,14 @@ public class Track
         header.TilesetPaletteOffset = (uint)trackStream.Position;
         TilesetPalette.Write(trackStream);
     }
+
     private void WriteTilemap(Stream trackStream, ref TrackHeader header)
     {
         header.Flags |= TrackFlags.SplitTilemap;
         header.TilemapOffset = (uint)trackStream.Position;
         Compressor.SplitCompress(Tilemap.GetData(), trackStream);
     }
+
     private void WriteMinimap(Stream trackStream, ref TrackHeader header)
     {
         header.MinimapOffset = (uint)trackStream.Position;
@@ -450,6 +459,7 @@ public class Track
             ObstaclePalette.Write(trackStream);
         }
     }
+
     private void WriteObstacleGfx(Stream trackStream, ref TrackHeader header)
     {
         if (ObstacleGfx is null)
@@ -463,6 +473,7 @@ public class Track
             Compressor.SplitCompress(ObstacleGfx.GetData(), trackStream);
         }
     }
+
     private ObstacleTable WriteObstacleTable(Stream romStream, int headerIndex, TrackObjects trackObjects)
     {
         var obstacles = new List<Obstacle>();
@@ -471,6 +482,7 @@ public class Track
             if (!obstacles.Contains(obstaclePlacement.Obstacle))
                 obstacles.Add(obstaclePlacement.Obstacle);
         }
+
         var obstacleTable = new ObstacleTable { Obstacles = obstacles };
         obstacleTable.OverrideExistingTable(romStream, headerIndex);
         return obstacleTable;
@@ -487,10 +499,11 @@ public class Track
                 ID = (byte)obstacleTable.IndexOfObstacle(obsPlacement.Obstacle),
                 X = (byte)obsPlacement.Position.X,
                 Y = (byte)obsPlacement.Position.Y,
-                Zone = aiMap[obsPlacement.Position.X/2 + obsPlacement.Position.Y/2 * header.TrackWidth * 64],
+                Zone = aiMap[obsPlacement.Position.X / 2 + obsPlacement.Position.Y / 2 * header.TrackWidth * 64],
             };
             objPlacement.Serialize(trackStream);
         }
+
         trackStream.Write((uint)0);
 
         header.ItemBoxOffset = (uint)trackStream.Position;
@@ -505,6 +518,7 @@ public class Track
             };
             objPlacement.Serialize(trackStream);
         }
+
         trackStream.Write((uint)0);
 
         header.StartPositionOffset = (uint)trackStream.Position;
@@ -519,6 +533,7 @@ public class Track
             };
             objPlacement.Serialize(trackStream);
         }
+
         trackStream.Write((uint)0);
     }
 

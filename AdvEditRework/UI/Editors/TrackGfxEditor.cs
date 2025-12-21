@@ -14,6 +14,7 @@ public enum TrackGraphic
     Tileset,
     Minimap,
 }
+
 public class TrackGfxEditor : Editor
 {
     private readonly Track _track;
@@ -28,6 +29,7 @@ public class TrackGfxEditor : Editor
             new(0xD6B5), new(0xE318), new(0xFFFF), new(0x0000)
         ]
     );
+
     public TrackGfxEditor(Track track)
     {
         _track = track;
@@ -54,7 +56,7 @@ public class TrackGfxEditor : Editor
 
         var optionsX = position.X + _tilesetEditor.RenderSize.X + 4;
         var optionsRect = new Rectangle(optionsX, menuBarHeight, windowSize.X - optionsX, windowSize.Y - position.Y);
-        
+
         ImHelper.BeginEmptyWindow("GfxOptionsWindow", optionsRect);
 
         var trackGraphics = Enum.GetValues(typeof(TrackGraphic)).Cast<TrackGraphic>();
@@ -75,12 +77,13 @@ public class TrackGfxEditor : Editor
                         case TrackGraphic.Tileset:
                             _tilesetEditor = new TilesetEditor(_track.Tileset, _track.TilesetPalette);
                             break;
-                    }   
+                    }
                 }
             }
+
             ImGui.EndCombo();
         }
-        
+
         ImHelper.EndEmptyWindow();
     }
 

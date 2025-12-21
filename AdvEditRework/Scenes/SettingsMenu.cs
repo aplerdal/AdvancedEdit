@@ -11,15 +11,14 @@ public class SettingsMenu : Scene
 {
     public override void Init(ref Project? project)
     {
-        
     }
 
     public override void Update(ref Project? project)
     {
         var viewport = ImGui.GetMainViewport();
-        
+
         Raylib.ClearBackground(Color.RayWhite);
-        ImHelper.BeginEmptyWindow("Settings",new Rectangle(viewport.Pos, viewport.Size));
+        ImHelper.BeginEmptyWindow("Settings", new Rectangle(viewport.Pos, viewport.Size));
         {
             ImGui.Text("Settings");
             ImGui.Separator();

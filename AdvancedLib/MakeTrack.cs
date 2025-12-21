@@ -1,4 +1,5 @@
 #region GPL statement
+
 /*Epic Edit is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 of the License.
@@ -10,7 +11,9 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+
 #endregion
+
 // Modified from Epic Edit's implementation.
 
 using System;
@@ -23,7 +26,6 @@ using AdvancedLib.Serialization.AI;
 
 namespace AdvancedLib
 {
-
     /// <summary>
     /// Represents the data found in a MAKE exported track file.
     /// </summary>
@@ -31,6 +33,7 @@ namespace AdvancedLib
     {
         public static readonly Dictionary<string, string> FileFilter = new()
             { { "SMK Track", "smkc" }, { "All files", "*" } };
+
         public int ItemProbabilityIndex
         {
             get => EEItemProba[1] >> 1;
@@ -251,8 +254,12 @@ namespace AdvancedLib
             get => this["AREA_BORDER"];
             set => this["AREA_BORDER"] = value;
         }
-        public List<AiZone> Ai {  get=>GetAi(); }
-        
+
+        public List<AiZone> Ai
+        {
+            get => GetAi();
+        }
+
         /// <summary>
         /// Loads the MAKE track file data.
         /// </summary>
@@ -260,7 +267,7 @@ namespace AdvancedLib
         {
             _fields = new Dictionary<string, byte[]>();
             InitData();
-            
+
             using (var fs = File.Open(filePath, FileMode.Open, FileAccess.Read))
             using (TextReader reader = new StreamReader(fs))
             {
@@ -277,7 +284,7 @@ namespace AdvancedLib
                     fieldName = fieldName.Substring(1); // Remove leading #
 
                     if (_fields.TryGetValue(fieldName, out var data))
-                    { 
+                    {
                         if (data.Length <= 4)
                         {
                             LoadLineData(data, line);
@@ -312,8 +319,8 @@ namespace AdvancedLib
             // EEObjFlashing = new byte[2];
             // EEItemProba = new byte[2];
 
-            MapBytes = new byte[128*128];
-            
+            MapBytes = new byte[128 * 128];
+
             var area = new byte[4064];
             for (var i = 0; i < area.Length; i++)
             {
@@ -322,6 +329,7 @@ namespace AdvancedLib
 
             Area = area;
         }
+
         /// <summary>
         /// Load SMK track over mksc one. Does not override tileset.
         /// </summary>
@@ -337,7 +345,9 @@ namespace AdvancedLib
             // track.ItemBoxes = new List<GameObject>(); // We do not load item boxes, as they don't exist as objects in SMK
             // track.Actors = new List<GameObject>(); // Object gfx are not stored in this format and I don't want to deal with objects right now.
         }
-        private List<AiZone> GetAi(){
+
+        private List<AiZone> GetAi()
+        {
             throw new NotImplementedException();
             //
             // List<AiSector> ai = new();
@@ -408,6 +418,7 @@ namespace AdvancedLib
             // positions.Add(new GameObject(0x8B, startPosition + new Point(-3, -4), 0));
             // return positions;
         }
+
         private static void LoadLineData(byte[] data, string line)
         {
             var space = line.IndexOf(' ');

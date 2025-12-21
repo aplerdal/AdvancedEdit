@@ -9,8 +9,8 @@ public struct Pointer(uint value)
 
     public uint Address
     {
-        get=>Raw & 0xffffff; 
-        set=>Raw = (value & 0xffffff) | 0x08000000;
+        get => Raw & 0xffffff;
+        set => Raw = (value & 0xffffff) | 0x08000000;
     }
 
     public static Pointer Null = new Pointer(0);

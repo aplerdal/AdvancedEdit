@@ -9,10 +9,11 @@ public enum TrackFlags
     SplitTilemap = 2,
     SplitObjects = 4,
 }
+
 public class TrackHeader : ISerializable, IEquatable<TrackHeader>
 {
     public long Address { get; set; }
-    
+
     public const byte Magic = 0x01;
     public bool CompressedTileset { get; set; }
     public TrackFlags Flags { get; set; }
@@ -32,11 +33,11 @@ public class TrackHeader : ISerializable, IEquatable<TrackHeader>
     public uint ObstacleGfxOffset { get; set; }
     public uint ObstaclePaletteOffset { get; set; }
     public sbyte SharedObstacleGfx { get; set; }
-    
+
     public void Deserialize(Stream stream)
     {
         Address = stream.Position;
-        
+
         stream.MatchThrow([Magic]);
         CompressedTileset = stream.ReadUInt16() != 0;
         Flags = (TrackFlags)stream.ReadUInt8();
@@ -64,14 +65,15 @@ public class TrackHeader : ISerializable, IEquatable<TrackHeader>
         SharedObstacleGfx = stream.ReadInt8();
         stream.Skip(19);
     }
+
     public void Serialize(Stream stream)
     {
         Address = stream.Position;
-        
+
         Span<byte> padding = stackalloc byte[60];
         padding.Clear();
         stream.Write(Magic);
-        stream.Write((ushort)(CompressedTileset?1:0));
+        stream.Write((ushort)(CompressedTileset ? 1 : 0));
         stream.Write((byte)Flags);
         stream.Write(TrackWidth);
         stream.Write(TrackHeight);
@@ -79,7 +81,7 @@ public class TrackHeader : ISerializable, IEquatable<TrackHeader>
         stream.Write(SharedTileset);
         stream.Write(padding[..19]);
         stream.Write(padding[..60]);
-        stream.Write(TilesetOffset); 
+        stream.Write(TilesetOffset);
         stream.Write(TilesetPaletteOffset);
         stream.Write(BehaviorsOffset);
         stream.Write(ObstaclesOffset);
@@ -98,6 +100,7 @@ public class TrackHeader : ISerializable, IEquatable<TrackHeader>
         stream.Write(SharedObstacleGfx);
         stream.Write(padding[..19]);
     }
+
     public override int GetHashCode()
     {
         var hashCode = new HashCode();
@@ -121,6 +124,7 @@ public class TrackHeader : ISerializable, IEquatable<TrackHeader>
         hashCode.Add(SharedObstacleGfx);
         return hashCode.ToHashCode();
     }
+
     public bool Equals(TrackHeader other)
     {
         return CompressedTileset == other.CompressedTileset && Flags == other.Flags && TrackWidth == other.TrackWidth && TrackHeight == other.TrackHeight && SharedTileset == other.SharedTileset && TilemapOffset == other.TilemapOffset && TilesetOffset == other.TilesetOffset && TilesetPaletteOffset == other.TilesetPaletteOffset && BehaviorsOffset == other.BehaviorsOffset && ObstaclesOffset == other.ObstaclesOffset && CoinsOffset == other.CoinsOffset && ItemBoxOffset == other.ItemBoxOffset && StartPositionOffset == other.StartPositionOffset && MinimapOffset == other.MinimapOffset && AiOffset == other.AiOffset && ObstacleGfxOffset == other.ObstacleGfxOffset && ObstaclePaletteOffset == other.ObstaclePaletteOffset && SharedObstacleGfx == other.SharedObstacleGfx;

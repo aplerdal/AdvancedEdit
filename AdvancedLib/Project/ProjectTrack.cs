@@ -13,7 +13,7 @@ public class ProjectTrack
 {
     public string Folder { get; set; }
     public string Name { get; set; }
-    
+
     private readonly string _configPath, _tilesetPath, _tilemapPath, _minimapPath, _obstacleGraphicsPath, _objectsPath, _obstaclePalettePath, _aiPath, _tilesetPalPath, _behaviorsPath, _coinsPath;
 
     public ProjectTrack(string folder, string name)
@@ -34,6 +34,7 @@ public class ProjectTrack
         if (!Directory.Exists(Folder))
             Directory.CreateDirectory(Folder);
     }
+
     public void SaveTrackData(Track track)
     {
         using var configStream = File.Create(_configPath);
@@ -53,12 +54,12 @@ public class ProjectTrack
             using var obstaclePaletteStream = File.Create(_obstaclePalettePath);
             track.ObstaclePalette.Write(obstaclePaletteStream);
         }
-        
+
         Task.WaitAll(
             MessagePackSerializer.SerializeAsync(configStream, track.Config),
             track.Tileset.WriteAsync(tilesetStream),
             track.TilesetPalette.WriteAsync(tilesetPalStream),
-            track.Tilemap.WriteAsync(tilemapStream), 
+            track.Tilemap.WriteAsync(tilemapStream),
             track.Minimap.WriteAsync(minimapStream),
             MessagePackSerializer.SerializeAsync(coinsStream, track.Coins),
             behaviorsStream.WriteAsync(track.Behaviors).AsTask(),
@@ -82,13 +83,14 @@ public class ProjectTrack
             obstacleGfxStream = File.OpenRead(_obstacleGraphicsPath);
             obstaclePaletteStream = File.OpenRead(_obstaclePalettePath);
         }
+
         using var objectsStream = File.OpenRead(_objectsPath);
         using var aiStream = File.OpenRead(_aiPath);
         using var behaviorsStream = File.OpenRead(_behaviorsPath);
 
         byte[] behaviors = new byte[256];
         behaviorsStream.ReadExactly(behaviors);
-        
+
         var trackConfig = MessagePackSerializer.Deserialize<TrackConfig>(configStream);
         var obstacleGfxTileset = (obstacleGfxStream is null) ? null : new Tileset(obstacleGfxStream, 256, PixelFormat.Bpp4);
         var obstaclePalette = (obstaclePaletteStream is null) ? null : new Palette(obstaclePaletteStream, 48);

@@ -35,6 +35,7 @@ public class AffineTilemap
         Height = height;
         _indicies = new byte[width * height];
     }
+
     /// <summary>
     /// Load an <see cref="AffineTilemap"/> from a stream
     /// </summary>
@@ -50,6 +51,7 @@ public class AffineTilemap
     }
 
     public byte[] GetData() => _indicies;
+
     public void Write(Stream stream)
     {
         stream.Write(_indicies);

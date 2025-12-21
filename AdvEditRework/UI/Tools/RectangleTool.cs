@@ -9,6 +9,7 @@ public class RectangleTool : MapEditorTool
 {
     private bool _dragging;
     private Vector2 _start;
+
     public override void Update(MapEditor editor)
     {
         if (editor.SelectedTile is null || !editor.HasFocus) return;
@@ -21,6 +22,7 @@ public class RectangleTool : MapEditorTool
                 _dragging = true;
                 _start = Vector2.Clamp(view.MouseTilePos, Vector2.Zero, trackSize);
             }
+
             if (!_dragging) return;
             var p1 = _start;
             var p2 = Vector2.Clamp(view.MouseTilePos, Vector2.Zero, trackSize);

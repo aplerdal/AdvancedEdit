@@ -20,6 +20,7 @@ public enum MapEditorToolType
     Stamp,
     Wand,
 }
+
 public class MapEditor : Editor
 {
     private MapEditorToolType _activeToolType = MapEditorToolType.Draw;
@@ -32,7 +33,8 @@ public class MapEditor : Editor
     public TileEntry[]? Stamp { get; set; }
 
     public bool MouseOverMap => !((Raylib.GetMousePosition().Y <= ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2) ||
-                                 (Raylib.GetMousePosition().X >= Raylib.GetRenderWidth() - Settings.Shared.UIScale * 262));
+                                  (Raylib.GetMousePosition().X >= Raylib.GetRenderWidth() - Settings.Shared.UIScale * 262));
+
     public MapEditor(TrackView view)
     {
         View = view;
@@ -40,21 +42,25 @@ public class MapEditor : Editor
         View.DrawInTrack = TrackSpaceUpdate;
         Raylib.SetMouseCursor(MouseCursor.Default);
     }
+
     public override void Update(bool hasFocus)
     {
         HasFocus = hasFocus;
         View.Draw();
         UpdateUI();
     }
+
     void TrackSpaceUpdate()
     {
         _tools[(int)_activeToolType].Update(this);
         CheckKeybinds();
     }
+
     void UpdateUI()
     {
         UpdatePanel();
     }
+
     void UpdatePanel()
     {
         var scale = Settings.Shared.UIScale;
@@ -76,6 +82,7 @@ public class MapEditor : Editor
         ToolPicker(optionsPos, panelWidth - 6 * scale);
         HasFocus = Raylib.CheckCollisionPointRec(mousePos, panelRect);
     }
+
     void UpdateTilePicker(Vector2 position)
     {
         PaletteShader.Begin();
@@ -90,6 +97,7 @@ public class MapEditor : Editor
             var selectedTileRect = new Rectangle(tilesetRect.Position + tilePos * tileSize, new Vector2(tileSize));
             Raylib.DrawRectangleLinesEx(selectedTileRect, 1 * scale, Color.White);
         }
+
         var mousePos = Raylib.GetMousePosition();
         if (Raylib.CheckCollisionPointRec(mousePos, tilesetRect))
         {
@@ -106,6 +114,7 @@ public class MapEditor : Editor
             }
         }
     }
+
     void ToolPicker(Vector2 position, float width)
     {
         var scale = Settings.Shared.UIScale;
@@ -138,6 +147,7 @@ public class MapEditor : Editor
             dest = newDest;
         }
     }
+
     void CheckKeybinds()
     {
         // TODO: Customizable keybinds
@@ -150,10 +160,12 @@ public class MapEditor : Editor
         if (!ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.B)) SetTool(MapEditorToolType.Draw);
         if (!ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.R)) SetTool(MapEditorToolType.Rectangle);
     }
+
     public void SetTool(MapEditorToolType newEditorToolType)
     {
         _activeToolType = newEditorToolType;
     }
+
     public override void Dispose()
     {
         //

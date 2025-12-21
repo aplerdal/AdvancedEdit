@@ -8,7 +8,6 @@ public class RomManager : IDisposable
 
     public RomManager()
     {
-        
     }
 
     public void Load(string file)

@@ -11,9 +11,10 @@ public static class Compressor
     public const uint MaxPartSize = 4096;
 
     public static void Decompress(Stream source, Stream destination) => LZ10.Decompress(source, destination);
-    public static void Compress(ReadOnlySpan<byte> source, Stream destination, CompressionLevel compressionLevel = 
+
+    public static void Compress(ReadOnlySpan<byte> source, Stream destination, CompressionLevel compressionLevel =
         CompressionLevel.Optimal) => LZ10.Compress(source, destination, compressionLevel);
-    
+
     public static void SplitDecompress(Stream source, Stream destination, int maxParts = 16)
     {
         var baseAddress = source.Position;
@@ -34,6 +35,7 @@ public static class Compressor
             LZ10.Decompress(source, destination);
         }
     }
+
     public static void SplitCompress(ReadOnlySpan<byte> source, Stream destination, CompressionLevel compressionLevel = CompressionLevel.Optimal)
     {
         // Ceiling of integer division

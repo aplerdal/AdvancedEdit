@@ -8,18 +8,21 @@ public class AllocationTable : ISerializable
     public List<RomSpan> Blocks { get; set; } = new List<RomSpan>();
     public const int TableSize = 0x100;
     public const int MaxBlocks = (TableSize - 2) / 6;
+
     /// <summary>
     /// Allocation table version
     /// </summary>
     public const int Version = 0;
-    
-    public AllocationTable() {}
+
+    public AllocationTable()
+    {
+    }
 
     public AllocationTable(List<RomSpan> blocks)
     {
         Blocks = blocks;
     }
-    
+
     public void Serialize(Stream stream)
     {
         stream.Seek(0x400000, SeekOrigin.Begin);
@@ -30,6 +33,7 @@ public class AllocationTable : ISerializable
             stream.Write((UInt24)block.Address);
             stream.Write((UInt24)block.Length);
         }
+
         stream.Write((byte)0);
     }
 

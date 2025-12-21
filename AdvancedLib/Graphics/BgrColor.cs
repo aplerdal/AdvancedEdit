@@ -24,6 +24,7 @@ public class BgrColor : ISerializable
         get => (byte)((_raw >> 10) & 0x1F);
         set => _raw = (ushort)((_raw & ~(0x1F << 10)) | ((value & 0x1F) << 10));
     }
+
     public void Serialize(Stream stream)
     {
         stream.Write(_raw);
@@ -33,7 +34,10 @@ public class BgrColor : ISerializable
     {
         _raw = stream.ReadUInt16();
     }
-    public BgrColor() { }
+
+    public BgrColor()
+    {
+    }
 
     public BgrColor(ushort value)
     {

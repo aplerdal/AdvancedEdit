@@ -17,11 +17,11 @@ public class TilesetEditor : IDisposable
     private int _selectedColor = 0;
     private readonly RenderTexture2D _viewport;
     private readonly Camera2D _viewCamera;
-    
+
     private const int ViewportSize = 512;
     private const int IconSize = ViewportSize / 16;
     private const int IconsPerColumn = 16;
-    
+
     public Vector2 RenderSize => new(ViewportSize + 4 + IconSize * (int)(_palette.Length / IconsPerColumn), ViewportSize);
 
     public TilesetEditor(Tileset tileset, Palette palette)
@@ -40,7 +40,7 @@ public class TilesetEditor : IDisposable
     public void Update(Vector2 position, bool hasFocus)
     {
         UpdateViewport(position, hasFocus);
-        ColorPicker(position + new Vector2(ViewportSize+4, 0), hasFocus);
+        ColorPicker(position + new Vector2(ViewportSize + 4, 0), hasFocus);
     }
 
     void UpdateViewport(Vector2 position, bool hasFocus)
@@ -75,13 +75,14 @@ public class TilesetEditor : IDisposable
         }
         Raylib.EndMode2D();
         Raylib.EndTextureMode();
-        
+
         Raylib.DrawTextureRec(_viewport.Texture, new Rectangle(Vector2.Zero, _viewport.Texture.Width, -_viewport.Texture.Height), position, Color.White);
     }
+
     void ColorPicker(Vector2 position, bool hasFocus)
     {
         var len = _palette.Length;
-        
+
         for (int x = 0; x < (int)(len / IconsPerColumn); x++)
         for (int y = 0; y < IconsPerColumn; y++)
         {
@@ -94,7 +95,7 @@ public class TilesetEditor : IDisposable
             if (hovered && Raylib.IsMouseButtonPressed(MouseButton.Left) && hasFocus) _selectedColor = index;
         }
     }
-    
+
     public void Dispose()
     {
         Raylib.UnloadImage(_tilesetImage);

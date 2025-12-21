@@ -11,18 +11,19 @@ public class BucketTool : MapEditorTool
     {
         var view = editor.View;
         if (!editor.MouseOverMap || !editor.HasFocus || !editor.SelectedTile.HasValue) return;
-        
+
         Vector2 hoveredTile = editor.View.MouseTilePos;
         var track = editor.View.Track;
         var tile = editor.SelectedTile.Value;
         if (Raylib.IsMouseButtonPressed(MouseButton.Left))
         {
-                // Flood fill
-                var action = FastFloodFill(editor, hoveredTile, tile);
-                if (action is not null)
-                    editor.UndoManager.Push(action);
+            // Flood fill
+            var action = FastFloodFill(editor, hoveredTile, tile);
+            if (action is not null)
+                editor.UndoManager.Push(action);
         }
     }
+
     private static UndoActions? FastFloodFill(MapEditor editor, Vector2 pos, byte replacement)
     {
         var map = editor.View.Track.Tilemap;
@@ -70,7 +71,7 @@ public class BucketTool : MapEditorTool
                     {
                         if (!found)
                         {
-                            stack.Push(new (i, ny));
+                            stack.Push(new(i, ny));
                             found = true;
                         }
                     }
@@ -86,6 +87,5 @@ public class BucketTool : MapEditorTool
         }
 
         return editor.View.SetTilesUndoable(changedPoints, replacement);
-
     }
 }

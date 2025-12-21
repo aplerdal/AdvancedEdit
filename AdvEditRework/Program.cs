@@ -24,21 +24,21 @@ static class Program
         _scene = scene;
         _scene.Init(ref _project);
     }
-    
+
     private static Project? _project;
-    
+
     static void Main(string[] args)
     {
-        #if !DEBUG
+#if !DEBUG
             Raylib.SetTraceLogLevel(TraceLogLevel.Error);
-        #endif
+#endif
         Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
         Raylib.InitWindow(800, 600, "AdvEditRework");
         Raylib.SetTargetFPS(144);
         Raylib.SetExitKey(KeyboardKey.Null);
-        
+
         PaletteShader.Load();
-        
+
         ImGuiRenderer.Setup(false, false);
         var dpiScale = Raylib.GetWindowScaleDPI();
         var settings = Settings.Shared;
@@ -48,14 +48,14 @@ static class Program
         ImGuiRenderer.ReloadFonts();
         ImGui.GetIO().FontDefault = imFont;
         Style.SetupImGuiStyle();
-        
+
         _scene.Init(ref _project);
         while (!(Raylib.WindowShouldClose() || ShouldClose))
         {
             Raylib.SetWindowTitle($"AdvEditRework - {Raylib.GetFPS():0000}FPS");
             Update();
         }
-        
+
         Close();
     }
 

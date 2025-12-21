@@ -20,6 +20,7 @@ public static class FontLoader
 
     private const int CharacterCount = 256;
     private const int IconCount = 7;
+
     public static unsafe Font LoadMkscFont()
     {
         Font font = Raylib.GetFontDefault();
@@ -54,10 +55,11 @@ public static class FontLoader
             font.Glyphs[CharacterCount + i].AdvanceX = 0;
             font.Glyphs[CharacterCount + i].Image = Raylib.ImageFromImage(image, rect);
         }
+
         Raylib.UnloadImage(image);
 
         font.BaseSize = 16;
-        
+
         return font;
     }
 

@@ -16,12 +16,12 @@ public class MainMenu : Scene
     {
         Gui.SetFontMksc();
     }
-    
+
     public override void Update(ref Project? project)
     {
         Raylib.ClearBackground(Gui.Style.BgColor);
         Gui.SetCursorPos(new Vector2(8));
-        Gui.TitleBox("Start", new (256.0f, 512.0f));
+        Gui.TitleBox("Start", new(256.0f, 512.0f));
         if (Gui.LabelButton((char)MapEditIcon.FileOpen + "Open Project"))
         {
             var status = Nfd.OpenDialog(out var path, ProjectFilter, null);
@@ -31,6 +31,7 @@ public class MainMenu : Scene
                 Program.SetScene(new TrackEditorScene());
             }
         }
+
         if (Gui.LabelButton((char)MapEditIcon.FileNew + "New Project"))
         {
             Program.SetScene(new CreateProject());
@@ -40,10 +41,11 @@ public class MainMenu : Scene
         {
             Program.SetScene(new SettingsMenu());
         }
+
         Gui.LabelButton((char)MapEditIcon.Help + "Help");
         Gui.LabelLink((char)MapEditIcon.Discord + "Discord", "https://discord.gg/tDNDgfC5sD");
     }
-    
+
     public override void Dispose()
     {
         // 

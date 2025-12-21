@@ -20,6 +20,7 @@ record AiDrag(Vector2 StartPosition, AiZone Zone, DragHandle Handle)
         Shape = Zone.Shape,
     };
 }
+
 public class AiEditor : Editor
 {
     public readonly TrackView View;
@@ -33,6 +34,7 @@ public class AiEditor : Editor
     private bool _resetConfirmationShown = false;
 
     public Vector2 MouseAiBlockPos => (View.MouseTilePos / 2).ToVec2I().AsVector2();
+
     public AiEditor(TrackView view)
     {
         View = view;
@@ -108,7 +110,8 @@ public class AiEditor : Editor
         foreach (var shape in Enum.GetValues(typeof(ZoneShape)).Cast<ZoneShape>())
         {
             if (ZoneShapeButton(dest, shape, _selectedZone?.Shape == shape))
-                if (_selectedZone != null) UndoManager.Push(ModifyZoneShapeUndoable(_selectedZone, shape));
+                if (_selectedZone != null)
+                    UndoManager.Push(ModifyZoneShapeUndoable(_selectedZone, shape));
             dest.X += 32 * scale;
             if (dest.X + (32 * scale) - position.X > width) dest = new Vector2(position.X, position.Y + 32 * scale);
         }
@@ -118,10 +121,11 @@ public class AiEditor : Editor
     {
         var scale = Settings.Shared.UIScale;
         var dest = position;
-        if (ZoneOptionsButton(dest + new Vector2(0 * 32*scale, 0), AiEditorIcon.NewZone))
+        if (ZoneOptionsButton(dest + new Vector2(0 * 32 * scale, 0), AiEditorIcon.NewZone))
         {
             UndoManager.Push(CreateZoneUndoable());
         }
+
         if (ZoneOptionsButton(dest + new Vector2(1 * 32 * scale, 0), AiEditorIcon.DeleteZone) || Raylib.IsKeyPressed(KeyboardKey.Delete))
         {
             if (_selectedZone != null)
@@ -131,6 +135,7 @@ public class AiEditor : Editor
             }
         }
     }
+
     void UpdatePanel()
     {
         var scale = Settings.Shared.UIScale;
@@ -179,12 +184,14 @@ public class AiEditor : Editor
         {
             _selectedZone = null;
         }
+
         if (Raylib.IsMouseButtonDown(MouseButton.Left))
         {
             if (_drag is null && hoveredZone is not null)
             {
                 _drag = new AiDrag(MouseAiBlockPos, hoveredZone, handle);
             }
+
             if (_drag is not null)
             {
                 var dragDelta = MouseAiBlockPos - _drag.StartPosition;
@@ -244,9 +251,10 @@ public class AiEditor : Editor
                     }
                 ));
             }
+
             _drag = null;
         }
-        
+
         Raylib.SetMouseCursor(handle switch
         {
             DragHandle.Bottom or DragHandle.Top => MouseCursor.ResizeNs,
@@ -256,6 +264,7 @@ public class AiEditor : Editor
             _ => hoveredZone is null ? MouseCursor.Default : MouseCursor.ResizeAll
         });
     }
+
     private AiZone? GetHoveredZone()
     {
         if (_selectedZone != null && _selectedZone.IsHovered(View.MouseTilePos)) return _selectedZone;
@@ -272,10 +281,10 @@ public class AiEditor : Editor
             DrawZone(zone, color);
         }
     }
-    
+
     private void DrawZone(AiZone zone, Color color)
     {
-        zone.Draw(color with {A = 255});
+        zone.Draw(color with { A = 255 });
     }
 
     private void ResetAi()
@@ -295,9 +304,10 @@ public class AiEditor : Editor
         if (newShape == ZoneShape.Rectangle && oldShape != ZoneShape.Rectangle) zone.Height = zone.Width;
         return new UndoActions(
             (() => zone.Shape = newShape),
-            (()=> zone.Shape = oldShape)
-            );
+            (() => zone.Shape = oldShape)
+        );
     }
+
     private UndoActions CreateZoneUndoable()
     {
         var ai = View.Track.Ai;
@@ -320,6 +330,7 @@ public class AiEditor : Editor
             var viewportSize = Raylib.GetScreenToWorld2D(windowSize - Vector2.One, View.Camera) - Raylib.GetScreenToWorld2D(Vector2.Zero, View.Camera);
             View.Camera.Target = zoneCenter - viewportSize / 2;
         }
+
         ai.Zones.Insert(newIndex, newZone);
         foreach (var set in ai.TargetSets)
         {
@@ -348,6 +359,7 @@ public class AiEditor : Editor
             }
         );
     }
+
     private UndoActions DeleteZoneUndoable(AiZone zone)
     {
         var ai = View.Track.Ai;
@@ -363,13 +375,13 @@ public class AiEditor : Editor
 
         return new UndoActions(
             () =>
+            {
+                View.Track.Ai.Zones.RemoveAt(index);
+                foreach (var set in View.Track.Ai.TargetSets)
                 {
-                    View.Track.Ai.Zones.RemoveAt(index);
-                    foreach (var set in View.Track.Ai.TargetSets)
-                    {
-                        set.RemoveAt(index);
-                    }
-                }, 
+                    set.RemoveAt(index);
+                }
+            },
             () =>
             {
                 View.Track.Ai.Zones.Insert(index, originalZone);
@@ -378,8 +390,9 @@ public class AiEditor : Editor
                     ai.TargetSets[i].Insert(index, originalTargets[i]);
                 }
             }
-            );
+        );
     }
+
     public override void Dispose()
     {
         //

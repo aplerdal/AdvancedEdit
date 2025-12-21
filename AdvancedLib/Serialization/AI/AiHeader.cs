@@ -14,7 +14,7 @@ public class AiHeader : ISerializable, IEquatable<AiHeader>
         ZonesOffset = stream.ReadUInt16();
         TargetsOffset = stream.ReadUInt16();
     }
-    
+
     public void Serialize(Stream stream)
     {
         stream.Write(ZoneCount);

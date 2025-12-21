@@ -5,6 +5,7 @@ public class Tile8Bpp : Tile
     public static int DataSize => 64;
     public override PixelFormat Format => PixelFormat.Bpp8;
     private readonly byte[] _indicies = new byte[64];
+
     public override byte this[int x, int y]
     {
         get => _indicies[x + Tile.Size * y];

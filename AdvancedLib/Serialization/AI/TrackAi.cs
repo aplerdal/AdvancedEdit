@@ -9,6 +9,7 @@ public class TrackAi : ISerializable
     private const int DefaultSets = 3;
     public List<AiZone> Zones { get; set; } = new();
     public List<List<AiTarget>> TargetSets { get; set; } = new();
+
     public void Serialize(Stream stream)
     {
         var header = new AiHeader
@@ -40,6 +41,7 @@ public class TrackAi : ISerializable
             {
                 set.Add(stream.Read<AiTarget>());
             }
+
             TargetSets.Add(set);
         }
     }
@@ -56,6 +58,7 @@ public class TrackAi : ISerializable
                 id |= 0x80;
             Zones[i].WriteZoneMap((byte)id, ref aiMap, aiMapSize);
         }
+
         return aiMap;
     }
 }

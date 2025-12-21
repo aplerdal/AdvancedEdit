@@ -8,7 +8,6 @@ namespace AdvancedLib.RaylibExt;
 
 public static class Extensions
 {
-    
     public static Texture2D TilePaletteTexture(this Tileset tileset, int width, int height)
     {
         Debug.Assert(width * height >= tileset.Length, "width * height >= tileset.Length");
@@ -24,7 +23,7 @@ public static class Extensions
                 Raylib.ImageDrawPixel(ref image, (int)tilePos.X + x, (int)tilePos.Y + y, new Color(index, index, index, (byte)255));
             }
         }
-        
+
         var texture = Raylib.LoadTextureFromImage(image);
         if (!Raylib.IsTextureValid(texture)) throw new Exception("Error creating tileset texture");
         Raylib.UnloadImage(image);
@@ -35,6 +34,7 @@ public static class Extensions
     {
         return new Rectangle(8 * (index % width), 8 * (int)(index / width), 8, 8);
     }
+
     public static Color ToColor(this BgrColor color)
     {
         return new Color(color.R << 3, color.G << 3, color.B << 3);

@@ -22,8 +22,13 @@ public class AiZone : ISerializable, IEquatable<AiZone>
     public ushort Y { get; set; }
     public ushort Width { get; set; }
     public ushort Height { get; set; }
-    public AiZone() { }
+
+    public AiZone()
+    {
+    }
+
     public static AiZone Default => new(0, 0, 16, 16, ZoneShape.Rectangle);
+
     public AiZone(ushort x, ushort y, ushort width, ushort height, ZoneShape shape)
     {
         X = x;
@@ -32,7 +37,7 @@ public class AiZone : ISerializable, IEquatable<AiZone>
         Height = height;
         Shape = shape;
     }
-    
+
     public void Serialize(Stream stream)
     {
         stream.Write((byte)Shape);
@@ -40,7 +45,7 @@ public class AiZone : ISerializable, IEquatable<AiZone>
         stream.Write(Y);
         stream.Write(Width);
         stream.Write(Height);
-        stream.Write([0,0,0]);
+        stream.Write([0, 0, 0]);
     }
 
     public void Deserialize(Stream stream)
@@ -74,7 +79,8 @@ public class AiZone : ISerializable, IEquatable<AiZone>
                         map[destX + destY * mapWidth] = id;
                     }
                 }
-            } break;
+            }
+                break;
             case ZoneShape.TriangleTopLeft:
             case ZoneShape.TriangleTopRight:
             case ZoneShape.TriangleBottomRight:
@@ -103,7 +109,8 @@ public class AiZone : ISerializable, IEquatable<AiZone>
                         map[colX + rowY * mapWidth] = id;
                     }
                 }
-            } break;
+            }
+                break;
         }
     }
 

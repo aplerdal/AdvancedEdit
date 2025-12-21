@@ -13,6 +13,7 @@ public class DrawTool : MapEditorTool
 {
     private int _radius = 11;
     private readonly List<TileEntry> _drawnTiles = new();
+
     public override void Update(MapEditor editor)
     {
         var view = editor.View;
@@ -25,9 +26,10 @@ public class DrawTool : MapEditorTool
         {
             Raylib.DrawTextureRec(view.Tileset, Extensions.GetTileRect(tile, 16), point * 8, Color.White);
         }
+
         PaletteShader.End();
         // Raylib.DrawRectangleLinesEx(new Rectangle(view.MouseTilePos * 8 - Vector2.One, new(8 + 2)), 1, Color.White);
-        
+
         if (Raylib.IsMouseButtonDown(MouseButton.Left))
         {
             if (view.MouseOnTrack)
@@ -55,9 +57,9 @@ public class DrawTool : MapEditorTool
         if (radius == 1) return [center];
         List<Vector2> points = new();
         for (int y = -radius; y <= radius; y++)
-            for (int x = -radius; x <= radius; x++)
-                if (x * x + y * y <= radius)
-                    points.Add(center + new Vector2(x, y));
+        for (int x = -radius; x <= radius; x++)
+            if (x * x + y * y <= radius)
+                points.Add(center + new Vector2(x, y));
         return points;
     }
 }

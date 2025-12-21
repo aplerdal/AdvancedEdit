@@ -44,6 +44,7 @@ void main()
 }";
 
     private static Color ToColor(this BgrColor color) => new Color(color.R << 3, color.G << 3, color.B << 3);
+
     public static int[] ToIVec3(this Palette palette)
     {
         int[] iVec3 = new int[palette.Length * 3];
@@ -54,9 +55,10 @@ void main()
             iVec3[i * 3 + 1] = color.G;
             iVec3[i * 3 + 2] = color.B;
         }
+
         return iVec3;
     }
-    
+
     public static void Load()
     {
         _shader = Raylib.LoadShaderFromMemory(null, ShaderText);

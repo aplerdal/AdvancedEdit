@@ -27,7 +27,7 @@ public class ObstacleTable
     public void OverrideExistingTable(Stream writer, int definitionIndex)
     {
         if (definitionIndex > 50) throw new Exception("Table not big enough");
-        var tablePointerPointer = new Pointer((uint)(0x8053DFC + definitionIndex*4));
+        var tablePointerPointer = new Pointer((uint)(0x8053DFC + definitionIndex * 4));
         var newTableAddress = RomAllocator.Allocate(Size);
         writer.Seek(newTableAddress);
         WriteObstacleTable(writer, Obstacles);
@@ -50,7 +50,7 @@ public class ObstacleTable
             writer.Write(obstacle.Type);
         }
     }
-    
+
     public static ObstacleTable ReadTable(Stream reader, int index)
     {
         int caseIdx = index - 4;
@@ -74,7 +74,7 @@ public class ObstacleTable
         {
             reader.Seek(new Pointer(0x080f1008));
         }
-        
+
         var table = new ObstacleTable();
         bool secondTime = false;
         while (true)
@@ -87,9 +87,11 @@ public class ObstacleTable
                 if (secondTime) break;
                 secondTime = true;
             }
+
             table.Obstacles.Add(new Obstacle(obj, param));
         }
-        table.Obstacles.Add(new Obstacle(0,0));
+
+        table.Obstacles.Add(new Obstacle(0, 0));
         return table;
     }
 }

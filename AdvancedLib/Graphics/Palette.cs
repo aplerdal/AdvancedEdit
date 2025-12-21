@@ -5,6 +5,7 @@ namespace AdvancedLib.Graphics;
 public class Palette
 {
     private BgrColor[] _colors;
+
     public int Length
     {
         get => _colors.Length;
@@ -20,6 +21,7 @@ public class Palette
         for (int i = 0; i < length; i++)
             _colors[i] = new BgrColor(0);
     }
+
     public Palette(Stream stream, int length)
     {
         _colors = new BgrColor[length];
@@ -31,6 +33,7 @@ public class Palette
     {
         _colors = colors;
     }
+
     public BgrColor this[int index]
     {
         get => _colors[index];
@@ -41,8 +44,9 @@ public class Palette
     {
         foreach (var entry in _colors)
         {
-            stream.Write(entry);   
+            stream.Write(entry);
         }
     }
+
     public Task WriteAsync(Stream stream) => Task.Run(() => Write(stream));
 }

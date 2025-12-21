@@ -17,9 +17,11 @@ public class TrackEditorScene : Scene
     private TrackView? _view;
     private Editor? _editor;
     private Track? _currentTrack;
+
     public override void Init(ref Project? project)
     {
     }
+
     void SetView(TrackView view)
     {
         _view?.Dispose();
@@ -32,6 +34,7 @@ public class TrackEditorScene : Scene
         _editor?.Dispose();
         _editor = editor;
     }
+
     private bool MainMenuBar(ref Project? project)
     {
         bool isActive = false;
@@ -45,7 +48,7 @@ public class TrackEditorScene : Scene
                 {
                     var name = new string(project.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray());
                     if (string.IsNullOrWhiteSpace(name)) name = "mksc";
-                    var status = Nfd.SaveDialog(out var path, MainMenu.ProjectFilter, name+".amkp");
+                    var status = Nfd.SaveDialog(out var path, MainMenu.ProjectFilter, name + ".amkp");
                     if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
                     {
                         if (_currentTrack != null) _projectTrack?.SaveTrackData(_currentTrack);
@@ -73,6 +76,7 @@ public class TrackEditorScene : Scene
                     project = null;
                     Program.SetScene(new MainMenu());
                 }
+
                 ImGui.Separator();
 
                 if (ImGui.MenuItem("Create Rom"))
@@ -96,14 +100,14 @@ public class TrackEditorScene : Scene
                 {
                     Program.ShouldClose = true;
                 }
-                
+
                 ImGui.EndMenu();
             }
 
             isActive |= TrackSelectorMenu(project);
 
             isActive |= ModeSelector();
-            
+
             ImGui.EndMainMenuBar();
         }
 
@@ -111,6 +115,7 @@ public class TrackEditorScene : Scene
     }
 
     private EditMode _mode;
+
     private bool ModeSelector()
     {
         var windowPos = ImGui.GetWindowPos();
@@ -126,6 +131,7 @@ public class TrackEditorScene : Scene
             SetEditor(new MapEditor(_view));
             _mode = EditMode.Map;
         }
+
         buttonPos += new Vector2(ButtonSize("Layout") + 16, 0);
         ImGui.SetCursorScreenPos(buttonPos);
         if (ImGui.MenuItem("AI Map", "", _mode == EditMode.Ai))
@@ -133,16 +139,19 @@ public class TrackEditorScene : Scene
             SetEditor(new AiEditor(_view));
             _mode = EditMode.Ai;
         }
+
         buttonPos += new Vector2(ButtonSize("AI Map") + 16, 0);
         ImGui.SetCursorScreenPos(buttonPos);
         if (ImGui.MenuItem("Graphics", "", _mode == EditMode.Graphics))
         {
             SetEditor(new TrackGfxEditor(_view.Track));
             _mode = EditMode.Graphics;
-        } 
+        }
+
         ImGui.EndDisabled();
         return false;
     }
+
     private bool TrackSelectorMenu(Project? project)
     {
         if (project is null)
@@ -175,16 +184,20 @@ public class TrackEditorScene : Scene
                                 SetView(new TrackView(_currentTrack));
                             }
                         }
+
                         ImGui.EndMenu();
                     }
                 }
+
                 ImGui.EndMenu();
             }
+
             ImGui.EndMenu();
         }
 
         return isActive;
     }
+
     public override void Update(ref Project? project)
     {
         bool hasFocus = MainMenuBar(ref project);

@@ -7,10 +7,12 @@ public class Tileset
 {
     private readonly Tile[] _tiles;
     public PixelFormat PixelFormat { get; set; }
+
     public int Length
     {
         get => _tiles.Length;
     }
+
     public Tile this[int index]
     {
         get => _tiles[index];
@@ -33,6 +35,7 @@ public class Tileset
             for (int i = 0; i < tiles; i++)
                 _tiles[i] = Tile8Bpp.Empty;
     }
+
     /// <summary>
     /// Creates a <see cref="Tileset"/> from a <see cref="Stream"/>
     /// </summary>
@@ -57,6 +60,7 @@ public class Tileset
         Write(stream);
         return stream.ToArray();
     }
+
     public void Write(Stream stream)
     {
         foreach (var tile in _tiles)
@@ -64,5 +68,6 @@ public class Tileset
             stream.Write(tile);
         }
     }
+
     public Task WriteAsync(Stream stream) => Task.Run(() => Write(stream));
 }

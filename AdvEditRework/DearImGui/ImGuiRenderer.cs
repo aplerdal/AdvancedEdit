@@ -1,15 +1,15 @@
 /*******************************************************************************************
-*
-*   raylib-extras [ImGui] example - Simple Integration
-*
-*	This is a simple ImGui Integration
-*	It is done using C++ but with C style code
-*	It can be done in C as well if you use the C ImGui wrapper
-*	https://github.com/cimgui/cimgui
-*
-*   Copyright (c) 2021 Jeffery Myers
-*
-********************************************************************************************/
+ *
+ *   raylib-extras [ImGui] example - Simple Integration
+ *
+ *	This is a simple ImGui Integration
+ *	It is done using C++ but with C style code
+ *	It can be done in C as well if you use the C ImGui wrapper
+ *	https://github.com/cimgui/cimgui
+ *
+ *   Copyright (c) 2021 Jeffery Myers
+ *
+ ********************************************************************************************/
 
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -35,10 +35,25 @@ namespace AdvEditRework.DearImGui
         internal static bool LastAltPressed = false;
         internal static bool LastSuperPressed = false;
 
-        internal static bool IsControlDown() { return Raylib.IsKeyDown(KeyboardKey.RightControl) || Raylib.IsKeyDown(KeyboardKey.LeftControl); }
-        internal static bool IsShiftDown() { return Raylib.IsKeyDown(KeyboardKey.RightShift) || Raylib.IsKeyDown(KeyboardKey.LeftShift); }
-        internal static bool IsAltDown() { return Raylib.IsKeyDown(KeyboardKey.RightAlt) || Raylib.IsKeyDown(KeyboardKey.LeftAlt); }
-        internal static bool IsSuperDown() { return Raylib.IsKeyDown(KeyboardKey.RightSuper) || Raylib.IsKeyDown(KeyboardKey.LeftSuper); }
+        internal static bool IsControlDown()
+        {
+            return Raylib.IsKeyDown(KeyboardKey.RightControl) || Raylib.IsKeyDown(KeyboardKey.LeftControl);
+        }
+
+        internal static bool IsShiftDown()
+        {
+            return Raylib.IsKeyDown(KeyboardKey.RightShift) || Raylib.IsKeyDown(KeyboardKey.LeftShift);
+        }
+
+        internal static bool IsAltDown()
+        {
+            return Raylib.IsKeyDown(KeyboardKey.RightAlt) || Raylib.IsKeyDown(KeyboardKey.LeftAlt);
+        }
+
+        internal static bool IsSuperDown()
+        {
+            return Raylib.IsKeyDown(KeyboardKey.RightSuper) || Raylib.IsKeyDown(KeyboardKey.LeftSuper);
+        }
 
         public delegate void SetupUserFontsCallback(ImGuiIOPtr imGuiIo);
 
@@ -255,6 +270,7 @@ namespace AdvEditRework.DearImGui
         }
 
         private unsafe delegate sbyte* GetClipTextCallback(IntPtr userData);
+
         private unsafe delegate void SetClipTextCallback(IntPtr userData, sbyte* text);
 
         private static GetClipTextCallback GetClipCallback = null!;
@@ -328,7 +344,7 @@ namespace AdvEditRework.DearImGui
             io.DisplayFramebufferScale = new Vector2(1, 1);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || Raylib.IsWindowState(ConfigFlags.HighDpiWindow))
-                    io.DisplayFramebufferScale = Raylib.GetWindowScaleDPI();
+                io.DisplayFramebufferScale = Raylib.GetWindowScaleDPI();
 
             io.DeltaTime = dt >= 0 ? dt : Raylib.GetFrameTime();
 
@@ -366,7 +382,6 @@ namespace AdvEditRework.DearImGui
 
                         if ((io.ConfigFlags & ImGuiConfigFlags.NoMouseCursorChange) == 0)
                         {
-
                             if (!_mouseCursorMap.ContainsKey(imgui_cursor))
                                 Raylib.SetMouseCursor(MouseCursor.Default);
                             else
@@ -420,7 +435,7 @@ namespace AdvEditRework.DearImGui
 
             // look for any keys that were down last frame and see if they were down and are released
             foreach (var keyItr in _raylibKeyMap)
-	        {
+            {
                 if (Raylib.IsKeyReleased(keyItr.Key))
                     io.AddKeyEvent(keyItr.Value, false);
             }
@@ -507,10 +522,10 @@ namespace AdvEditRework.DearImGui
             if (Raylib.IsWindowState(ConfigFlags.HighDpiWindow) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 scale = io.DisplayFramebufferScale;
 
-            Rlgl.Scissor(   (int)(x * scale.X),
-                            (int)((io.DisplaySize.Y - (int)(y + height)) * scale.Y),
-                            (int)(width * scale.X),
-                            (int)(height * scale.Y));
+            Rlgl.Scissor((int)(x * scale.X),
+                (int)((io.DisplaySize.Y - (int)(y + height)) * scale.Y),
+                (int)(width * scale.X),
+                (int)(height * scale.Y));
         }
 
         private static void TriangleVert(ImDrawVert idx_vert)
@@ -554,6 +569,7 @@ namespace AdvEditRework.DearImGui
                 TriangleVert(vertexB);
                 TriangleVert(vertexC);
             }
+
             Rlgl.End();
         }
 
@@ -587,6 +603,7 @@ namespace AdvEditRework.DearImGui
                     Rlgl.DrawRenderBatchActive();
                 }
             }
+
             Rlgl.SetTexture(0);
             Rlgl.DisableScissorTest();
             Rlgl.EnableBackfaceCulling();
@@ -727,7 +744,7 @@ namespace AdvEditRework.DearImGui
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (area.Y / 2 - sizeY / 2));
             }
 
-            ImageRect(image.Texture, sizeX, sizeY, new Rectangle(0,0, (image.Texture.Width), -(image.Texture.Height) ));
+            ImageRect(image.Texture, sizeX, sizeY, new Rectangle(0, 0, (image.Texture.Width), -(image.Texture.Height)));
         }
 
         /// <summary>
@@ -779,7 +796,8 @@ namespace AdvEditRework.DearImGui
                 uv0.Y = (float)sourceRect.Y / image.Height;
                 uv1.Y = uv0.Y + (float)(sourceRect.Height / image.Height);
             }
-            return ImGui.ImageButton(name ,new ImTextureID(image.Id), size, uv0, uv1);
+
+            return ImGui.ImageButton(name, new ImTextureID(image.Id), size, uv0, uv1);
         }
     }
 }

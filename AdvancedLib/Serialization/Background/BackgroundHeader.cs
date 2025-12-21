@@ -30,7 +30,7 @@ public struct BackgroundHeader : ISerializable, IEquatable<BackgroundHeader>
     public uint MiddleTilemapOffset { get; set; }
     public uint BackTilemapOffset { get; set; }
     public uint PaletteOffset { get; set; }
-    
+
     public void Deserialize(Stream stream)
     {
         Size = (BackgroundSize)stream.ReadUInt8();
@@ -42,6 +42,7 @@ public struct BackgroundHeader : ISerializable, IEquatable<BackgroundHeader>
         BackTilemapOffset = stream.ReadUInt32();
         PaletteOffset = stream.ReadUInt32();
     }
+
     public void Serialize(Stream stream)
     {
         stream.Write((byte)Size);
@@ -53,7 +54,7 @@ public struct BackgroundHeader : ISerializable, IEquatable<BackgroundHeader>
         stream.Write(BackTilemapOffset);
         stream.Write(PaletteOffset);
     }
-    
+
     public bool Equals(BackgroundHeader other)
     {
         return Size == other.Size && CompressionMode == other.CompressionMode && TilesetOffset == other.TilesetOffset && FrontTilemapOffset == other.FrontTilemapOffset && MiddleTilemapOffset == other.MiddleTilemapOffset && BackTilemapOffset == other.BackTilemapOffset && PaletteOffset == other.PaletteOffset;

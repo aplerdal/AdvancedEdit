@@ -7,6 +7,7 @@ public class Tile4Bpp : Tile
     public static int DataSize => 32;
     public override PixelFormat Format => PixelFormat.Bpp4;
     private readonly byte[] _indicies = new byte[64];
+
     public override byte this[int x, int y]
     {
         get => _indicies[x + Tile.Size * y];
@@ -14,6 +15,7 @@ public class Tile4Bpp : Tile
     }
 
     public static Tile4Bpp Empty => new();
+
     public override void Serialize(Stream stream)
     {
         for (int i = 0; i < 32; i++)

@@ -8,6 +8,7 @@ public class TurnMarker : ISerializable
     public byte Time { get; set; }
     public sbyte Sprite { get; set; }
     public byte Unknown { get; set; }
+
     public void Serialize(Stream stream)
     {
         stream.Write(Zone);

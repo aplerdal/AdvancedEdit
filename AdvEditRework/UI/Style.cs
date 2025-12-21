@@ -14,8 +14,8 @@ public class Style
     public Color TextTint = Color.White;
     public Style Clone() => (Style)MemberwiseClone();
 
-	public static void SetupImGuiStyle()
-	{
-		var style = ImGui.GetStyle();
-	}
+    public static void SetupImGuiStyle()
+    {
+        var style = ImGui.GetStyle();
+    }
 }

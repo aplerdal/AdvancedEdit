@@ -45,6 +45,7 @@ public static class AiExtensions
             DrawTriangle(zone, color);
         }
     }
+
     public static Rectangle GetZoneRect(this AiZone zone)
     {
         if (zone.Shape == ZoneShape.Rectangle) return new Rectangle(zone.X, zone.Y, zone.Width + 1, zone.Height + 1);
@@ -62,11 +63,13 @@ public static class AiExtensions
                 zoneRect.Y -= zoneRect.Width - 1;
                 break;
         }
+
         return zoneRect;
     }
+
     static void DrawTriangle(this AiZone zone, Color color)
     {
-        var points = new Vector2[zone.Width*2 + 5];
+        var points = new Vector2[zone.Width * 2 + 5];
         var scale = AiZone.Precision * 8;
         var triRect = GetZoneRect(zone);
         Vector2 vertex, arm;
@@ -103,7 +106,7 @@ public static class AiExtensions
         points[0] = vertex;
         Vector2 pos = arm;
         var even = true;
-        for (int i = 1; i < points.Length-1; i++)
+        for (int i = 1; i < points.Length - 1; i++)
         {
             points[i] = pos;
             if (even)
@@ -112,6 +115,7 @@ public static class AiExtensions
                 pos.Y += step.Y;
             even = !even;
         }
+
         // HACK: reverse point order so fans are always wound counter-clockwise
         points[^1] = vertex;
         if (zone.Shape == ZoneShape.TriangleTopRight || zone.Shape == ZoneShape.TriangleBottomLeft)
@@ -119,22 +123,26 @@ public static class AiExtensions
             Array.Reverse(points);
         }
 
-        
-        for (int i = 0; i < points.Length-1; i++)
+
+        for (int i = 0; i < points.Length - 1; i++)
         {
             Raylib.DrawLineEx(points[i], points[i + 1], 1, color);
         }
+
         Raylib.DrawTriangleFan(points, points.Length, color with { A = 96 });
     }
+
     public static bool IsHovered(this AiZone zone, Vector2 tilePos)
     {
-        var aiBlockPos = (tilePos/2).ToVec2I();
+        var aiBlockPos = (tilePos / 2).ToVec2I();
         if (zone.Shape == ZoneShape.Rectangle)
         {
             return Raylib.CheckCollisionPointRec(aiBlockPos.AsVector2(), GetZoneRect(zone));
         }
+
         return zone.IntersectsWithTriangle(aiBlockPos);
     }
+
     private static bool IntersectsWithTriangle(this AiZone zone, Vec2I aiBlockPos)
     {
         if (!Raylib.CheckCollisionPointRec(aiBlockPos.AsVector2(), GetZoneRect(zone)))
@@ -160,6 +168,7 @@ public static class AiExtensions
                 throw new InvalidOperationException();
         }
     }
+
     public static DragHandle GetResizeHandle(this AiZone zone, Vector2 tilePos)
     {
         var aiBlockPos = (tilePos / 2).ToVec2I();
@@ -167,8 +176,10 @@ public static class AiExtensions
         {
             return GetResizeHandleRectangle(zone, aiBlockPos);
         }
+
         return GetResizeHandleTriangle(zone, aiBlockPos);
     }
+
     private static DragHandle GetResizeHandleRectangle(AiZone zone, Vec2I aiBlockPos)
     {
         DragHandle dragHandle;
@@ -229,8 +240,10 @@ public static class AiExtensions
                 }
             }
         }
+
         return dragHandle;
     }
+
     private static DragHandle GetResizeHandleTriangle(AiZone zone, Vec2I aiBlockPos)
     {
         int diagonal;
@@ -240,7 +253,7 @@ public static class AiExtensions
         int zoneRight = (int)(zoneRect.X + zoneRect.Width);
         int zoneTop = (int)(zoneRect.Y);
         int zoneBottom = (int)(zoneRect.Y + zoneRect.Height);
-        
+
         switch (zone.Shape)
         {
             case ZoneShape.TriangleTopLeft:
@@ -251,13 +264,13 @@ public static class AiExtensions
                 break;
             case ZoneShape.TriangleTopRight:
                 diagonal = (aiBlockPos.X - zone.X) - (aiBlockPos.Y - zone.Y);
-                if (diagonal <= 1-zone.Width) return DragHandle.BottomLeft;
-                if (aiBlockPos.X == zoneRight- 1) return DragHandle.Right;
+                if (diagonal <= 1 - zone.Width) return DragHandle.BottomLeft;
+                if (aiBlockPos.X == zoneRight - 1) return DragHandle.Right;
                 if (aiBlockPos.Y == zoneTop) return DragHandle.Top;
                 break;
             case ZoneShape.TriangleBottomRight:
                 diagonal = (aiBlockPos.X - zone.X) + (aiBlockPos.Y - zone.Y);
-                if (diagonal <= 1-zone.Width) return DragHandle.TopLeft;
+                if (diagonal <= 1 - zone.Width) return DragHandle.TopLeft;
                 if (aiBlockPos.X == zoneRight - 1) return DragHandle.Right;
                 if (aiBlockPos.Y == zoneBottom - 1) return DragHandle.Bottom;
                 break;
@@ -281,7 +294,7 @@ public static class AiExtensions
         if (zone.Shape == ZoneShape.Rectangle) ResizeRectangle(zone, handle, aiBlockPos);
         else ResizeTriangle(zone, handle, aiBlockPos);
     }
-    
+
     private static void ResizeRectangle(AiZone zone, DragHandle dragHandle, Vec2I aiBlockPos)
     {
         var zoneRect = GetZoneRect(zone);
@@ -305,7 +318,7 @@ public static class AiExtensions
                 break;
             case DragHandle.Top:
                 if (y >= zoneBottom) y = zoneBottom - 1;
-            
+
                 zone.Y = (ushort)y;
                 zone.Height = (ushort)(zoneBottom - y - 1);
                 break;
@@ -324,7 +337,7 @@ public static class AiExtensions
             case DragHandle.BottomRight:
                 if (x < zoneLeft) x = zoneLeft;
                 if (y < zoneTop) y = zoneTop;
-            
+
                 zone.Width = (ushort)(x - zoneLeft);
                 zone.Height = (ushort)(y - zoneTop);
                 break;
@@ -335,28 +348,28 @@ public static class AiExtensions
             case DragHandle.BottomLeft:
                 if (x >= zoneRight) x = zoneRight - 1;
                 if (y < zoneTop) y = zoneTop;
-            
+
                 zone.X = (ushort)x;
                 zone.Width = (ushort)(zoneRight - x - 1);
                 zone.Height = (ushort)(y - zoneTop);
                 break;
             case DragHandle.Left:
                 if (x >= zoneRight) x = zoneRight - 1;
-            
+
                 zone.X = (ushort)x;
                 zone.Width = (ushort)(zoneRight - x - 1);
                 break;
         }
     }
-    
+
     private static void ResizeTriangle(AiZone zone, DragHandle dragHandle, Vec2I aiBlockPos)
     {
         int size;
 
         var zoneRect = GetZoneRect(zone);
-        int zoneLeft   = (int)zoneRect.X;
-        int zoneRight  = (int)(zoneRect.X + zoneRect.Width);
-        int zoneTop    = (int)zoneRect.Y;
+        int zoneLeft = (int)zoneRect.X;
+        int zoneRight = (int)(zoneRect.X + zoneRect.Width);
+        int zoneTop = (int)zoneRect.Y;
         int zoneBottom = (int)(zoneRect.Y + zoneRect.Height);
 
         var x = aiBlockPos.X;
@@ -373,14 +386,14 @@ public static class AiExtensions
                 zone.Y = (ushort)(zoneTop + size);
                 break;
             case DragHandle.Left:
-                size = zoneRight - x -1;
+                size = zoneRight - x - 1;
                 zone.X = (ushort)(zoneRight - size - 1);
                 break;
             case DragHandle.Right:
                 size = x - zoneLeft;
                 zone.X = (ushort)(zoneLeft + size);
                 break;
-            
+
             case DragHandle.TopLeft:
                 size = (zoneRight - x - 1) + (zoneBottom - y - 1);
                 break;

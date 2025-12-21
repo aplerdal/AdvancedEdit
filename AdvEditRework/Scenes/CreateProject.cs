@@ -12,6 +12,7 @@ public class CreateProject : Scene
     public static readonly Dictionary<string, string> RomFilter = new() { { "MKSC Rom", "gba" }, { "All files", "*" } };
     private string _path = string.Empty;
     private string _name = string.Empty;
+
     public override void Init(ref Project? project)
     {
         //
@@ -20,7 +21,7 @@ public class CreateProject : Scene
     public override void Update(ref Project? project)
     {
         var viewport = ImGui.GetMainViewport();
-        
+
         ImGui.SetNextWindowSize(viewport.WorkSize);
         ImGui.SetNextWindowPos(viewport.WorkPos);
         ImGui.SetNextWindowViewport(viewport.ID);
@@ -42,6 +43,7 @@ public class CreateProject : Scene
             {
                 ImGui.InputTextWithHint("ROM Path", "/path/to/rom.gba", ref _path, 512);
             }
+
             ImGui.SameLine();
             if (ImGui.Button("Open"))
             {
@@ -59,6 +61,7 @@ public class CreateProject : Scene
                 project = Project.FromRom(romStream, _name);
                 Program.SetScene(new TrackEditorScene());
             }
+
             ImGui.SameLine();
             if (ImGui.Button("Cancel"))
             {
@@ -70,6 +73,5 @@ public class CreateProject : Scene
 
     public override void Dispose()
     {
-        
     }
 }

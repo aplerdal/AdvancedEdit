@@ -10,12 +10,14 @@ public enum ObjectMode
     Hide,
     AffineDouble,
 }
+
 public enum GraphicsMode
 {
     Normal,
     AlphaBlend,
     Window,
 }
+
 public class OamAttribute : ISerializable, IEquatable<OamAttribute>
 {
     public byte YPosition { get; set; }
@@ -32,56 +34,68 @@ public class OamAttribute : ISerializable, IEquatable<OamAttribute>
     public ushort TileIndex { get; set; }
     public byte Priority { get; set; }
     public byte Palette { get; set; }
-    public void Serialize(Stream stream) {
+
+    public void Serialize(Stream stream)
+    {
         ushort attr0 = (ushort)(
-            (YPosition&0xff) | 
-            (((int)ObjectMode&0b11)<<8) | 
-            (((int)GraphicsMode&0b11)<<10) |
-            ((Mosaic?1:0)<<12) |
-            ((Is8Bit?1:0)<<13) |
-            ((SpriteShape&0b11)<<14)
+            (YPosition & 0xff) |
+            (((int)ObjectMode & 0b11) << 8) |
+            (((int)GraphicsMode & 0b11) << 10) |
+            ((Mosaic ? 1 : 0) << 12) |
+            ((Is8Bit ? 1 : 0) << 13) |
+            ((SpriteShape & 0b11) << 14)
         );
         ushort attr1 = (ushort)(
-            (XPosition&0x1ff) |
-            ((SpriteSize&0b11)<<14)
+            (XPosition & 0x1ff) |
+            ((SpriteSize & 0b11) << 14)
         );
-        if (ObjectMode == ObjectMode.Affine || ObjectMode == ObjectMode.AffineDouble) {
-            attr1 |= (ushort)((AffineIndex&0b11111)<<9);
-        } else {
-            attr1 |= (ushort)(((HorizontalFlip?1:0)<<12) | ((VerticalFlip?1:0)<<13));
+        if (ObjectMode == ObjectMode.Affine || ObjectMode == ObjectMode.AffineDouble)
+        {
+            attr1 |= (ushort)((AffineIndex & 0b11111) << 9);
         }
+        else
+        {
+            attr1 |= (ushort)(((HorizontalFlip ? 1 : 0) << 12) | ((VerticalFlip ? 1 : 0) << 13));
+        }
+
         ushort attr2 = (ushort)(
             (TileIndex & 0x3ff) |
-            ((Priority&0b11)<<10) |
-            ((Palette&0b1111)<<12)
+            ((Priority & 0b11) << 10) |
+            ((Palette & 0b1111) << 12)
         );
         stream.Write(attr0);
         stream.Write(attr1);
         stream.Write(attr2);
     }
-    public void Deserialize(Stream stream) {
+
+    public void Deserialize(Stream stream)
+    {
         var attr0 = stream.ReadUInt16();
         YPosition = (byte)(attr0 & 0xff);
-        ObjectMode = (ObjectMode)((attr0>>8) & 0b11);
-        GraphicsMode = (GraphicsMode)((attr0>>10) & 0b11);
-        Mosaic = ((attr0>>12) & 1) != 0;
-        Is8Bit = ((attr0>>13) & 1) != 0;
-        SpriteShape = (byte)((attr0>>14) & 0b11);
+        ObjectMode = (ObjectMode)((attr0 >> 8) & 0b11);
+        GraphicsMode = (GraphicsMode)((attr0 >> 10) & 0b11);
+        Mosaic = ((attr0 >> 12) & 1) != 0;
+        Is8Bit = ((attr0 >> 13) & 1) != 0;
+        SpriteShape = (byte)((attr0 >> 14) & 0b11);
 
         var attr1 = stream.ReadUInt16();
         XPosition = (ushort)(attr1 & 0x1ff);
-        if (ObjectMode == ObjectMode.Affine || ObjectMode == ObjectMode.AffineDouble) {
-            AffineIndex = (byte)((attr1>>9) & 0b11111);
-        } else {
-            HorizontalFlip = ((attr1>>12) & 1) != 0;
-            VerticalFlip = ((attr1>>13) & 1) != 0;
+        if (ObjectMode == ObjectMode.Affine || ObjectMode == ObjectMode.AffineDouble)
+        {
+            AffineIndex = (byte)((attr1 >> 9) & 0b11111);
         }
-        SpriteSize = (byte)((attr1>>14) & 0b11);
-        
+        else
+        {
+            HorizontalFlip = ((attr1 >> 12) & 1) != 0;
+            VerticalFlip = ((attr1 >> 13) & 1) != 0;
+        }
+
+        SpriteSize = (byte)((attr1 >> 14) & 0b11);
+
         var attr2 = stream.ReadUInt16();
         TileIndex = (ushort)(attr2 & 0x3ff);
-        Priority = (byte)((attr2>>10)&0b11);
-        Palette = (byte)((attr2>>12)&0b1111);
+        Priority = (byte)((attr2 >> 10) & 0b11);
+        Palette = (byte)((attr2 >> 12) & 0b1111);
     }
 
     public bool Equals(OamAttribute? other)

@@ -14,6 +14,7 @@ public class Project(string name)
     public string Name { get; set; } = name;
     public string Folder => Path.Combine(Path.GetTempPath(), "AdvLib", Name);
     public ProjectConfig Config = new ProjectConfig();
+
     /// <summary>
     /// Load project from a .amkp file
     /// </summary>
@@ -26,12 +27,13 @@ public class Project(string name)
         {
             Directory.Delete(folder, true);
         }
+
         Directory.CreateDirectory(folder);
         TarFile.ExtractToDirectory(path, folder, false);
 
         using var configStream = File.OpenRead(Path.Combine(folder, "config.msp"));
         project.Config = MessagePackSerializer.Deserialize<ProjectConfig>(configStream);
-        
+
         return project;
     }
 
@@ -48,7 +50,7 @@ public class Project(string name)
     {
         // Apply Patches
         Patcher.Apply("Resources/Patches/objRework.ips", stream);
-        
+
         int headerIdx = 0;
         stream.Seek(new Pointer(0x08400000));
         foreach (var cup in Config.Cups)
@@ -66,6 +68,7 @@ public class Project(string name)
             headerIdx++;
         }
     }
+
     public static Project FromRom(Stream romStream, string projectName)
     {
         var project = new Project(projectName);
@@ -74,9 +77,9 @@ public class Project(string name)
         {
             Directory.Delete(folder, true);
         }
-        
+
         Directory.CreateDirectory(folder);
-        
+
         for (var i = 0; i < TrackNames.Cups.Length; i++)
         {
             var cupName = TrackNames.Cups[i];
@@ -90,8 +93,10 @@ public class Project(string name)
                 cupTracks[j] = new ProjectTrack(Path.Combine(folder, name), name);
                 cupTracks[j].SaveTrackData(Track.FromRom(romStream, headerIdx));
             }
+
             project.Config.Cups.Add(new Cup(cupName, cupTracks));
         }
+
         return project;
     }
 }

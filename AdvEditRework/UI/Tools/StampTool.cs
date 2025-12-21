@@ -22,7 +22,7 @@ public class StampTool : MapEditorTool
                 var offsetEntries = ((TileEntry[])editor.Stamp.Clone()).ToList();
                 for (var i = 0; i < offsetEntries.Count; i++)
                 {
-                    offsetEntries[i] = offsetEntries[i] with { Position = view.MouseTilePos + offsetEntries[i].Position};
+                    offsetEntries[i] = offsetEntries[i] with { Position = view.MouseTilePos + offsetEntries[i].Position };
                 }
 
                 editor.UndoManager.Push(editor.View.SetTilesUndoable(offsetEntries));

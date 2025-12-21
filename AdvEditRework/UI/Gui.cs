@@ -15,9 +15,10 @@ public static class Gui
     public static Font ActiveFont = MkscFont;
     private static float Scale => Style.FontSize / 16.0f;
     private static Vector2 _cursor;
-    
+
     private static Stack<Style> _styleStack = new Stack<Style>();
     public static Style Style { get; private set; } = new Style();
+
     private static void OpenUrl(string url)
     {
         try
@@ -44,7 +45,7 @@ public static class Gui
             Console.Error.WriteLine($"Failed to open URL: {ex.Message}");
         }
     }
-    
+
     public static Vector2 MeasureText(string text)
     {
         return Raylib.MeasureTextEx(ActiveFont, text, Style.FontSize * Scale, 0.0f);
@@ -55,31 +56,35 @@ public static class Gui
         Style.TextTint = Color.White;
         ActiveFont = MkscFont;
     }
+
     public static void SetFontOpenSans()
     {
         Style.TextTint = Color.Black;
         ActiveFont = OpenSans;
     }
+
     public static void SetCursorPos(Vector2 pos)
     {
         _cursor = pos * Scale;
     }
+
     public static void TitleBox(string title, Vector2 size)
     {
         var rect = new Rectangle(_cursor.X, _cursor.Y, size.X, size.Y);
         Raylib.DrawRectangleRec(rect, Style.BoxColor);
-        Raylib.DrawRectangleLinesEx(rect,4f*Scale, Style.BoxOutlineColor);
-        Raylib.DrawRectangleRounded(rect with{Height = (16.0f + 8.0f) * Scale},0.1f, 4, Style.BoxOutlineColor);
-        _cursor = rect.Position + new Vector2(4*Scale);
+        Raylib.DrawRectangleLinesEx(rect, 4f * Scale, Style.BoxOutlineColor);
+        Raylib.DrawRectangleRounded(rect with { Height = (16.0f + 8.0f) * Scale }, 0.1f, 4, Style.BoxOutlineColor);
+        _cursor = rect.Position + new Vector2(4 * Scale);
         Label(title);
-        _cursor += new Vector2(4*Scale);
+        _cursor += new Vector2(4 * Scale);
     }
+
     public static void Label(string text)
     {
         Raylib.DrawTextEx(ActiveFont, text, _cursor, ActiveFont.BaseSize, 0, Style.TextTint);
         _cursor.Y += MeasureText(text).Y;
     }
-    
+
     public static bool LabelButton(string text)
     {
         bool clicked = false;
@@ -90,8 +95,9 @@ public static class Gui
         {
             hovered = true;
             if (Raylib.IsMouseButtonPressed(MouseButton.Left)) clicked = true;
-            PushStyle(style=>style.TextTint = new Color(200, 200, 200));
+            PushStyle(style => style.TextTint = new Color(200, 200, 200));
         }
+
         Label(text);
         if (hovered) PopStyle();
         return clicked;
@@ -104,7 +110,7 @@ public static class Gui
             OpenUrl(url);
         }
     }
-    
+
     public static void PushStyle(Action<Style> modifier)
     {
         _styleStack.Push(Style.Clone());
