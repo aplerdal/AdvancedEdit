@@ -120,7 +120,7 @@ namespace AdvancedLib
         }
 
         /// <summary>
-        /// Theme.
+        /// Theme
         /// </summary>
         private byte[] SpRegion
         {

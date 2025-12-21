@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO.Compression;
 using AuroraLib.Compression.Algorithms;
 using AuroraLib.Core.IO;
@@ -43,10 +44,12 @@ public static class Compressor
         var offsets = new ushort[blocks];
         for (int i = 0; i < blocks; i++)
         {
+            Debug.Assert(destination.Position % 2 == 0);
             offsets[i] = (ushort)(destination.Position - headerAddress);
             int sourceOffset = (int)(i * MaxPartSize);
             int sourceBlockEnd = (int)Math.Min(sourceOffset + MaxPartSize, source.Length);
             LZ10.Compress(source[sourceOffset..sourceBlockEnd], destination, compressionLevel);
+            destination.Position = (destination.Position + 3) & ~3; // Align stream to word boundary
         }
 
         var endAddress = destination.Position;

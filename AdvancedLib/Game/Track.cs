@@ -1,7 +1,7 @@
-using System.Text.Json;
 using AdvancedLib.Graphics;
 using AdvancedLib.Serialization;
 using AdvancedLib.Serialization.AI;
+using AdvancedLib.Serialization.Allocator;
 using AdvancedLib.Serialization.Objects;
 using AdvancedLib.Serialization.Tracks;
 using AuroraLib.Core.IO;
@@ -19,7 +19,9 @@ public class Track
     public required AffineTilemap Tilemap { get; set; }
     public required Tileset Minimap { get; set; }
     public required Tileset? ObstacleGfx { get; set; }
+    public required Palette? ObstaclePalette { get; set; }
     public required TrackObjects Objects { get; set; }
+    public required List<Vec2I> Coins { get; set; }
     public required TrackAi Ai { get; set; }
     public required byte[] Behaviors { get; set; }
 
@@ -40,13 +42,15 @@ public class Track
         return new Track
         {
             Config = LoadConfig(header, definition),
-            TilesetPalette = LoadTilesetPalette(stream, header), // TODO: Do this for the other constructor and writing palette to rom
+            TilesetPalette = LoadTilesetPalette(stream, header),
             Tileset = LoadTileset(stream, header, headerIndex),
             Tilemap = LoadTilemap(stream, header),
             Minimap = LoadMinimap(stream, header),
             Behaviors = LoadBehaviors(stream, header),
             ObstacleGfx = LoadObstacleGraphics(stream, header, headerIndex),
+            ObstaclePalette = LoadObstaclePalette(stream, header),
             Objects = LoadObjects(stream, header, headerIndex),
+            Coins = LoadCoins(stream, header),
             Ai = LoadAi(stream, header, definition),
         };
     }
@@ -62,8 +66,10 @@ public class Track
         Tilemap = new AffineTilemap(TrackConfig.Default.Size.X * 128, TrackConfig.Default.Size.Y * 128),
         Minimap = new Tileset(64, PixelFormat.Bpp4),
         ObstacleGfx = new Tileset(256, PixelFormat.Bpp4),
+        ObstaclePalette = new Palette(48),
         Objects = new TrackObjects(), // TODO: Default starting positions
         Behaviors = new byte[256],
+        Coins = new List<Vec2I>(),
         Ai = new TrackAi(),
     };
     
@@ -97,6 +103,12 @@ public class Track
             Theme = definition.Theme,
             SongID = definition.SongID,
             Laps = definition.LapsCount,
+            TurnsPointer = definition.Turns.Raw,
+            TargetOptionsPointer = definition.TargetOptions.Raw,
+            CoverGfxPointer = definition.CoverGfx.Raw,
+            CoverPalPointer = definition.CoverPal.Raw,
+            LockedTrackPalPointer = definition.LockedTrackPal.Raw,
+            TrackNameGfxPointer = definition.TrackNameGfx.Raw,
         };
     }
 
@@ -172,6 +184,14 @@ public class Track
         reader.ReadExactly(behaviors);
         return behaviors;
     }
+
+    private static Palette LoadObstaclePalette(Stream reader, TrackHeader header)
+    {
+        var palAddress = header.Address + header.ObstaclePaletteOffset;
+        reader.Seek(palAddress, SeekOrigin.Begin);
+        return new Palette(reader, 48);
+    }
+    
     private static Tileset? LoadObstacleGraphics(Stream reader, TrackHeader header, int headerIndex)
     {
         using var obstacleGraphicsStream = new MemoryPoolStream(256 * Tile4Bpp.DataSize, true);
@@ -245,6 +265,23 @@ public class Track
 
         return trackObjects;
     }
+
+    private static List<Vec2I> LoadCoins(Stream reader, TrackHeader header)
+    {
+        var coins = new List<Vec2I>();
+        if (header.CoinsOffset != 0)
+        {
+            var coinsAddress = header.Address + header.CoinsOffset;
+            reader.Seek(coinsAddress, SeekOrigin.Begin);
+            while (reader.PeekByte() != 0)
+            {
+                var coin = reader.Read<ObjectPlacement>();
+                coins.Add(new Vec2I(coin.X, coin.Y));
+            }
+        }
+
+        return coins;
+    }
     
     private static TrackAi LoadAi(Stream reader, TrackHeader header, TrackDefinition definition)
     {
@@ -291,25 +328,46 @@ public class Track
     /// <param name="headerIndex">header index of the track</param>
     public void WriteTrack(Stream stream, int headerIndex)
     {
+        var trackAddress = stream.Position;
         var trackStream = new MemoryStream();
 
-        var trackDefinition = new TrackDefinition();
+        var trackDefinition = new TrackDefinition {HeaderIndex = headerIndex};
         var trackHeader = new TrackHeader();
         trackStream.Skip(0x100);
         
         WriteConfig(Config, ref trackDefinition, ref trackHeader);
         WriteTileset(trackStream, ref trackHeader);
+        AlignStream(trackStream);
+        WritePalette(trackStream, ref trackHeader);
+        AlignStream(trackStream);
         WriteTilemap(trackStream, ref trackHeader);
+        AlignStream(trackStream);
         WriteMinimap(trackStream, ref trackHeader);
+        AlignStream(trackStream);
+        WriteBehaviors(trackStream, ref trackHeader);
+        AlignStream(trackStream);
         WriteObstacleGfx(trackStream, ref trackHeader);
+        AlignStream(trackStream);
+        WriteObstaclePal(trackStream, ref trackHeader);
+        AlignStream(trackStream);
         var obstacleTable = WriteObstacleTable(stream, headerIndex, Objects);
+        AlignStream(trackStream);
         WriteObjects(trackStream, ref trackHeader, obstacleTable, Objects);
+        AlignStream(trackStream);
+        WriteCoins(trackStream, ref trackHeader);
+        AlignStream(trackStream);
         WriteAi(trackStream, ref trackHeader);
 
-        var end = trackStream.Position;
         trackStream.Seek(0, SeekOrigin.Begin);
         trackStream.Write(trackHeader);
-        WriteDefinition(trackStream, trackDefinition, headerIndex);
+        WriteDefinition(stream, trackDefinition, headerIndex);
+        stream.Seek(trackAddress, SeekOrigin.Begin);
+        stream.Write(trackStream.GetBuffer());
+    }
+
+    void AlignStream(Stream stream)
+    {
+        stream.Position = (stream.Position + 3) & ~3;
     }
 
     #region Write Track Data
@@ -322,25 +380,45 @@ public class Track
         definition.SongID = config.SongID;
         definition.LapsCount = config.Laps;
 
+        definition.Turns = new (config.TurnsPointer);
+        definition.TargetOptions = new(config.TargetOptionsPointer);
+        definition.CoverGfx = new(config.CoverGfxPointer);
+        definition.CoverPal = new(config.CoverPalPointer);
+        definition.LockedTrackPal = new(config.LockedTrackPalPointer);
+        definition.TrackNameGfx = new(config.TrackNameGfxPointer);
+
         header.TrackWidth = (byte)config.Size.X;
         header.TrackHeight = (byte)config.Size.Y;
     }
 
-    private void WriteDefinition(Stream trackStream, TrackDefinition definition, int headerIndex)
+    private void WriteDefinition(Stream romStream, TrackDefinition definition, int headerIndex)
     {
         const uint definitionPointerTableAddress = 0x0E7FEC;
-        trackStream.Seek(definitionPointerTableAddress + headerIndex * 4, SeekOrigin.Begin);
-        var definitionAddress = trackStream.Read<Pointer>();
-        if (definitionAddress.IsNull) throw new ArgumentOutOfRangeException(nameof(headerIndex), "Invalid header index");
-        trackStream.Seek(definitionAddress);
-        trackStream.Write(definition);
+        romStream.Seek(definitionPointerTableAddress + headerIndex * 4, SeekOrigin.Begin);
+        var definitionAddress = romStream.Read<Pointer>();
+        if (definitionAddress.IsNull) // Create new table if one doesn't exist
+        {
+            romStream.Seek(definitionPointerTableAddress + headerIndex * 4, SeekOrigin.Begin);
+            var newDefAddress = RomAllocator.Allocate(14 * 4); // Definition size
+            romStream.Write(newDefAddress.Raw);
+            definitionAddress = newDefAddress;
+        }
+        romStream.Seek(definitionAddress);
+        romStream.Write(definition);
     }
 
     private void WriteTileset(Stream trackStream, ref TrackHeader header)
     {
         header.Flags |= TrackFlags.SplitTileset;
+        header.CompressedTileset = true;
         header.TilesetOffset = (uint)trackStream.Position;
         Compressor.SplitCompress(Tileset.GetData(), trackStream);
+    }
+
+    private void WritePalette(Stream trackStream, ref TrackHeader header)
+    {
+        header.TilesetPaletteOffset = (uint)trackStream.Position;
+        TilesetPalette.Write(trackStream);
     }
     private void WriteTilemap(Stream trackStream, ref TrackHeader header)
     {
@@ -352,6 +430,25 @@ public class Track
     {
         header.MinimapOffset = (uint)trackStream.Position;
         Compressor.Compress(Minimap.GetData(), trackStream);
+    }
+
+    private void WriteBehaviors(Stream trackStream, ref TrackHeader header)
+    {
+        header.BehaviorsOffset = (uint)trackStream.Position;
+        trackStream.Write(Behaviors);
+    }
+
+    private void WriteObstaclePal(Stream trackStream, ref TrackHeader header)
+    {
+        if (ObstaclePalette is null)
+        {
+            header.ObstaclePaletteOffset = 0;
+        }
+        else
+        {
+            header.ObstaclePaletteOffset = (uint)trackStream.Position;
+            ObstaclePalette.Write(trackStream);
+        }
     }
     private void WriteObstacleGfx(Stream trackStream, ref TrackHeader header)
     {
@@ -383,16 +480,61 @@ public class Track
     {
         byte[] aiMap = Ai.GenerateZoneMap(header.TrackWidth);
         header.ObstaclesOffset = (uint)trackStream.Position;
-        for (int i = 0; i < trackObjects.ObstaclePlacements.Count; i++)
+        foreach (var obsPlacement in trackObjects.ObstaclePlacements)
         {
-            var obsPlacement = trackObjects.ObstaclePlacements[i];
             var objPlacement = new ObjectPlacement
             {
                 ID = (byte)obstacleTable.IndexOfObstacle(obsPlacement.Obstacle),
                 X = (byte)obsPlacement.Position.X,
-                Y = (byte)obsPlacement.Position.X,
-                Zone = aiMap[obsPlacement.Position.X + obsPlacement.Position.Y * header.TrackWidth * 64],
+                Y = (byte)obsPlacement.Position.Y,
+                Zone = aiMap[obsPlacement.Position.X/2 + obsPlacement.Position.Y/2 * header.TrackWidth * 64],
             };
+            objPlacement.Serialize(trackStream);
+        }
+        trackStream.Write((uint)0);
+
+        header.ItemBoxOffset = (uint)trackStream.Position;
+        foreach (var boxPosition in trackObjects.ItemBoxes)
+        {
+            var objPlacement = new ObjectPlacement
+            {
+                ID = 1,
+                X = (byte)boxPosition.X,
+                Y = (byte)boxPosition.Y,
+                Zone = aiMap[boxPosition.X / 2 + boxPosition.Y / 2 * header.TrackWidth * 64],
+            };
+            objPlacement.Serialize(trackStream);
+        }
+        trackStream.Write((uint)0);
+
+        header.StartPositionOffset = (uint)trackStream.Position;
+        foreach (var startPosition in trackObjects.StartPositions)
+        {
+            var objPlacement = new ObjectPlacement
+            {
+                ID = (byte)((int)startPosition.Place | 0x80),
+                X = (byte)startPosition.Position.X,
+                Y = (byte)startPosition.Position.Y,
+                Zone = aiMap[startPosition.Position.X / 2 + startPosition.Position.X / 2 * header.TrackWidth * 64],
+            };
+            objPlacement.Serialize(trackStream);
+        }
+        trackStream.Write((uint)0);
+    }
+
+    private void WriteCoins(Stream trackStream, ref TrackHeader header)
+    {
+        header.CoinsOffset = (uint)trackStream.Position;
+        foreach (var coinPos in Coins)
+        {
+            var coin = new ObjectPlacement
+            {
+                ID = 0xff,
+                X = (byte)coinPos.X,
+                Y = (byte)coinPos.Y,
+                Zone = 0,
+            };
+            coin.Serialize(trackStream);
         }
     }
 
@@ -402,7 +544,7 @@ public class Track
         var aiHeader = new AiHeader { ZoneCount = (byte)Ai.Zones.Count };
         var headerAddr = trackStream.Position;
         trackStream.Seek(5, SeekOrigin.Current);
-        var zonesOffs = (ushort)(trackStream.Position - headerAddr);
+        aiHeader.ZonesOffset = (ushort)(trackStream.Position - headerAddr);
         foreach (var zone in Ai.Zones)
             trackStream.Write(zone);
 

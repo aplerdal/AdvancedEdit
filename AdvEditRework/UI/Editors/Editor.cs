@@ -1,7 +1,7 @@
 namespace AdvEditRework.UI.Editors;
 
-public abstract class Editor
+public abstract class Editor : IDisposable
 {
-    public abstract void Init();
-    public abstract void Update();
+    public abstract void Update(bool hasFocus);
+    public abstract void Dispose();
 }

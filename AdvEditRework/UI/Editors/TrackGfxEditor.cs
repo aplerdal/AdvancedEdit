@@ -31,27 +31,31 @@ public class TrackGfxEditor : Editor
     public TrackGfxEditor(Track track)
     {
         _track = track;
-    }
-    public override void Init()
-    {
         Raylib.SetMouseCursor(MouseCursor.Default);
-        _tilesetEditor = new TilesetEditor(_track.Minimap, _uiPalette);
+        _activeGraphic = TrackGraphic.Tileset;
+        _tilesetEditor = new TilesetEditor(_track.Tileset, _track.TilesetPalette);
     }
 
-    public override void Update()
+    public override void Update(bool hasFocus)
     {
         Raylib.ClearBackground(Color.White);
-        GfxSelectorPanel();
+        GfxSelectorPanel(hasFocus);
     }
 
-    void GfxSelectorPanel()
+    void GfxSelectorPanel(bool hasFocus)
     {
         var scale = Settings.Shared.UIScale;
         var windowSize = new Vector2(Raylib.GetRenderWidth(), Raylib.GetRenderHeight());
         var menuBarHeight = ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2;
-        var panelRect = new Rectangle(0, menuBarHeight, windowSize.X, windowSize.Y - menuBarHeight);
-        Raylib.DrawRectangleRec(panelRect, Color.LightGray);
-        ImHelper.BeginEmptyWindow("GfxEditorWindow", panelRect);
+
+        var position = new Vector2(4, menuBarHeight + 4);
+
+        _tilesetEditor.Update(position, hasFocus);
+
+        var optionsX = position.X + _tilesetEditor.RenderSize.X + 4;
+        var optionsRect = new Rectangle(optionsX, menuBarHeight, windowSize.X - optionsX, windowSize.Y - position.Y);
+        
+        ImHelper.BeginEmptyWindow("GfxOptionsWindow", optionsRect);
 
         var trackGraphics = Enum.GetValues(typeof(TrackGraphic)).Cast<TrackGraphic>();
         var graphicName = Enum.GetName(_activeGraphic);
@@ -60,13 +64,28 @@ public class TrackGfxEditor : Editor
             foreach (var graphic in trackGraphics)
             {
                 if (ImGui.Selectable(Enum.GetName(graphic)))
+                {
+                    if (_activeGraphic == graphic) continue;
                     _activeGraphic = graphic;
+                    switch (graphic)
+                    {
+                        case TrackGraphic.Minimap:
+                            _tilesetEditor = new TilesetEditor(_track.Minimap, _uiPalette);
+                            break;
+                        case TrackGraphic.Tileset:
+                            _tilesetEditor = new TilesetEditor(_track.Tileset, _track.TilesetPalette);
+                            break;
+                    }   
+                }
             }
             ImGui.EndCombo();
         }
-
-        _tilesetEditor.Update(ImGui.GetCursorScreenPos());
         
         ImHelper.EndEmptyWindow();
+    }
+
+    public override void Dispose()
+    {
+        _tilesetEditor.Dispose();
     }
 }

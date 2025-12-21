@@ -18,7 +18,7 @@ public static class RomAllocator
         for (var i = 0; i < _allocationTable.Blocks.Count; i++)
         {
             var span = _allocationTable.Blocks[i];
-            if (span.Length <= alignedLength)
+            if (alignedLength <= span.Length)
             {
                 address = span.Address;
                 span.Address += alignedLength;

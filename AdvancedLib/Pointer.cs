@@ -1,4 +1,8 @@
+using MessagePack;
+
 namespace AdvancedLib;
+
+[MessagePackObject(keyAsPropertyName: true)]
 public struct Pointer(uint value)
 {
     public uint Raw { get; set; } = (value & 0xffffff) | 0x08000000;

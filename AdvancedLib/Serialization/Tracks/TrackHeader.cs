@@ -44,9 +44,7 @@ public class TrackHeader : ISerializable, IEquatable<TrackHeader>
         TrackHeight = stream.ReadUInt8();
         stream.Skip(42);
         SharedTileset = stream.ReadInt8();
-        stream.Skip(15);
-        TilemapOffset = stream.ReadUInt32();
-        stream.Skip(60);
+        stream.Skip(79);
         TilesetOffset = stream.ReadUInt32();
         TilesetPaletteOffset = stream.ReadUInt32();
         BehaviorsOffset = stream.ReadUInt32();
@@ -58,7 +56,9 @@ public class TrackHeader : ISerializable, IEquatable<TrackHeader>
         MinimapOffset = stream.ReadUInt32();
         stream.Skip(4);
         AiOffset = stream.ReadUInt32();
-        stream.Skip(20);
+        stream.Skip(4);
+        TilemapOffset = stream.ReadUInt32();
+        stream.Skip(12);
         ObstacleGfxOffset = stream.ReadUInt32();
         ObstaclePaletteOffset = stream.ReadUInt32();
         SharedObstacleGfx = stream.ReadInt8();
@@ -77,10 +77,9 @@ public class TrackHeader : ISerializable, IEquatable<TrackHeader>
         stream.Write(TrackHeight);
         stream.Write(padding[..42]);
         stream.Write(SharedTileset);
-        stream.Write(padding[..15]);
-        stream.Write(TilemapOffset);
+        stream.Write(padding[..19]);
         stream.Write(padding[..60]);
-        stream.Write(TilesetOffset);
+        stream.Write(TilesetOffset); 
         stream.Write(TilesetPaletteOffset);
         stream.Write(BehaviorsOffset);
         stream.Write(ObstaclesOffset);
@@ -91,7 +90,9 @@ public class TrackHeader : ISerializable, IEquatable<TrackHeader>
         stream.Write(MinimapOffset);
         stream.Write(padding[..4]);
         stream.Write(AiOffset);
-        stream.Write(padding[..20]);
+        stream.Write(padding[..4]);
+        stream.Write(TilemapOffset);
+        stream.Write(padding[..12]);
         stream.Write(ObstacleGfxOffset);
         stream.Write(ObstaclePaletteOffset);
         stream.Write(SharedObstacleGfx);

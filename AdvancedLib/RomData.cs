@@ -17,4 +17,10 @@ public static class RomData
         Region.USA => new Pointer(0x080E7464),
         _ => Pointer.Null,
     };
+
+    public static Pointer TrackOffsets => Region switch
+    {
+        Region.USA => new Pointer(0x08258000),
+        _ => Pointer.Null,
+    };
 }

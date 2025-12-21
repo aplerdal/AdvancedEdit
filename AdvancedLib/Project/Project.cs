@@ -3,6 +3,7 @@ using System.Formats.Tar;
 using System.Text.Json;
 using AdvancedLib.Game;
 using AdvancedLib.Serialization;
+using AdvEditRework;
 using AuroraLib.Core.IO;
 using MessagePack;
 
@@ -43,9 +44,27 @@ public class Project(string name)
         TarFile.CreateFromDirectory(Folder, path, false);
     }
 
-    public void ToRom(string path)
+    public void ToRom(Stream stream)
     {
+        // Apply Patches
+        Patcher.Apply("Resources/Patches/objRework.ips", stream);
         
+        int headerIdx = 0;
+        stream.Seek(new Pointer(0x08400000));
+        foreach (var cup in Config.Cups)
+        foreach (var projectTrack in cup.Tracks)
+        {
+            var track = projectTrack.LoadTrackData();
+            var trackAddress = stream.Position;
+            track.WriteTrack(stream, headerIdx);
+            var trackEnd = stream.Position;
+            stream.Seek(RomData.Cups.Address + headerIdx * 4, SeekOrigin.Begin);
+            stream.Write(headerIdx);
+            stream.Seek(RomData.TrackOffsets.Address + headerIdx * 4, SeekOrigin.Begin);
+            stream.Write((uint)((uint)trackAddress - RomData.TrackOffsets.Address));
+            stream.Seek(trackEnd, SeekOrigin.Begin);
+            headerIdx++;
+        }
     }
     public static Project FromRom(Stream romStream, string projectName)
     {

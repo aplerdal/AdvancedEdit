@@ -14,7 +14,11 @@ public class AllocationTable : ISerializable
     public const int Version = 0;
     
     public AllocationTable() {}
-    public AllocationTable(List<RomSpan> blocks) {}
+
+    public AllocationTable(List<RomSpan> blocks)
+    {
+        Blocks = blocks;
+    }
     
     public void Serialize(Stream stream)
     {

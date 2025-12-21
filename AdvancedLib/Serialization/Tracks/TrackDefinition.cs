@@ -1,7 +1,9 @@
 using AuroraLib.Core.IO;
+using MessagePack;
 
 namespace AdvancedLib.Serialization.Tracks;
 
+[MessagePackObject(keyAsPropertyName: true)]
 public class TrackDefinition : ISerializable, IEquatable<TrackDefinition>
 {
     public int HeaderIndex { get; set; }

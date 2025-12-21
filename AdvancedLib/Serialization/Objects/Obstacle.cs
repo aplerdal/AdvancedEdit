@@ -7,6 +7,7 @@ public class Obstacle(short type, short parameter) : IEquatable<Obstacle>
 {
     public short Type { get; set; } = type;
     public short Parameter { get; set; } = parameter;
+    public static Obstacle ItemBox => new(0, -1);
 
     public bool Equals(Obstacle? other)
     {

@@ -119,6 +119,11 @@ public class TrackView : IDisposable
         Raylib.UnloadRenderTexture(_trackTexture);
     }
 
+    public bool PointOnTrack(Vector2 point)
+    {
+        return (point.X >= 0 && point.Y >= 0 && point.X < Track.Tilemap.Width && point.Y < Track.Tilemap.Height);
+    }
+
     private void BeginTileMode()
     {
         Raylib.BeginTextureMode(_trackTexture);
@@ -191,6 +196,29 @@ public class TrackView : IDisposable
         for (var x = 0; x < tiles.GetLength(0); x++)
             DrawSetTile(position + new Vector2(x,y), tiles[x, y]);
         EndTileMode();
+    }
+
+    public void SetTiles(HashSet<Vector2> positions, byte tile)
+    {
+        BeginTileMode();
+        foreach (var position in positions)
+            DrawSetTile(position, tile);
+        EndTileMode();
+    }
+
+    public UndoActions SetTilesUndoable(HashSet<Vector2> positions, byte tile)
+    {
+        var positionsClone = new HashSet<Vector2>(positions);
+        var oldTiles = new List<TileEntry>(positions.Count);
+        BeginTileMode();
+        foreach (var pos in positions)
+        {
+            oldTiles.Add(new TileEntry(pos, Track.Tilemap[pos]));
+            DrawSetTile(pos, tile);
+        }
+
+        EndTileMode();
+        return new UndoActions(() => SetTiles(positionsClone, tile), () => SetTiles(oldTiles));
     }
 
     public UndoActions SetTilesUndoable(List<TileEntry> tiles)

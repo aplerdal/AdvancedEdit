@@ -26,17 +26,15 @@ public class ObstacleTable
 
     public void OverrideExistingTable(Stream writer, int definitionIndex)
     {
-        if (definitionIndex < 4 || definitionIndex >= 30) throw new IndexOutOfRangeException();
-        var caseReplacementAddress = RomAllocator.Allocate(0x10);
+        if (definitionIndex > 50) throw new Exception("Table not big enough");
+        var tablePointerPointer = new Pointer((uint)(0x8053DFC + definitionIndex*4));
         var newTableAddress = RomAllocator.Allocate(Size);
         writer.Seek(newTableAddress);
         WriteObstacleTable(writer, Obstacles);
 
         // Write custom ASM to edit table location
-        writer.Seek(caseReplacementAddress);
-        writer.Write([0x01, 0x49, 0x02, 0x48, 0x00, 0x47, 0x00, 0x00]);
-        writer.Write(newTableAddress.Raw);
-        writer.Write([0xD7, 0x3E, 0x05, 0x08]);
+        writer.Seek(tablePointerPointer);
+        writer.Write(newTableAddress);
     }
 
     private void WriteObstacleTable(Stream writer, List<Obstacle> obstacles)
@@ -55,7 +53,6 @@ public class ObstacleTable
     
     public static ObstacleTable ReadTable(Stream reader, int index)
     {
-        //TODO: This way of managing objects sucks. Only some tracks can have custom tables.
         int caseIdx = index - 4;
         if (caseIdx < 24)
         {

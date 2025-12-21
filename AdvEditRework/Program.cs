@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using System.Resources;
+using System.Runtime.InteropServices;
 using AdvancedLib.Project;
 using AdvEditRework.DearImGui;
 using AdvEditRework.Resources;
@@ -28,6 +29,9 @@ static class Program
     
     static void Main(string[] args)
     {
+        #if !DEBUG
+            Raylib.SetTraceLogLevel(TraceLogLevel.Error);
+        #endif
         Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
         Raylib.InitWindow(800, 600, "AdvEditRework");
         Raylib.SetTargetFPS(144);

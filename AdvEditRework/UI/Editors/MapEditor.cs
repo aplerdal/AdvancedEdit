@@ -17,7 +17,7 @@ public enum MapEditorToolType
     Eyedropper,
     Rectangle,
     Bucket,
-    Move,
+    Stamp,
     Wand,
 }
 public class MapEditor : Editor
@@ -26,19 +26,56 @@ public class MapEditor : Editor
     public readonly UndoManager UndoManager = new();
     public readonly TrackView View;
     private readonly Texture2D _iconAtlas;
-    private readonly MapEditorTool[] _tools = [new DrawTool(), new DrawTool(), new DrawTool(), new Eyedropper(), new RectangleTool(), new DrawTool(), new DrawTool(), new DrawTool()];
-    private bool PanelFocused { get; set; }
+    private readonly MapEditorTool[] _tools = [new DrawTool(), new DrawTool(), new SelectionTool(), new Eyedropper(), new RectangleTool(), new BucketTool(), new StampTool(), new DrawTool()];
+    public bool HasFocus { get; set; }
     public byte? SelectedTile { get; set; } = 0;
+    public TileEntry[]? Stamp { get; set; }
 
     public bool MouseOverMap => !((Raylib.GetMousePosition().Y <= ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2) ||
                                  (Raylib.GetMousePosition().X >= Raylib.GetRenderWidth() - Settings.Shared.UIScale * 262));
-
     public MapEditor(TrackView view)
     {
         View = view;
         _iconAtlas = Program.TextureManager.GetTexture("tools.png");
+        View.DrawInTrack = TrackSpaceUpdate;
+        Raylib.SetMouseCursor(MouseCursor.Default);
     }
+    public override void Update(bool hasFocus)
+    {
+        HasFocus = hasFocus;
+        View.Draw();
+        UpdateUI();
+    }
+    void TrackSpaceUpdate()
+    {
+        _tools[(int)_activeToolType].Update(this);
+        CheckKeybinds();
+    }
+    void UpdateUI()
+    {
+        UpdatePanel();
+    }
+    void UpdatePanel()
+    {
+        var scale = Settings.Shared.UIScale;
+        var mousePos = Raylib.GetMousePosition();
+        var windowSize = new Vector2(Raylib.GetRenderWidth(), Raylib.GetRenderHeight());
 
+        var panelWidth = scale * 262;
+        var panelRect = new Rectangle(windowSize.X - panelWidth, ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2, panelWidth, windowSize.Y);
+        var tabRect = new Rectangle(panelRect.X - 25 * scale, (32 + windowSize.Y) / 2.0f - 25 * scale, 25 * scale, 50 * scale);
+        tabRect.X += (25 * scale);
+
+        Raylib.DrawRectangleRec(tabRect, ImHelper.Color(ImGuiCol.WindowBg));
+        Raylib.DrawRectangleLinesEx(tabRect, 1 * scale, ImHelper.Color(ImGuiCol.Border));
+        Raylib.DrawRectangleRec(panelRect, ImHelper.Color(ImGuiCol.WindowBg));
+        Raylib.DrawRectangleLinesEx(panelRect, 1 * scale, ImHelper.Color(ImGuiCol.Border));
+        UpdateTilePicker(panelRect.Position + new Vector2(3 * scale));
+        var optionsPos = panelRect.Position + new Vector2(3 * scale, 16 * 8 * 2 * scale + 6 * scale);
+        var optionsRect = new Rectangle(optionsPos, panelWidth - 6 * scale, panelRect.Size.Y - optionsPos.Y - 3);
+        ToolPicker(optionsPos, panelWidth - 6 * scale);
+        HasFocus = Raylib.CheckCollisionPointRec(mousePos, panelRect);
+    }
     void UpdateTilePicker(Vector2 position)
     {
         PaletteShader.Begin();
@@ -94,68 +131,31 @@ public class MapEditor : Editor
                 Raylib.DrawTexturePro(_iconAtlas, atlasSrc, dest, Vector2.Zero, 0, Color.White);
                 Raylib.DrawRectangleLinesEx(dest, 2 * scale, outlineColor);
             }
+
             //Raylib.DrawRectangleRec(dest, Color.Red);
             var newDest = new Rectangle(dest.X + 32, dest.Y, dest.Size);
             if (newDest.X + newDest.Width - position.X > width) newDest = new Rectangle(position.X, position.Y + 32, dest.Size);
             dest = newDest;
         }
     }
-    
-    void UpdatePanel()
+    void CheckKeybinds()
     {
-        var scale = Settings.Shared.UIScale;
-        var mousePos = Raylib.GetMousePosition();
-        var windowSize = new Vector2(Raylib.GetRenderWidth(), Raylib.GetRenderHeight());
-        
-        var panelWidth = scale * 262;
-        var panelRect = new Rectangle(windowSize.X - panelWidth, ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2, panelWidth, windowSize.Y);
-        var tabRect = new Rectangle(panelRect.X - 25 * scale, (32 + windowSize.Y) / 2.0f - 25 * scale, 25 * scale, 50 * scale);
-        tabRect.X += (25 * scale);
-
-        Raylib.DrawRectangleRec(tabRect, ImHelper.Color(ImGuiCol.WindowBg));
-        Raylib.DrawRectangleLinesEx(tabRect, 1 * scale, ImHelper.Color(ImGuiCol.Border));
-        Raylib.DrawRectangleRec(panelRect, ImHelper.Color(ImGuiCol.WindowBg));
-        Raylib.DrawRectangleLinesEx(panelRect, 1 * scale, ImHelper.Color(ImGuiCol.Border));
-        UpdateTilePicker(panelRect.Position + new Vector2(3 * scale));
-        var optionsPos = panelRect.Position + new Vector2(3 * scale, 16 * 8 * 2 * scale + 6 * scale);
-        var optionsRect = new Rectangle(optionsPos, panelWidth - 6 * scale, panelRect.Size.Y - optionsPos.Y - 3);
-        ToolPicker(optionsPos, panelWidth - 6 * scale);
-        PanelFocused = Raylib.CheckCollisionPointRec(mousePos, panelRect);
-    }
-
-    public override void Init()
-    {
-        View.DrawInTrack = TrackSpaceUpdate;
-        Raylib.SetMouseCursor(MouseCursor.Default);
-    }
-
-    private void TrackSpaceUpdate()
-    {
-        _tools[(int)_activeToolType].Update(this);
-        CheckUndo();
-    }
-
-    public override void Update()
-    {
-        View.Draw();
-        UpdateUI();
-    }
-
-    void CheckUndo()
-    {
+        // TODO: Customizable keybinds
         var ctrl = Raylib.IsKeyDown(KeyboardKey.LeftControl) || Raylib.IsKeyDown(KeyboardKey.RightControl);
         var shift = Raylib.IsKeyDown(KeyboardKey.LeftShift) || Raylib.IsKeyDown(KeyboardKey.RightShift);
-        if (ctrl && !shift&& Raylib.IsKeyPressed(KeyboardKey.Z)) UndoManager.Undo();
+        if (ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.Z)) UndoManager.Undo();
         if (ctrl && shift && Raylib.IsKeyPressed(KeyboardKey.Z)) UndoManager.Redo();
+        if (!ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.V)) SetTool(MapEditorToolType.Eyedropper);
+        if (!ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.S)) SetTool(MapEditorToolType.Select);
+        if (!ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.B)) SetTool(MapEditorToolType.Draw);
+        if (!ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.R)) SetTool(MapEditorToolType.Rectangle);
     }
-
-    public void UpdateUI()
-    {
-        UpdatePanel();
-    }
-
     public void SetTool(MapEditorToolType newEditorToolType)
     {
         _activeToolType = newEditorToolType;
+    }
+    public override void Dispose()
+    {
+        //
     }
 }

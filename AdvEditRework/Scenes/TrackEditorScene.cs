@@ -29,16 +29,18 @@ public class TrackEditorScene : Scene
 
     void SetEditor(Editor editor)
     {
+        _editor?.Dispose();
         _editor = editor;
-        _editor.Init();
     }
-    private void MainMenuBar(ref Project? project)
+    private bool MainMenuBar(ref Project? project)
     {
-        if (project is null) return;
+        bool isActive = false;
+        if (project is null) return false;
         if (ImGui.BeginMainMenuBar())
         {
             if (ImGui.BeginMenu("File"))
             {
+                isActive |= true;
                 if (ImGui.MenuItem("Save Project"))
                 {
                     var name = new string(project.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray());
@@ -73,15 +75,20 @@ public class TrackEditorScene : Scene
                 }
                 ImGui.Separator();
 
-                if (ImGui.MenuItem("Export Rom"))
+                if (ImGui.MenuItem("Create Rom"))
                 {
-                    var name = new string(project.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray());
-                    if (string.IsNullOrWhiteSpace(name)) name = "mksc_hack";
-                    var status = Nfd.SaveDialog(out var path, MainMenu.ProjectFilter, name + ".gba");
-                    if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
+                    var openStatus = Nfd.OpenDialog(out var romPath, CreateProject.RomFilter, null);
+                    if (openStatus == NfdStatus.Ok && !string.IsNullOrEmpty(romPath))
                     {
-                        if (_currentTrack != null) _projectTrack?.SaveTrackData(_currentTrack);
-                        project.Save(path);
+                        var name = new string(project.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray());
+                        if (string.IsNullOrWhiteSpace(name)) name = "mksc_hack";
+                        var status = Nfd.SaveDialog(out var savePath, CreateProject.RomFilter, name + ".gba");
+                        if (status == NfdStatus.Ok && !string.IsNullOrEmpty(savePath))
+                        {
+                            File.Copy(romPath, savePath, true);
+                            using var fileStream = File.Open(savePath, FileMode.Open);
+                            project.ToRom(fileStream);
+                        }
                     }
                 }
 
@@ -93,16 +100,18 @@ public class TrackEditorScene : Scene
                 ImGui.EndMenu();
             }
 
-            TrackSelectorMenu(project);
+            isActive |= TrackSelectorMenu(project);
 
-            ModeSelector();
+            isActive |= ModeSelector();
             
             ImGui.EndMainMenuBar();
         }
+
+        return isActive;
     }
 
     private EditMode _mode;
-    void ModeSelector()
+    private bool ModeSelector()
     {
         var windowPos = ImGui.GetWindowPos();
         var windowSize = ImGui.GetWindowSize();
@@ -132,20 +141,22 @@ public class TrackEditorScene : Scene
             _mode = EditMode.Graphics;
         } 
         ImGui.EndDisabled();
-
+        return false;
     }
-    private void TrackSelectorMenu(Project? project)
+    private bool TrackSelectorMenu(Project? project)
     {
         if (project is null)
         {
             ImGui.BeginDisabled();
             if (ImGui.BeginMenu("Track")) ImGui.EndMenu();
             ImGui.EndDisabled();
-            return;
+            return false;
         }
-        
+
+        bool isActive = false;
         if (ImGui.BeginMenu("Track"))
         {
+            isActive = true;
             if (ImGui.BeginMenu("Load"))
             {
                 foreach (var cup in project.Config.Cups)
@@ -171,15 +182,18 @@ public class TrackEditorScene : Scene
             }
             ImGui.EndMenu();
         }
+
+        return isActive;
     }
     public override void Update(ref Project? project)
     {
-        MainMenuBar(ref project);
-        if (_editor is not null) _editor.Update();
+        bool hasFocus = MainMenuBar(ref project);
+        _editor?.Update(!hasFocus);
     }
 
     public override void Dispose()
     {
-        if (_view is not null) _view.Dispose();
+        _view?.Dispose();
+        _editor?.Dispose();
     }
 }

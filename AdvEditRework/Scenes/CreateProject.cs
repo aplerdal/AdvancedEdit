@@ -9,7 +9,7 @@ namespace AdvEditRework.Scenes;
 
 public class CreateProject : Scene
 {
-    private static readonly Dictionary<string, string> RomFilter = new() { { "MKSC Rom", "gba" }, { "All files", "*" } };
+    public static readonly Dictionary<string, string> RomFilter = new() { { "MKSC Rom", "gba" }, { "All files", "*" } };
     private string _path = string.Empty;
     private string _name = string.Empty;
     public override void Init(ref Project? project)

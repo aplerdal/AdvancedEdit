@@ -24,28 +24,25 @@ public class AiEditor : Editor
 {
     public readonly TrackView View;
     public readonly UndoManager UndoManager = new();
-    private Texture2D _shapeIcons;
-    private Texture2D _zoneIcons;
+    private readonly Texture2D _shapeIcons;
+    private readonly Texture2D _zoneIcons;
 
     private AiDrag? _drag;
     private AiZone? _selectedZone;
-    private bool _pannelFocused = false;
+    private bool _panelFocused = false;
     private bool _resetConfirmationShown = false;
 
     public Vector2 MouseAiBlockPos => (View.MouseTilePos / 2).ToVec2I().AsVector2();
     public AiEditor(TrackView view)
     {
         View = view;
-    }
-    public override void Init()
-    {
         View.DrawInTrack = TrackDraw;
         _shapeIcons = Program.TextureManager.GetTexture("shapes.png");
         _zoneIcons = Program.TextureManager.GetTexture("zoneIcons.png");
         Gui.SetFontOpenSans();
     }
 
-    public override void Update()
+    public override void Update(bool hasFocus)
     {
         View.Draw();
         UpdatePanel();
@@ -162,7 +159,7 @@ public class AiEditor : Editor
             ShapeSelector(pos, panelWidth - 12 * scale);
         }
 
-        _pannelFocused = Raylib.CheckCollisionPointRec(mousePos, panelRect);
+        _panelFocused = Raylib.CheckCollisionPointRec(mousePos, panelRect);
     }
 
     void CheckUndo()
@@ -175,10 +172,10 @@ public class AiEditor : Editor
 
     void TrackDraw()
     {
-        var hoveredZone = _drag is not null ? _drag.Zone : (_pannelFocused || _resetConfirmationShown ? null : GetHoveredZone());
+        var hoveredZone = _drag is not null ? _drag.Zone : (_panelFocused || _resetConfirmationShown ? null : GetHoveredZone());
         var handle = hoveredZone?.GetResizeHandle(View.MouseTilePos) ?? DragHandle.None;
         DrawZones(hoveredZone);
-        if (Raylib.IsMouseButtonPressed(MouseButton.Left) && hoveredZone == null && !(_pannelFocused || _resetConfirmationShown) && _selectedZone != null)
+        if (Raylib.IsMouseButtonPressed(MouseButton.Left) && hoveredZone == null && !(_panelFocused || _resetConfirmationShown) && _selectedZone != null)
         {
             _selectedZone = null;
         }
@@ -382,5 +379,9 @@ public class AiEditor : Editor
                 }
             }
             );
+    }
+    public override void Dispose()
+    {
+        //
     }
 }

@@ -10,11 +10,13 @@ public class Eyedropper : MapEditorTool
     public override void Update(MapEditor editor)
     {
         Vector2 hoveredTile = editor.View.MouseTilePos;
-        if (!editor.View.MouseOnTrack || !editor.MouseOverMap) return;
+        if (!editor.View.MouseOnTrack || !editor.MouseOverMap || !editor.HasFocus) return;
         
         if (ImGui.IsMouseDown(ImGuiMouseButton.Left))
         {
             editor.SelectedTile = editor.View.Track.Tilemap[hoveredTile];
+            // TODO: Add auto tool swap setting
+            editor.SetTool(MapEditorToolType.Draw);
         }
         Raylib.DrawRectangleLinesEx(new Rectangle(editor.View.MouseTilePos * 8 - Vector2.One, new(10)), 1, Color.White);
     }
