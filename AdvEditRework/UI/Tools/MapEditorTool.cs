@@ -4,5 +4,5 @@ namespace AdvEditRework.UI.Tools;
 
 public abstract class MapEditorTool
 {
-    public abstract void Update(MapEditor editor);
+    public abstract void Update(IToolEditable editor);
 }

@@ -11,44 +11,47 @@ namespace AdvEditRework.UI.Tools;
 
 public class DrawTool : MapEditorTool
 {
-    private int _radius = 11;
-    private readonly List<TileEntry> _drawnTiles = new();
+    private int _radius = 1;
+    private readonly List<CellEntry> _drawnCells = new();
 
-    public override void Update(MapEditor editor)
+    public override void Update(IToolEditable editor)
     {
-        var view = editor.View;
-        if (!editor.MouseOverMap || !editor.HasFocus || !editor.SelectedTile.HasValue) return;
+        if (!editor.ViewportHovered || !editor.Focused || !editor.ActiveIndex.HasValue) return;
 
-        var tile = editor.SelectedTile.Value;
-        var drawPoints = GetCirclePoints(view.MouseTilePos, _radius);
+        var tile = editor.ActiveIndex.Value;
+        var drawPoints = GetCirclePoints(editor.CellMousePos, _radius);
         PaletteShader.Begin();
         foreach (var point in drawPoints)
         {
-            Raylib.DrawTextureRec(view.Tileset, Extensions.GetTileRect(tile, 16), point * 8, Color.White);
+            editor.DrawCell(point, tile, Color.White);
+        }
+
+        foreach (var cell in _drawnCells)
+        {
+            editor.DrawCell(cell.Position, cell.Id, Color.White);
         }
 
         PaletteShader.End();
-        // Raylib.DrawRectangleLinesEx(new Rectangle(view.MouseTilePos * 8 - Vector2.One, new(8 + 2)), 1, Color.White);
 
         if (Raylib.IsMouseButtonDown(MouseButton.Left))
         {
-            if (view.MouseOnTrack)
+            if (editor.ViewportHovered)
             {
                 foreach (var point in drawPoints)
                 {
-                    var entry = new TileEntry(point, tile);
-                    if (!_drawnTiles.Contains(entry) && view.PointOnTrack(point))
+                    var entry = new CellEntry(point, tile);
+                    if (!_drawnCells.Contains(entry) && editor.ValidCell(point))
                     {
-                        view.DrawTile(entry.Position, entry.Tile);
-                        _drawnTiles.Add(entry);
+                        editor.DrawCell(entry.Position, entry.Id, Color.White);
+                        _drawnCells.Add(entry);
                     }
                 }
             }
         }
-        else if (_drawnTiles.Count > 0)
+        else if (_drawnCells.Count > 0)
         {
-            editor.UndoManager.Push(view.SetTilesUndoable(_drawnTiles));
-            _drawnTiles.Clear();
+            editor.PushUndoable(editor.SetCellsUndoable(_drawnCells));
+            _drawnCells.Clear();
         }
     }
 
@@ -58,7 +61,7 @@ public class DrawTool : MapEditorTool
         List<Vector2> points = new();
         for (int y = -radius; y <= radius; y++)
         for (int x = -radius; x <= radius; x++)
-            if (x * x + y * y <= radius)
+            if (x * x + y * y <= radius * radius)
                 points.Add(center + new Vector2(x, y));
         return points;
     }

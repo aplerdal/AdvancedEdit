@@ -10,22 +10,21 @@ public class RectangleTool : MapEditorTool
     private bool _dragging;
     private Vector2 _start;
 
-    public override void Update(MapEditor editor)
+    public override void Update(IToolEditable editor)
     {
-        if (editor.SelectedTile is null || !editor.HasFocus) return;
-        var view = editor.View;
+        if (!editor.ActiveIndex.HasValue || !editor.Focused) return;
+        
         if (Raylib.IsMouseButtonDown(MouseButton.Left))
         {
-            var trackSize = new Vector2(view.Track.Config.Size.X, view.Track.Config.Size.Y) * 128 - Vector2.One;
-            if (!_dragging && editor.MouseOverMap)
+            if (!_dragging && editor.ViewportHovered)
             {
                 _dragging = true;
-                _start = Vector2.Clamp(view.MouseTilePos, Vector2.Zero, trackSize);
+                _start = Vector2.Clamp(editor.CellMousePos, Vector2.Zero, editor.GridSize - Vector2.One);
             }
 
             if (!_dragging) return;
             var p1 = _start;
-            var p2 = Vector2.Clamp(view.MouseTilePos, Vector2.Zero, trackSize);
+            var p2 = Vector2.Clamp(editor.CellMousePos, Vector2.Zero, editor.GridSize - Vector2.One);
             var min = new Vector2(Math.Min(p1.X, p2.X), Math.Min(p1.Y, p2.Y));
             var max = new Vector2(Math.Max(p1.X, p2.X) + 1, Math.Max(p1.Y, p2.Y) + 1);
             var selRect = new Rectangle(min * 8, (max - min) * 8);
@@ -35,12 +34,11 @@ public class RectangleTool : MapEditorTool
         {
             _dragging = false;
             var p1 = _start;
-            var trackSize = new Vector2(view.Track.Config.Size.X, view.Track.Config.Size.Y) * 128 - Vector2.One;
-            var p2 = Vector2.Clamp(view.MouseTilePos, Vector2.Zero, trackSize);
+            var p2 = Vector2.Clamp(editor.CellMousePos, Vector2.Zero, editor.GridSize - Vector2.One);
             var min = new Vector2(Math.Min(p1.X, p2.X), Math.Min(p1.Y, p2.Y));
             var max = new Vector2(Math.Max(p1.X, p2.X) + 1, Math.Max(p1.Y, p2.Y) + 1);
             var selRect = new Rectangle(min, max - min);
-            editor.UndoManager.Push(editor.View.SetTilesUndoable(selRect, editor.SelectedTile.Value));
+            editor.PushUndoable(editor.SetCellsUndoable(selRect, editor.ActiveIndex.Value));
         }
     }
 }

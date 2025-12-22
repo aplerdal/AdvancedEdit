@@ -7,25 +7,28 @@ namespace AdvEditRework.UI.Tools;
 
 public class StampTool : MapEditorTool
 {
-    public override void Update(MapEditor editor)
+    public override void Update(IToolEditable editor)
     {
-        var view = editor.View;
+        if (!editor.Focused || !editor.ViewportHovered) return;
+        
         if (editor.Stamp is not null)
         {
             PaletteShader.Begin();
             foreach (var tile in editor.Stamp)
-                Raylib.DrawTextureRec(view.Tileset, Extensions.GetTileRect(tile.Tile, 16), 8 * (view.MouseTilePos + tile.Position), Color.White with { A = 192 });
+                editor.DrawCell(editor.CellMousePos + tile.Position, tile.Id, Color.White with { A = 192 });
             PaletteShader.End();
 
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
-                var offsetEntries = ((TileEntry[])editor.Stamp.Clone()).ToList();
-                for (var i = 0; i < offsetEntries.Count; i++)
+                List<CellEntry> offset = new List<CellEntry>();
+                
+                foreach (var entry in editor.Stamp)
                 {
-                    offsetEntries[i] = offsetEntries[i] with { Position = view.MouseTilePos + offsetEntries[i].Position };
+                    if (editor.ValidCell(editor.CellMousePos + entry.Position))
+                        offset.Add(entry with { Position = editor.CellMousePos + entry.Position });
                 }
 
-                editor.UndoManager.Push(editor.View.SetTilesUndoable(offsetEntries));
+                editor.PushUndoable(editor.SetCellsUndoable(offset));
             }
         }
     }

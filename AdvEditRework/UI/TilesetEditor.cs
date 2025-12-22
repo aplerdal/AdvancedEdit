@@ -59,7 +59,7 @@ public class TilesetEditor : IDisposable
             PaletteShader.End();
             if (hasFocus)
             {
-                var viewportRect = new Rectangle(Vector2.Zero, _viewport.Texture.Width, _viewport.Texture.Height);
+                var viewportRect = new Rectangle(position, _viewport.Texture.Width, _viewport.Texture.Height);
                 var mousePos = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition(), _viewCamera) - position / _viewCamera.Zoom;
                 var hovered = Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), viewportRect);
                 if (hovered)
@@ -86,13 +86,14 @@ public class TilesetEditor : IDisposable
 
     private bool _isPanning;
     private Vector2 _lastMousePosition = Vector2.Zero;
+
     void UpdateCamera(Vector2 viewportPos)
     {
         var mouseOffs = viewportPos / _viewCamera.Zoom;
         var viewportRect = new Rectangle(Vector2.Zero, _viewport.Texture.Width, _viewport.Texture.Height);
 
         var hovered = Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), viewportRect);
-        
+
         float wheel = Raylib.GetMouseWheelMove();
         if (wheel != 0.0f && hovered)
         {
@@ -121,6 +122,7 @@ public class TilesetEditor : IDisposable
             _viewCamera.Target += delta;
             _lastMousePosition = currentMousePosition;
         }
+
         // Limit camera position to size of tileset
         // First, make sure it can all fit with current zoom level
         Debug.Assert(_texture.Width == _texture.Height); // Assuming square texture

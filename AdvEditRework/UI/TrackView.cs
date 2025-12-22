@@ -17,8 +17,6 @@ public enum EditMode
     Graphics,
 }
 
-public record struct TileEntry(Vector2 Position, byte Tile);
-
 public class TrackView : IDisposable
 {
     public Texture2D Tileset;
@@ -177,7 +175,7 @@ public class TrackView : IDisposable
         EndTileMode();
     }
 
-    public void SetTiles(Rectangle area, byte tile)
+    private void SetTiles(Rectangle area, byte tile)
     {
         BeginTileMode();
         for (var y = area.Y; y < area.Y + area.Height; y++)
@@ -186,18 +184,18 @@ public class TrackView : IDisposable
         EndTileMode();
     }
 
-    public void SetTiles(List<TileEntry> tiles)
+    private void SetTiles(List<CellEntry> tiles)
     {
         BeginTileMode();
         foreach (var entry in tiles)
         {
-            DrawSetTile(entry.Position, entry.Tile);
+            DrawSetTile(entry.Position, entry.Id);
         }
 
         EndTileMode();
     }
 
-    public void SetTiles(byte[,] tiles, Vector2 position)
+    private void SetTiles(byte[,] tiles, Vector2 position)
     {
         BeginTileMode();
         for (var y = 0; y < tiles.GetLength(1); y++)
@@ -206,7 +204,7 @@ public class TrackView : IDisposable
         EndTileMode();
     }
 
-    public void SetTiles(HashSet<Vector2> positions, byte tile)
+    private void SetTiles(HashSet<Vector2> positions, byte tile)
     {
         BeginTileMode();
         foreach (var position in positions)
@@ -217,11 +215,11 @@ public class TrackView : IDisposable
     public UndoActions SetTilesUndoable(HashSet<Vector2> positions, byte tile)
     {
         var positionsClone = new HashSet<Vector2>(positions);
-        var oldTiles = new List<TileEntry>(positions.Count);
+        var oldTiles = new List<CellEntry>(positions.Count);
         BeginTileMode();
         foreach (var pos in positions)
         {
-            oldTiles.Add(new TileEntry(pos, Track.Tilemap[pos]));
+            oldTiles.Add(new CellEntry(pos, Track.Tilemap[pos]));
             DrawSetTile(pos, tile);
         }
 
@@ -229,19 +227,24 @@ public class TrackView : IDisposable
         return new UndoActions(() => SetTiles(positionsClone, tile), () => SetTiles(oldTiles));
     }
 
-    public UndoActions SetTilesUndoable(List<TileEntry> tiles)
+    public UndoActions SetTilesUndoable(List<CellEntry> tiles)
     {
-        var tilesClone = new List<TileEntry>(tiles);
-        var oldTiles = new List<TileEntry>(tiles.Count);
+        var tilesClone = new List<CellEntry>(tiles);
+        var oldTiles = new List<CellEntry>(tiles.Count);
         BeginTileMode();
         foreach (var entry in tiles)
         {
-            oldTiles.Add(entry with { Tile = Track.Tilemap[entry.Position] });
-            DrawSetTile(entry.Position, entry.Tile);
+            oldTiles.Add(entry with { Id = Track.Tilemap[entry.Position] });
+            DrawSetTile(entry.Position, entry.Id);
         }
 
         EndTileMode();
         return new UndoActions(() => SetTiles(tilesClone), () => SetTiles(oldTiles));
+    }
+
+    public UndoActions SetTilesUndoable(System.Drawing.Rectangle area, byte tile)
+    {
+        throw new NotImplementedException();
     }
 
     public UndoActions SetTilesUndoable(Rectangle area, byte tile)

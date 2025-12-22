@@ -1,4 +1,5 @@
 using System.Numerics;
+using AdvancedLib.RaylibExt;
 using AdvancedLib.Serialization.AI;
 using AdvEditRework.DearImGui;
 using AdvEditRework.Shaders;
@@ -12,27 +13,46 @@ namespace AdvEditRework.UI.Editors;
 public enum MapEditorToolType
 {
     Draw,
-    Erase,
     Select,
     Eyedropper,
     Rectangle,
     Bucket,
     Stamp,
-    Wand,
 }
 
-public class MapEditor : Editor
+public class MapEditor : Editor, IToolEditable
 {
     private MapEditorToolType _activeToolType = MapEditorToolType.Draw;
     public readonly UndoManager UndoManager = new();
     public readonly TrackView View;
     private readonly Texture2D _iconAtlas;
-    private readonly MapEditorTool[] _tools = [new DrawTool(), new DrawTool(), new SelectionTool(), new Eyedropper(), new RectangleTool(), new BucketTool(), new StampTool(), new DrawTool()];
-    public bool HasFocus { get; set; }
-    public byte? SelectedTile { get; set; } = 0;
-    public TileEntry[]? Stamp { get; set; }
+    private readonly MapEditorTool[] _tools = [new DrawTool(), new SelectionTool(), new Eyedropper(), new RectangleTool(), new BucketTool(), new StampTool()];
+    public bool Focused { get; set; }
+    public byte? ActiveIndex { get; set; } = 0;
 
-    public bool MouseOverMap => !((Raylib.GetMousePosition().Y <= ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2) ||
+    public Vector2 CellMousePos => View.MouseTilePos;
+
+    public Vector2 GridSize => new Vector2(View.Track.Config.Size.X, View.Track.Config.Size.Y) * 128;
+
+    public void DrawCell(Vector2 position, int id, Color color)
+    {
+        Raylib.DrawTextureRec(View.Tileset, Extensions.GetTileRect(id, 16), position * 8, color);
+    }
+    
+    public bool ValidCell(Vector2 position) => View.PointOnTrack(position);
+    public UndoActions SetCellsUndoable(HashSet<Vector2> positions, byte cells) => View.SetTilesUndoable(positions, cells);
+    public UndoActions SetCellsUndoable(List<CellEntry> cells) => View.SetTilesUndoable(cells);
+    public UndoActions SetCellsUndoable(Rectangle area, byte cells) => View.SetTilesUndoable(area, cells);
+    public void PushUndoable(UndoActions action) => UndoManager.Push(action);
+    public byte GetCell(Vector2 position) => View.Track.Tilemap[position];
+    public void OutlineCell(Vector2 position, Color color)
+    {
+        Raylib.DrawRectangleLinesEx(new Rectangle(position * 8 - Vector2.One, new(10)), 1, color);
+    }
+
+    public CellEntry[]? Stamp { get; set; }
+
+    public bool ViewportHovered => !((Raylib.GetMousePosition().Y <= ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2) ||
                                   (Raylib.GetMousePosition().X >= Raylib.GetRenderWidth() - Settings.Shared.UIScale * 262));
 
     public MapEditor(TrackView view)
@@ -45,7 +65,7 @@ public class MapEditor : Editor
 
     public override void Update(bool hasFocus)
     {
-        HasFocus = hasFocus;
+        Focused = hasFocus;
         View.Draw();
         UpdateUI();
     }
@@ -80,7 +100,7 @@ public class MapEditor : Editor
         var optionsPos = panelRect.Position + new Vector2(3 * scale, 16 * 8 * 2 * scale + 6 * scale);
         var optionsRect = new Rectangle(optionsPos, panelWidth - 6 * scale, panelRect.Size.Y - optionsPos.Y - 3);
         ToolPicker(optionsPos, panelWidth - 6 * scale);
-        HasFocus = Raylib.CheckCollisionPointRec(mousePos, panelRect);
+        Focused = Raylib.CheckCollisionPointRec(mousePos, panelRect);
     }
 
     void UpdateTilePicker(Vector2 position)
@@ -91,9 +111,9 @@ public class MapEditor : Editor
         var tilesetRect = new Rectangle(position, new Vector2(16 * tileSize));
         Raylib.DrawTextureEx(View.Tileset, position, 0.0f, scale, Color.White);
         PaletteShader.End();
-        if (SelectedTile.HasValue)
+        if (ActiveIndex.HasValue)
         {
-            var tilePos = new Vector2((int)(SelectedTile.Value % 16), (int)(SelectedTile.Value / 16));
+            var tilePos = new Vector2((int)(ActiveIndex.Value % 16), (int)(ActiveIndex.Value / 16));
             var selectedTileRect = new Rectangle(tilesetRect.Position + tilePos * tileSize, new Vector2(tileSize));
             Raylib.DrawRectangleLinesEx(selectedTileRect, 1 * scale, Color.White);
         }
@@ -110,7 +130,7 @@ public class MapEditor : Editor
             Raylib.DrawRectangleLinesEx(hoverTileRect, 2 * scale, Color.White);
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
-                SelectedTile = (byte)(tilePosition.X + 16 * tilePosition.Y);
+                ActiveIndex = (byte)(tilePosition.X + 16 * tilePosition.Y);
             }
         }
     }

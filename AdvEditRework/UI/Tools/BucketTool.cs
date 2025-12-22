@@ -7,20 +7,19 @@ namespace AdvEditRework.UI.Tools;
 
 public class BucketTool : MapEditorTool
 {
-    public override void Update(MapEditor editor)
+    public override void Update(IToolEditable editor)
     {
-        var view = editor.View;
-        if (!editor.MouseOverMap || !editor.HasFocus || !editor.SelectedTile.HasValue) return;
+        if (!editor.ViewportHovered || !editor.Focused || !editor.ActiveIndex.HasValue) return;
 
-        Vector2 hoveredTile = editor.View.MouseTilePos;
-        var track = editor.View.Track;
-        var tile = editor.SelectedTile.Value;
+        Vector2 hoveredTile = editor.CellMousePos;
+        var tile = editor.ActiveIndex.Value;
         if (Raylib.IsMouseButtonPressed(MouseButton.Left))
         {
             // Flood fill
-            var action = FastFloodFill(editor, hoveredTile, tile);
-            if (action is not null)
-                editor.UndoManager.Push(action);
+            // TODO
+            // var action = FastFloodFill(editor, hoveredTile, tile);
+            // if (action is not null)
+            //     editor.UndoManager.Push(action);
         }
     }
 
