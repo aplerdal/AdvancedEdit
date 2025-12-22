@@ -3,14 +3,12 @@ using System.Numerics;
 using AdvancedLib.Graphics;
 using AdvancedLib.RaylibExt;
 using AdvEditRework.Shaders;
-using AdvEditRework.UI.Editors;
 using AdvEditRework.UI.Tools;
 using AdvEditRework.UI.Undo;
 using AuroraLib.Core;
-using Hexa.NET.ImGui;
 using Raylib_cs;
 
-namespace AdvEditRework.UI;
+namespace AdvEditRework.UI.Editors;
 
 public class TilesetEditor : IDisposable, IToolEditable
 {
@@ -32,6 +30,7 @@ public class TilesetEditor : IDisposable, IToolEditable
     public byte? ActiveIndex { get; set; } = 0;
     public bool ViewportHovered => Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), new Rectangle(_position, _viewport.Texture.Width, _viewport.Texture.Height));
     public bool Focused { get; private set; }
+
     public Vector2 CellMousePos
     {
         get
@@ -80,6 +79,7 @@ public class TilesetEditor : IDisposable, IToolEditable
             UpdateCamera();
             CheckKeybinds();
         }
+
         Raylib.BeginTextureMode(_viewport);
         Raylib.ClearBackground(Color.Black);
         Raylib.BeginMode2D(_viewCamera);

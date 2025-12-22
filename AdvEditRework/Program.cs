@@ -1,12 +1,8 @@
-﻿using System.Numerics;
-using System.Resources;
-using System.Runtime.InteropServices;
-using AdvancedLib.Project;
+﻿using AdvancedLib.Project;
 using AdvEditRework.DearImGui;
 using AdvEditRework.Resources;
 using AdvEditRework.Scenes;
 using AdvEditRework.Shaders;
-using AdvEditRework.UI;
 using Hexa.NET.ImGui;
 using Raylib_cs;
 
@@ -15,7 +11,7 @@ namespace AdvEditRework;
 static class Program
 {
     private static Scene _scene = new MainMenu();
-    public static TextureManager TextureManager;
+    public static TextureManager TextureManager = null!;
     public static bool ShouldClose { get; set; } = false;
 
     public static void SetScene(Scene scene)
@@ -27,11 +23,12 @@ static class Program
 
     private static Project? _project;
 
-    static void Main(string[] args)
+    static void Main()
     {
 #if !DEBUG
             Raylib.SetTraceLogLevel(TraceLogLevel.Error);
 #endif
+        // Setup Raylib
         Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
         Raylib.InitWindow(800, 600, "AdvEditRework");
         Raylib.SetTargetFPS(144);
@@ -39,7 +36,8 @@ static class Program
 
         PaletteShader.Load();
 
-        ImGuiRenderer.Setup(false, false);
+        ImGuiRenderer.Setup(false);
+        // Calculate UI scale based on DPI
         var dpiScale = Raylib.GetWindowScaleDPI();
         var settings = Settings.Shared;
         settings.UIScale = (int)Math.Round((dpiScale.X + dpiScale.Y) / 2);
@@ -47,8 +45,7 @@ static class Program
         var imFont = ImGui.GetIO().Fonts.AddFontFromFileTTF("Resources/OpenSans.ttf", 16 * settings.UIScale);
         ImGuiRenderer.ReloadFonts();
         ImGui.GetIO().FontDefault = imFont;
-        Style.SetupImGuiStyle();
-
+        
         _scene.Init(ref _project);
         while (!(Raylib.WindowShouldClose() || ShouldClose))
         {

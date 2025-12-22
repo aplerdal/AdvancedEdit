@@ -1,6 +1,5 @@
 using System.Numerics;
 using AdvancedLib.RaylibExt;
-using AdvancedLib.Serialization.AI;
 using AdvEditRework.DearImGui;
 using AdvEditRework.Shaders;
 using AdvEditRework.UI.Tools;
@@ -102,7 +101,6 @@ public class MapEditor : Editor, IToolEditable
         Raylib.DrawRectangleLinesEx(panelRect, 1 * scale, ImHelper.Color(ImGuiCol.Border));
         UpdateTilePicker(panelRect.Position + new Vector2(3 * scale));
         var optionsPos = panelRect.Position + new Vector2(3 * scale, 16 * 8 * 2 * scale + 6 * scale);
-        var optionsRect = new Rectangle(optionsPos, panelWidth - 6 * scale, panelRect.Size.Y - optionsPos.Y - 3);
         ToolPicker(optionsPos, panelWidth - 6 * scale);
         Focused = Raylib.CheckCollisionPointRec(mousePos, panelRect);
     }

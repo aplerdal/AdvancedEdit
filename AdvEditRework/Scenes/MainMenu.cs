@@ -1,8 +1,7 @@
-using System.Diagnostics;
 using System.Numerics;
-using System.Runtime.InteropServices;
 using AdvancedLib.Project;
 using AdvEditRework.UI;
+using AdvEditRework.UI.Editors;
 using NativeFileDialogs.Net;
 using Raylib_cs;
 
@@ -24,7 +23,7 @@ public class MainMenu : Scene
         Gui.TitleBox("Start", new(256.0f, 512.0f));
         if (Gui.LabelButton((char)MapEditIcon.FileOpen + "Open Project"))
         {
-            var status = Nfd.OpenDialog(out var path, ProjectFilter, null);
+            var status = Nfd.OpenDialog(out var path, ProjectFilter);
             if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
             {
                 project = Project.Unpack(path);

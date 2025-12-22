@@ -1,6 +1,5 @@
 using System.Numerics;
 using AdvEditRework.UI.Editors;
-using Hexa.NET.ImGui;
 using Raylib_cs;
 
 namespace AdvEditRework.UI.Tools;
@@ -13,7 +12,7 @@ public class RectangleTool : MapEditorTool
     public override void Update(IToolEditable editor)
     {
         if (!editor.ActiveIndex.HasValue || !editor.Focused) return;
-        
+
         if (Raylib.IsMouseButtonDown(MouseButton.Left))
         {
             if (!_dragging)

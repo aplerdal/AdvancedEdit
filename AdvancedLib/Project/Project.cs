@@ -1,9 +1,6 @@
-using System.Diagnostics;
 using System.Formats.Tar;
-using System.Text.Json;
 using AdvancedLib.Game;
 using AdvancedLib.Serialization;
-using AdvEditRework;
 using AuroraLib.Core.IO;
 using MessagePack;
 
@@ -63,7 +60,7 @@ public class Project(string name)
             stream.Seek(RomData.Cups.Address + headerIdx * 4, SeekOrigin.Begin);
             stream.Write(headerIdx);
             stream.Seek(RomData.TrackOffsets.Address + headerIdx * 4, SeekOrigin.Begin);
-            stream.Write((uint)((uint)trackAddress - RomData.TrackOffsets.Address));
+            stream.Write((uint)trackAddress - RomData.TrackOffsets.Address);
             stream.Seek(trackEnd, SeekOrigin.Begin);
             headerIdx++;
         }

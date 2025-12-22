@@ -114,18 +114,8 @@ public class AiZone : ISerializable, IEquatable<AiZone>
         }
     }
 
-    public bool Equals(AiZone other)
+    public bool Equals(AiZone? other)
     {
-        return Shape == other.Shape && X == other.X && Y == other.Y && Width == other.Width && Height == other.Height;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is AiZone other && Equals(other);
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine((int)Shape, X, Y, Width, Height);
+        return other != null && Shape == other.Shape && X == other.X && Y == other.Y && Width == other.Width && Height == other.Height;
     }
 }

@@ -104,32 +104,4 @@ public class OamAttribute : ISerializable, IEquatable<OamAttribute>
         if (ReferenceEquals(this, other)) return true;
         return YPosition == other.YPosition && ObjectMode == other.ObjectMode && GraphicsMode == other.GraphicsMode && Mosaic == other.Mosaic && Is8Bit == other.Is8Bit && SpriteShape == other.SpriteShape && XPosition == other.XPosition && AffineIndex == other.AffineIndex && HorizontalFlip == other.HorizontalFlip && VerticalFlip == other.VerticalFlip && SpriteSize == other.SpriteSize && TileIndex == other.TileIndex && Priority == other.Priority && Palette == other.Palette;
     }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj is null) return false;
-        if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != GetType()) return false;
-        return Equals((OamAttribute)obj);
-    }
-
-    public override int GetHashCode()
-    {
-        var hashCode = new HashCode();
-        hashCode.Add(YPosition);
-        hashCode.Add((int)ObjectMode);
-        hashCode.Add((int)GraphicsMode);
-        hashCode.Add(Mosaic);
-        hashCode.Add(Is8Bit);
-        hashCode.Add(SpriteShape);
-        hashCode.Add(XPosition);
-        hashCode.Add(AffineIndex);
-        hashCode.Add(HorizontalFlip);
-        hashCode.Add(VerticalFlip);
-        hashCode.Add(SpriteSize);
-        hashCode.Add(TileIndex);
-        hashCode.Add(Priority);
-        hashCode.Add(Palette);
-        return hashCode.ToHashCode();
-    }
 }

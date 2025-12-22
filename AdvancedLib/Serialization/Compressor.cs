@@ -7,8 +7,8 @@ namespace AdvancedLib.Serialization;
 
 public static class Compressor
 {
-    public static readonly LZ10 LZ10 = new() { LookAhead = false };
-    public const uint MaxPartSize = 4096;
+    private static readonly LZ10 LZ10 = new() { LookAhead = false };
+    private const uint MaxPartSize = 4096;
 
     public static void Decompress(Stream source, Stream destination) => LZ10.Decompress(source, destination);
 

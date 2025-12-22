@@ -1,5 +1,3 @@
-using AdvancedLib.RaylibExt;
-using AdvEditRework.Shaders;
 using AdvEditRework.UI.Editors;
 using Raylib_cs;
 
@@ -10,7 +8,7 @@ public class StampTool : MapEditorTool
     public override void Update(IToolEditable editor)
     {
         if (!editor.Focused || !editor.ViewportHovered) return;
-        
+
         if (editor.Stamp is not null)
         {
             foreach (var tile in editor.Stamp)
@@ -19,7 +17,7 @@ public class StampTool : MapEditorTool
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
                 List<CellEntry> offset = new List<CellEntry>();
-                
+
                 foreach (var entry in editor.Stamp)
                 {
                     if (editor.ValidCell(editor.CellMousePos + entry.Position))

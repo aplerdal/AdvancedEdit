@@ -1,6 +1,4 @@
 using System.Numerics;
-using AdvancedLib.RaylibExt;
-using AdvEditRework.Shaders;
 using AdvEditRework.UI.Editors;
 using Raylib_cs;
 
@@ -42,7 +40,7 @@ public class SelectionTool : MapEditorTool
             var stamp = new CellEntry[(int)selRect.Width * (int)selRect.Height];
             for (int y = 0; y < (int)selRect.Height; y++)
             for (int x = 0; x < (int)selRect.Width; x++)
-                stamp[y * (int)selRect.Width + x] = new CellEntry(new Vector2(x, y), editor.GetCell(new (x + selRect.X, y + selRect.Y)));
+                stamp[y * (int)selRect.Width + x] = new CellEntry(new Vector2(x, y), editor.GetCell(new(x + selRect.X, y + selRect.Y)));
             editor.Stamp = stamp;
             editor.SetTool(MapEditorToolType.Stamp);
         }

@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
 using AdvancedLib.Graphics;
-using AdvancedLib.Serialization.AI;
 using Raylib_cs;
 
 namespace AdvancedLib.RaylibExt;
@@ -15,7 +14,7 @@ public static class Extensions
         for (var i = 0; i < tileset.Length; i++)
         {
             var tile = tileset[i];
-            var tilePos = new Vector2((int)(i % width), (int)(i / width)) * Tile.Size;
+            var tilePos = new Vector2(i % width, (int)(i / width)) * Tile.Size;
             for (int y = 0; y < Tile.Size; y++)
             for (int x = 0; x < Tile.Size; x++)
             {

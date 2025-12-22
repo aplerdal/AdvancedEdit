@@ -25,18 +25,8 @@ public class ObjectPlacement : ISerializable, IEquatable<ObjectPlacement>
         stream.Write(Zone);
     }
 
-    public bool Equals(ObjectPlacement other)
+    public bool Equals(ObjectPlacement? other)
     {
-        return ID == other.ID && X == other.X && Y == other.Y && Zone == other.Zone;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is ObjectPlacement other && Equals(other);
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(ID, X, Y, Zone);
+        return other != null && ID == other.ID && X == other.X && Y == other.Y && Zone == other.Zone;
     }
 }

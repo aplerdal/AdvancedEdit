@@ -22,18 +22,8 @@ public class AiHeader : ISerializable, IEquatable<AiHeader>
         stream.Write(TargetsOffset);
     }
 
-    public bool Equals(AiHeader other)
+    public bool Equals(AiHeader? other)
     {
-        return ZoneCount == other.ZoneCount && ZonesOffset == other.ZonesOffset && TargetsOffset == other.TargetsOffset;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is AiHeader other && Equals(other);
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(ZoneCount, ZonesOffset, TargetsOffset);
+        return other != null && ZoneCount == other.ZoneCount && ZonesOffset == other.ZonesOffset && TargetsOffset == other.TargetsOffset;
     }
 }

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Numerics;
 using AdvancedLib.RaylibExt;
 using AdvancedLib.Serialization.AI;
@@ -30,7 +29,7 @@ public class AiEditor : Editor
 
     private AiDrag? _drag;
     private AiZone? _selectedZone;
-    private bool _panelFocused = false;
+    private bool _panelFocused;
     private bool _resetConfirmationShown = false;
 
     public Vector2 MouseAiBlockPos => (View.MouseTilePos / 2).ToVec2I().AsVector2();
@@ -285,16 +284,6 @@ public class AiEditor : Editor
     private void DrawZone(AiZone zone, Color color)
     {
         zone.Draw(color with { A = 255 });
-    }
-
-    private void ResetAi()
-    {
-        View.Track.Ai.Zones.Clear();
-        View.Track.Ai.TargetSets.Clear();
-        // Add default target sets. Possibly support more in the future?
-        View.Track.Ai.TargetSets.Add(new List<AiTarget>());
-        View.Track.Ai.TargetSets.Add(new List<AiTarget>());
-        View.Track.Ai.TargetSets.Add(new List<AiTarget>());
     }
 
     private UndoActions ModifyZoneShapeUndoable(AiZone zone, ZoneShape newShape)

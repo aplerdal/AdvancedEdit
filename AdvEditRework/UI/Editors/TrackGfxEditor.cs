@@ -1,9 +1,7 @@
 using System.Numerics;
 using AdvancedLib.Game;
 using AdvancedLib.Graphics;
-using AdvancedLib.RaylibExt;
 using AdvEditRework.DearImGui;
-using AdvEditRework.Shaders;
 using Hexa.NET.ImGui;
 using Raylib_cs;
 
@@ -46,7 +44,6 @@ public class TrackGfxEditor : Editor
 
     void GfxSelectorPanel(bool hasFocus)
     {
-        var scale = Settings.Shared.UIScale;
         var windowSize = new Vector2(Raylib.GetRenderWidth(), Raylib.GetRenderHeight());
         var menuBarHeight = ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2;
 

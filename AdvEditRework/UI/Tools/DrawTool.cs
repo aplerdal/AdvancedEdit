@@ -1,10 +1,5 @@
 using System.Numerics;
-using AdvancedLib.Game;
-using AdvancedLib.RaylibExt;
-using AdvEditRework.Shaders;
 using AdvEditRework.UI.Editors;
-using AdvEditRework.UI.Undo;
-using Hexa.NET.ImGui;
 using Raylib_cs;
 
 namespace AdvEditRework.UI.Tools;

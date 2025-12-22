@@ -1,4 +1,4 @@
-namespace AdvEditRework;
+namespace AdvancedLib;
 
 public static class Patcher
 {

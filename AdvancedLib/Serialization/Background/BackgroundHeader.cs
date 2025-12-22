@@ -59,14 +59,4 @@ public struct BackgroundHeader : ISerializable, IEquatable<BackgroundHeader>
     {
         return Size == other.Size && CompressionMode == other.CompressionMode && TilesetOffset == other.TilesetOffset && FrontTilemapOffset == other.FrontTilemapOffset && MiddleTilemapOffset == other.MiddleTilemapOffset && BackTilemapOffset == other.BackTilemapOffset && PaletteOffset == other.PaletteOffset;
     }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is BackgroundHeader other && Equals(other);
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine((int)Size, (int)CompressionMode, TilesetOffset, FrontTilemapOffset, MiddleTilemapOffset, BackTilemapOffset, PaletteOffset);
-    }
 }

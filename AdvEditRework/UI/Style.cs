@@ -1,5 +1,3 @@
-using System.Numerics;
-using Hexa.NET.ImGui;
 using Raylib_cs;
 
 namespace AdvEditRework.UI;
@@ -13,9 +11,4 @@ public class Style
     public Color BoxOutlineColor = new Color(63, 63, 80);
     public Color TextTint = Color.White;
     public Style Clone() => (Style)MemberwiseClone();
-
-    public static void SetupImGuiStyle()
-    {
-        var style = ImGui.GetStyle();
-    }
 }

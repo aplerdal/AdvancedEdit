@@ -4,7 +4,6 @@ using AdvancedLib.Game;
 using AdvancedLib.Project;
 using AdvEditRework.UI;
 using AdvEditRework.UI.Editors;
-using AdvEditRework.UI.Tools;
 using Hexa.NET.ImGui;
 using NativeFileDialogs.Net;
 
@@ -12,7 +11,6 @@ namespace AdvEditRework.Scenes;
 
 public class TrackEditorScene : Scene
 {
-    private bool _quitPopupOpen = true;
     private ProjectTrack? _projectTrack;
     private TrackView? _view;
     private Editor? _editor;
@@ -39,11 +37,12 @@ public class TrackEditorScene : Scene
     {
         bool isActive = false;
         if (project is null) return false;
+        
         if (ImGui.BeginMainMenuBar())
         {
             if (ImGui.BeginMenu("File"))
             {
-                isActive |= true;
+                isActive = true;
                 if (ImGui.MenuItem("Save Project"))
                 {
                     var name = new string(project.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray());
@@ -58,7 +57,7 @@ public class TrackEditorScene : Scene
 
                 if (ImGui.MenuItem("Open Project"))
                 {
-                    var status = Nfd.OpenDialog(out var path, MainMenu.ProjectFilter, null);
+                    var status = Nfd.OpenDialog(out var path, MainMenu.ProjectFilter);
                     if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
                     {
                         project = Project.Unpack(path);
@@ -81,10 +80,11 @@ public class TrackEditorScene : Scene
 
                 if (ImGui.MenuItem("Create Rom"))
                 {
+                    Debug.Assert(project != null);
                     // Save active track
                     if (_currentTrack is not null) _projectTrack?.SaveTrackData(_currentTrack);
-                    
-                    var openStatus = Nfd.OpenDialog(out var romPath, CreateProject.RomFilter, null);
+
+                    var openStatus = Nfd.OpenDialog(out var romPath, CreateProject.RomFilter);
                     if (openStatus == NfdStatus.Ok && !string.IsNullOrEmpty(romPath))
                     {
                         var name = new string(project.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray());
@@ -131,6 +131,7 @@ public class TrackEditorScene : Scene
         ImGui.SetCursorScreenPos(buttonPos);
         if (ImGui.MenuItem("Layout", "", _mode == EditMode.Map))
         {
+            Debug.Assert(_view != null);
             SetEditor(new MapEditor(_view));
             _mode = EditMode.Map;
         }
@@ -139,6 +140,7 @@ public class TrackEditorScene : Scene
         ImGui.SetCursorScreenPos(buttonPos);
         if (ImGui.MenuItem("AI Map", "", _mode == EditMode.Ai))
         {
+            Debug.Assert(_view != null);
             SetEditor(new AiEditor(_view));
             _mode = EditMode.Ai;
         }
@@ -147,6 +149,7 @@ public class TrackEditorScene : Scene
         ImGui.SetCursorScreenPos(buttonPos);
         if (ImGui.MenuItem("Graphics", "", _mode == EditMode.Graphics))
         {
+            Debug.Assert(_view != null);
             SetEditor(new TrackGfxEditor(_view.Track));
             _mode = EditMode.Graphics;
         }

@@ -1,17 +1,10 @@
 using System.Numerics;
-using System.Runtime.InteropServices;
-using Hexa.NET.ImGui;
 using Raylib_cs;
 
 namespace AdvEditRework;
 
 public static class FontLoader
 {
-    private static bool ColorEqual(Color color1, Color color2)
-    {
-        return (color1.R == color2.R) && (color1.G == color2.G) && (color1.B == color2.B) && (color1.A == color2.A);
-    }
-
     private const string CharMap =
         /*Latin   */" !\"#$%\'&()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[¥]^_`abcdefghijklmnopqrstuvwxyz{|}~ " +
         /*Hiragana*/"ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎをん" +
@@ -35,7 +28,7 @@ public static class FontLoader
         var rect = new Rectangle(0, 0, 8, 16);
         for (int i = 0; i < CharacterCount; i++)
         {
-            rect.Position = new Vector2(8 * (i % 32), 16 * (i / 32));
+            rect.Position = new Vector2(8 * (i % 32), 16 * (int)(i / 32));
             font.Glyphs[i].Value = CharMap[i];
             font.Recs[i] = rect;
             font.Glyphs[i].OffsetX = 0;
@@ -47,7 +40,7 @@ public static class FontLoader
         rect = new Rectangle(0, 0, 16, 16);
         for (int i = 0; i < IconCount; i++)
         {
-            rect.Position = new Vector2(16 * (i % 32), 16 * (i / 32) + 128);
+            rect.Position = new Vector2(16 * (i % 32), 16 * (int)(i / 32) + 128);
             font.Glyphs[CharacterCount + i].Value = CharMap[CharacterCount + i];
             font.Recs[CharacterCount + i] = rect;
             font.Glyphs[CharacterCount + i].OffsetX = 0;

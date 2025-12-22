@@ -1,10 +1,8 @@
 using System.Numerics;
 using AdvancedLib.Game;
-using AdvancedLib.Graphics;
 using AdvancedLib.RaylibExt;
 using AdvEditRework.Shaders;
 using AdvEditRework.UI.Editors;
-using AdvEditRework.UI.Tools;
 using AdvEditRework.UI.Undo;
 using Raylib_cs;
 
@@ -20,25 +18,22 @@ public enum EditMode
 public class TrackView : IDisposable
 {
     public Texture2D Tileset;
-    private Palette _palette;
-    private int[] _shaderPalette;
+    private readonly int[] _shaderPalette;
     public Camera2D Camera;
     public readonly Track Track;
     private RenderTexture2D _trackTexture;
     public Vector2 MouseWorldPos { get; private set; } = Vector2.Zero;
     public Vector2 MouseTilePos { get; private set; } = Vector2.Zero;
-    public bool MouseOnTrack => (MouseTilePos.X >= 0 && MouseTilePos.Y >= 0 && MouseTilePos.X < Track.Tilemap.Width && MouseTilePos.Y < Track.Tilemap.Height);
-
     public delegate void DrawCallback();
 
-    public DrawCallback DrawInTrack;
+    public DrawCallback? DrawInTrack;
 
     public TrackView(Track track)
     {
         Track = track;
         Tileset = track.Tileset.TilePaletteTexture(16, 16);
-        _palette = track.TilesetPalette;
-        _shaderPalette = _palette.ToIVec3();
+        var palette = track.TilesetPalette;
+        _shaderPalette = palette.ToIVec3();
         Camera = new Camera2D
         {
             Offset = new(0),
@@ -46,6 +41,7 @@ public class TrackView : IDisposable
             Rotation = 0.0f,
             Zoom = 1.0f
         };
+        DrawInTrack = null;
         RegenMapTextures();
     }
 
@@ -113,7 +109,7 @@ public class TrackView : IDisposable
             PaletteShader.Begin();
             Raylib.DrawTextureRec(_trackTexture.Texture, new Rectangle(0, 0, _trackTexture.Texture.Width, -_trackTexture.Texture.Height), new Vector2(0), Color.White);
             PaletteShader.End();
-            DrawInTrack.Invoke();
+            DrawInTrack?.Invoke();
         }
         Raylib.EndMode2D();
     }

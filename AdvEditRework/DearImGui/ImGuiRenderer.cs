@@ -24,33 +24,33 @@ namespace AdvEditRework.DearImGui
 
         private static ImGuiMouseCursor _currentMouseCursor = ImGuiMouseCursor.Count;
         private static Dictionary<ImGuiMouseCursor, MouseCursor> _mouseCursorMap = new Dictionary<ImGuiMouseCursor, MouseCursor>();
-        public static Texture2D _fontTexture;
+        private static Texture2D _fontTexture;
 
         private static Dictionary<KeyboardKey, ImGuiKey> _raylibKeyMap = new Dictionary<KeyboardKey, ImGuiKey>();
 
-        internal static bool LastFrameFocused = false;
+        private static bool _lastFrameFocused;
 
-        internal static bool LastControlPressed = false;
-        internal static bool LastShiftPressed = false;
-        internal static bool LastAltPressed = false;
-        internal static bool LastSuperPressed = false;
+        private static bool _lastControlPressed;
+        private static bool _lastShiftPressed;
+        private static bool _lastAltPressed;
+        private static bool _lastSuperPressed;
 
-        internal static bool IsControlDown()
+        public static bool IsControlDown()
         {
             return Raylib.IsKeyDown(KeyboardKey.RightControl) || Raylib.IsKeyDown(KeyboardKey.LeftControl);
         }
 
-        internal static bool IsShiftDown()
+        public static bool IsShiftDown()
         {
             return Raylib.IsKeyDown(KeyboardKey.RightShift) || Raylib.IsKeyDown(KeyboardKey.LeftShift);
         }
 
-        internal static bool IsAltDown()
+        public static bool IsAltDown()
         {
             return Raylib.IsKeyDown(KeyboardKey.RightAlt) || Raylib.IsKeyDown(KeyboardKey.LeftAlt);
         }
 
-        internal static bool IsSuperDown()
+        public static bool IsSuperDown()
         {
             return Raylib.IsKeyDown(KeyboardKey.RightSuper) || Raylib.IsKeyDown(KeyboardKey.LeftSuper);
         }
@@ -60,7 +60,7 @@ namespace AdvEditRework.DearImGui
         /// <summary>
         /// Callback for cases where the user wants to install additional fonts.
         /// </summary>
-        public static SetupUserFontsCallback SetupUserFonts = null;
+        public static readonly SetupUserFontsCallback? SetupUserFonts = null;
 
         /// <summary>
         /// Sets up ImGui, loads fonts and themes
@@ -90,11 +90,11 @@ namespace AdvEditRework.DearImGui
         {
             _mouseCursorMap = new Dictionary<ImGuiMouseCursor, MouseCursor>();
 
-            LastFrameFocused = Raylib.IsWindowFocused();
-            LastControlPressed = false;
-            LastShiftPressed = false;
-            LastAltPressed = false;
-            LastSuperPressed = false;
+            _lastFrameFocused = Raylib.IsWindowFocused();
+            _lastControlPressed = false;
+            _lastShiftPressed = false;
+            _lastAltPressed = false;
+            _lastSuperPressed = false;
 
             _fontTexture.Id = 0;
 
@@ -259,12 +259,12 @@ namespace AdvEditRework.DearImGui
             io.Fonts.SetTexID(new ImTextureID(_fontTexture.Id));
         }
 
-        unsafe internal static sbyte* rlImGuiGetClipText(IntPtr userData)
+        private static unsafe sbyte* RlImGuiGetClipText(IntPtr userData)
         {
             return Raylib.GetClipboardText();
         }
 
-        unsafe internal static void rlImGuiSetClipText(IntPtr userData, sbyte* text)
+        private static unsafe void RlImGuiSetClipText(IntPtr userData, sbyte* text)
         {
             Raylib.SetClipboardText(text);
         }
@@ -273,10 +273,10 @@ namespace AdvEditRework.DearImGui
 
         private unsafe delegate void SetClipTextCallback(IntPtr userData, sbyte* text);
 
-        private static GetClipTextCallback GetClipCallback = null!;
-        private static SetClipTextCallback SetClipCallback = null!;
+        private static GetClipTextCallback _getClipCallback = null!;
+        private static SetClipTextCallback _setClipCallback = null!;
 
-        public static bool LoadDefaultFont = true;
+        public static readonly bool LoadDefaultFont = true;
 
         /// <summary>
         /// End Custom initialization. Not needed if you call Setup. Only needed if you want to add custom setup code.
@@ -288,7 +288,7 @@ namespace AdvEditRework.DearImGui
 
             ImGui.SetCurrentContext(ImGuiContext);
 
-            var fonts = ImGui.GetIO().Fonts;
+            _ = ImGui.GetIO().Fonts;
 
             if (LoadDefaultFont)
                 ImGui.GetIO().Fonts.AddFontDefault();
@@ -306,14 +306,11 @@ namespace AdvEditRework.DearImGui
             io.MousePos.Y = 0;
 
             // copy/paste callbacks
-            unsafe
-            {
-                SetClipCallback = new SetClipTextCallback(rlImGuiSetClipText);
-                platformIO.PlatformSetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(SetClipCallback).ToPointer();
-
-                GetClipCallback = new GetClipTextCallback(rlImGuiGetClipText);
-                platformIO.PlatformGetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(GetClipCallback).ToPointer();
-            }
+            _setClipCallback = RlImGuiSetClipText;
+            platformIO.PlatformSetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(_setClipCallback).ToPointer();
+            
+            _getClipCallback = RlImGuiGetClipText;
+            platformIO.PlatformGetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(_getClipCallback).ToPointer();
 
             platformIO.PlatformClipboardUserData = IntPtr.Zero.ToPointer();
             ReloadFonts();
@@ -368,11 +365,11 @@ namespace AdvEditRework.DearImGui
 
             if ((io.ConfigFlags & ImGuiConfigFlags.NoMouseCursorChange) == 0)
             {
-                ImGuiMouseCursor imgui_cursor = ImGui.GetMouseCursor();
-                if (imgui_cursor != _currentMouseCursor || io.MouseDrawCursor)
+                ImGuiMouseCursor imguiCursor = ImGui.GetMouseCursor();
+                if (imguiCursor != _currentMouseCursor || io.MouseDrawCursor)
                 {
-                    _currentMouseCursor = imgui_cursor;
-                    if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor.None)
+                    _currentMouseCursor = imguiCursor;
+                    if (io.MouseDrawCursor || imguiCursor == ImGuiMouseCursor.None)
                     {
                         Raylib.HideCursor();
                     }
@@ -382,10 +379,10 @@ namespace AdvEditRework.DearImGui
 
                         if ((io.ConfigFlags & ImGuiConfigFlags.NoMouseCursorChange) == 0)
                         {
-                            if (!_mouseCursorMap.ContainsKey(imgui_cursor))
+                            if (!_mouseCursorMap.ContainsKey(imguiCursor))
                                 Raylib.SetMouseCursor(MouseCursor.Default);
                             else
-                                Raylib.SetMouseCursor(_mouseCursorMap[imgui_cursor]);
+                                Raylib.SetMouseCursor(_mouseCursorMap[imguiCursor]);
                         }
                     }
                 }
@@ -397,31 +394,31 @@ namespace AdvEditRework.DearImGui
             ImGuiIOPtr io = ImGui.GetIO();
 
             bool focused = Raylib.IsWindowFocused();
-            if (focused != LastFrameFocused)
+            if (focused != _lastFrameFocused)
                 io.AddFocusEvent(focused);
-            LastFrameFocused = focused;
+            _lastFrameFocused = focused;
 
 
             // handle the modifyer key events so that shortcuts work
             bool ctrlDown = IsControlDown();
-            if (ctrlDown != LastControlPressed)
+            if (ctrlDown != _lastControlPressed)
                 io.AddKeyEvent(ImGuiKey.ModCtrl, ctrlDown);
-            LastControlPressed = ctrlDown;
+            _lastControlPressed = ctrlDown;
 
             bool shiftDown = IsShiftDown();
-            if (shiftDown != LastShiftPressed)
+            if (shiftDown != _lastShiftPressed)
                 io.AddKeyEvent(ImGuiKey.ModShift, shiftDown);
-            LastShiftPressed = shiftDown;
+            _lastShiftPressed = shiftDown;
 
             bool altDown = IsAltDown();
-            if (altDown != LastAltPressed)
+            if (altDown != _lastAltPressed)
                 io.AddKeyEvent(ImGuiKey.ModAlt, altDown);
-            LastAltPressed = altDown;
+            _lastAltPressed = altDown;
 
             bool superDown = IsSuperDown();
-            if (superDown != LastSuperPressed)
+            if (superDown != _lastSuperPressed)
                 io.AddKeyEvent(ImGuiKey.ModSuper, superDown);
-            LastSuperPressed = superDown;
+            _lastSuperPressed = superDown;
 
             // get the pressed keys, they are in event order
             int keyId = Raylib.GetKeyPressed();
@@ -503,7 +500,7 @@ namespace AdvEditRework.DearImGui
         /// <summary>
         /// Starts a new ImGui Frame
         /// </summary>
-        /// <param name="dt">optional delta time, any value < 0 will use raylib GetFrameTime</param>
+        /// <param name="dt">optional delta time, any value less than 0 will use raylib GetFrameTime</param>
         public static void Begin(float dt = -1)
         {
             ImGui.SetCurrentContext(ImGuiContext);
@@ -528,13 +525,13 @@ namespace AdvEditRework.DearImGui
                 (int)(height * scale.Y));
         }
 
-        private static void TriangleVert(ImDrawVert idx_vert)
+        private static void TriangleVert(ImDrawVert idxVert)
         {
-            Vector4 color = ImGui.ColorConvertU32ToFloat4(idx_vert.Col);
+            Vector4 color = ImGui.ColorConvertU32ToFloat4(idxVert.Col);
 
             Rlgl.Color4f(color.X, color.Y, color.Z, color.W);
-            Rlgl.TexCoord2f(idx_vert.Uv.X, idx_vert.Uv.Y);
-            Rlgl.Vertex2f(idx_vert.Pos.X, idx_vert.Pos.Y);
+            Rlgl.TexCoord2f(idxVert.Uv.X, idxVert.Uv.Y);
+            Rlgl.Vertex2f(idxVert.Pos.X, idxVert.Pos.Y);
         }
 
         private static void RenderTriangles(uint count, uint indexStart, ImVector<ushort> indexBuffer, ImVector<ImDrawVert> vertBuffer, ImTextureID texturePtr)
@@ -740,8 +737,8 @@ namespace AdvEditRework.DearImGui
             if (center)
             {
                 ImGui.SetCursorPosX(0);
-                ImGui.SetCursorPosX(area.X / 2 - sizeX / 2);
-                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (area.Y / 2 - sizeY / 2));
+                ImGui.SetCursorPosX(area.X / 2 - (int)(sizeX / 2));
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (area.Y / 2 - (int)(sizeY / 2)));
             }
 
             ImageRect(image.Texture, sizeX, sizeY, new Rectangle(0, 0, (image.Texture.Width), -(image.Texture.Height)));

@@ -1,7 +1,5 @@
-using System.Numerics;
 using System.Runtime.InteropServices;
 using AdvancedLib.Project;
-using AdvEditRework.UI;
 using Hexa.NET.ImGui;
 using NativeFileDialogs.Net;
 
@@ -47,7 +45,7 @@ public class CreateProject : Scene
             ImGui.SameLine();
             if (ImGui.Button("Open"))
             {
-                var status = Nfd.OpenDialog(out var path, RomFilter, null);
+                var status = Nfd.OpenDialog(out var path, RomFilter);
                 if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
                 {
                     _path = path;

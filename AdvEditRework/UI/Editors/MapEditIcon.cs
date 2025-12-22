@@ -1,4 +1,4 @@
-namespace AdvEditRework;
+namespace AdvEditRework.UI.Editors;
 
 public enum MapEditIcon
 {

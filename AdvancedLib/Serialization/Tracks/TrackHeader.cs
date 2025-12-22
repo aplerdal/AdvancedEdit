@@ -100,33 +100,8 @@ public class TrackHeader : ISerializable, IEquatable<TrackHeader>
         stream.Write(SharedObstacleGfx);
         stream.Write(padding[..19]);
     }
-
-    public override int GetHashCode()
+    public bool Equals(TrackHeader? other)
     {
-        var hashCode = new HashCode();
-        hashCode.Add(CompressedTileset);
-        hashCode.Add((int)Flags);
-        hashCode.Add(TrackWidth);
-        hashCode.Add(TrackHeight);
-        hashCode.Add(SharedTileset);
-        hashCode.Add(TilemapOffset);
-        hashCode.Add(TilesetOffset);
-        hashCode.Add(TilesetPaletteOffset);
-        hashCode.Add(BehaviorsOffset);
-        hashCode.Add(ObstaclesOffset);
-        hashCode.Add(CoinsOffset);
-        hashCode.Add(ItemBoxOffset);
-        hashCode.Add(StartPositionOffset);
-        hashCode.Add(MinimapOffset);
-        hashCode.Add(AiOffset);
-        hashCode.Add(ObstacleGfxOffset);
-        hashCode.Add(ObstaclePaletteOffset);
-        hashCode.Add(SharedObstacleGfx);
-        return hashCode.ToHashCode();
-    }
-
-    public bool Equals(TrackHeader other)
-    {
-        return CompressedTileset == other.CompressedTileset && Flags == other.Flags && TrackWidth == other.TrackWidth && TrackHeight == other.TrackHeight && SharedTileset == other.SharedTileset && TilemapOffset == other.TilemapOffset && TilesetOffset == other.TilesetOffset && TilesetPaletteOffset == other.TilesetPaletteOffset && BehaviorsOffset == other.BehaviorsOffset && ObstaclesOffset == other.ObstaclesOffset && CoinsOffset == other.CoinsOffset && ItemBoxOffset == other.ItemBoxOffset && StartPositionOffset == other.StartPositionOffset && MinimapOffset == other.MinimapOffset && AiOffset == other.AiOffset && ObstacleGfxOffset == other.ObstacleGfxOffset && ObstaclePaletteOffset == other.ObstaclePaletteOffset && SharedObstacleGfx == other.SharedObstacleGfx;
+        return other != null && CompressedTileset == other.CompressedTileset && Flags == other.Flags && TrackWidth == other.TrackWidth && TrackHeight == other.TrackHeight && SharedTileset == other.SharedTileset && TilemapOffset == other.TilemapOffset && TilesetOffset == other.TilesetOffset && TilesetPaletteOffset == other.TilesetPaletteOffset && BehaviorsOffset == other.BehaviorsOffset && ObstaclesOffset == other.ObstaclesOffset && CoinsOffset == other.CoinsOffset && ItemBoxOffset == other.ItemBoxOffset && StartPositionOffset == other.StartPositionOffset && MinimapOffset == other.MinimapOffset && AiOffset == other.AiOffset && ObstacleGfxOffset == other.ObstacleGfxOffset && ObstaclePaletteOffset == other.ObstaclePaletteOffset && SharedObstacleGfx == other.SharedObstacleGfx;
     }
 }

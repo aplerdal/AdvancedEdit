@@ -56,32 +56,8 @@ public class TrackDefinition : ISerializable, IEquatable<TrackDefinition>
         stream.Write(LapsCount);
     }
 
-    public bool Equals(TrackDefinition other)
+    public bool Equals(TrackDefinition? other)
     {
-        return HeaderIndex == other.HeaderIndex && BackgroundIndex == other.BackgroundIndex && BackgroundBehavior == other.BackgroundBehavior && PaletteBehavior == other.PaletteBehavior && Theme == other.Theme && Turns.Raw == other.Turns.Raw && SongID == other.SongID && TargetOptions.Raw == other.TargetOptions.Raw && CoverGfx.Raw == other.CoverGfx.Raw && CoverPal.Raw == other.CoverPal.Raw && LockedTrackPal.Raw == other.LockedTrackPal.Raw && TrackNameGfx.Raw == other.TrackNameGfx.Raw && LapsCount == other.LapsCount;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is TrackDefinition other && Equals(other);
-    }
-
-    public override int GetHashCode()
-    {
-        var hashCode = new HashCode();
-        hashCode.Add(HeaderIndex);
-        hashCode.Add(BackgroundIndex);
-        hashCode.Add(BackgroundBehavior);
-        hashCode.Add(PaletteBehavior);
-        hashCode.Add(Theme);
-        hashCode.Add(Turns.Raw);
-        hashCode.Add(SongID);
-        hashCode.Add(TargetOptions.Raw);
-        hashCode.Add(CoverGfx.Raw);
-        hashCode.Add(CoverPal.Raw);
-        hashCode.Add(LockedTrackPal.Raw);
-        hashCode.Add(TrackNameGfx.Raw);
-        hashCode.Add(LapsCount);
-        return hashCode.ToHashCode();
+        return other != null && HeaderIndex == other.HeaderIndex && BackgroundIndex == other.BackgroundIndex && BackgroundBehavior == other.BackgroundBehavior && PaletteBehavior == other.PaletteBehavior && Theme == other.Theme && Turns.Raw == other.Turns.Raw && SongID == other.SongID && TargetOptions.Raw == other.TargetOptions.Raw && CoverGfx.Raw == other.CoverGfx.Raw && CoverPal.Raw == other.CoverPal.Raw && LockedTrackPal.Raw == other.LockedTrackPal.Raw && TrackNameGfx.Raw == other.TrackNameGfx.Raw && LapsCount == other.LapsCount;
     }
 }
