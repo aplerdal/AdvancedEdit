@@ -27,8 +27,8 @@ public class SelectionTool : MapEditorTool
             var p2 = Vector2.Clamp(editor.CellMousePos, Vector2.Zero, trackSize);
             var min = new Vector2(Math.Min(p1.X, p2.X), Math.Min(p1.Y, p2.Y));
             var max = new Vector2(Math.Max(p1.X, p2.X) + 1, Math.Max(p1.Y, p2.Y) + 1);
-            var selRect = new Rectangle(min * 8, (max - min) * 8);
-            Raylib.DrawRectangleLinesEx(selRect, 2 * Settings.Shared.UIScale, Color.White);
+            var selRect = new Rectangle(min * editor.CellSize, (max - min) * editor.CellSize);
+            Raylib.DrawRectangleLinesEx(selRect, 2, Color.White);
         }
         else if (_dragging)
         {

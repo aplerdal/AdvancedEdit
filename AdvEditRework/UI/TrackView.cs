@@ -242,11 +242,6 @@ public class TrackView : IDisposable
         return new UndoActions(() => SetTiles(tilesClone), () => SetTiles(oldTiles));
     }
 
-    public UndoActions SetTilesUndoable(System.Drawing.Rectangle area, byte tile)
-    {
-        throw new NotImplementedException();
-    }
-
     public UndoActions SetTilesUndoable(Rectangle area, byte tile)
     {
         var oldTiles = new byte[(int)area.Width, (int)area.Height];

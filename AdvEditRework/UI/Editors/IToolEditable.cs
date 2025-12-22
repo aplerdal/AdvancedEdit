@@ -15,15 +15,16 @@ public interface IToolEditable
     public Vector2 CellMousePos { get; }
     public Vector2 GridSize { get; }
     public CellEntry[]? Stamp { get; set; }
+    public int CellSize { get;}
     
-    public void DrawCell(Vector2 position, int id, Color color);
+    public void DrawCell(Vector2 position, byte id, Color color);
     public void OutlineCell(Vector2 position, Color color);
     public bool ValidCell(Vector2 position);
     public byte GetCell(Vector2 position);
     
-    public UndoActions SetCellsUndoable(HashSet<Vector2> positions, byte cells);
+    public UndoActions SetCellsUndoable(HashSet<Vector2> positions, byte id);
     public UndoActions SetCellsUndoable(List<CellEntry> cells);
-    public UndoActions SetCellsUndoable(Rectangle area, byte cells);
+    public UndoActions SetCellsUndoable(Rectangle area, byte id);
 
     public void SetTool(MapEditorToolType tool);
 

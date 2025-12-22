@@ -20,7 +20,6 @@ public class DrawTool : MapEditorTool
 
         var tile = editor.ActiveIndex.Value;
         var drawPoints = GetCirclePoints(editor.CellMousePos, _radius);
-        PaletteShader.Begin();
         foreach (var point in drawPoints)
         {
             editor.DrawCell(point, tile, Color.White);
@@ -30,8 +29,6 @@ public class DrawTool : MapEditorTool
         {
             editor.DrawCell(cell.Position, cell.Id, Color.White);
         }
-
-        PaletteShader.End();
 
         if (Raylib.IsMouseButtonDown(MouseButton.Left))
         {

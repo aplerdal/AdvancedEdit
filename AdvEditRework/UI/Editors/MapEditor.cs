@@ -31,20 +31,24 @@ public class MapEditor : Editor, IToolEditable
     public byte? ActiveIndex { get; set; } = 0;
 
     public Vector2 CellMousePos => View.MouseTilePos;
+    public int CellSize => 8;
 
     public Vector2 GridSize => new Vector2(View.Track.Config.Size.X, View.Track.Config.Size.Y) * 128;
 
-    public void DrawCell(Vector2 position, int id, Color color)
+    public void DrawCell(Vector2 position, byte id, Color color)
     {
+        PaletteShader.Begin();
         Raylib.DrawTextureRec(View.Tileset, Extensions.GetTileRect(id, 16), position * 8, color);
+        PaletteShader.End();
     }
-    
+
     public bool ValidCell(Vector2 position) => View.PointOnTrack(position);
-    public UndoActions SetCellsUndoable(HashSet<Vector2> positions, byte cells) => View.SetTilesUndoable(positions, cells);
+    public UndoActions SetCellsUndoable(HashSet<Vector2> positions, byte id) => View.SetTilesUndoable(positions, id);
     public UndoActions SetCellsUndoable(List<CellEntry> cells) => View.SetTilesUndoable(cells);
-    public UndoActions SetCellsUndoable(Rectangle area, byte cells) => View.SetTilesUndoable(area, cells);
+    public UndoActions SetCellsUndoable(Rectangle area, byte id) => View.SetTilesUndoable(area, id);
     public void PushUndoable(UndoActions action) => UndoManager.Push(action);
     public byte GetCell(Vector2 position) => View.Track.Tilemap[position];
+
     public void OutlineCell(Vector2 position, Color color)
     {
         Raylib.DrawRectangleLinesEx(new Rectangle(position * 8 - Vector2.One, new(10)), 1, color);
@@ -53,7 +57,7 @@ public class MapEditor : Editor, IToolEditable
     public CellEntry[]? Stamp { get; set; }
 
     public bool ViewportHovered => !((Raylib.GetMousePosition().Y <= ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2) ||
-                                  (Raylib.GetMousePosition().X >= Raylib.GetRenderWidth() - Settings.Shared.UIScale * 262));
+                                     (Raylib.GetMousePosition().X >= Raylib.GetRenderWidth() - Settings.Shared.UIScale * 262));
 
     public MapEditor(TrackView view)
     {
