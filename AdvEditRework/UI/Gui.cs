@@ -19,33 +19,6 @@ public static class Gui
     private static Stack<Style> _styleStack = new Stack<Style>();
     public static Style Style { get; private set; } = new Style();
 
-    private static void OpenUrl(string url)
-    {
-        try
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                Process.Start("open", url);
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                Process.Start("xdg-open", url);
-            }
-            else
-            {
-                throw new PlatformNotSupportedException("Unsupported OS");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Failed to open URL: {ex.Message}");
-        }
-    }
-
     public static Vector2 MeasureText(string text)
     {
         return Raylib.MeasureTextEx(ActiveFont, text, Style.FontSize * Scale, 0.0f);
@@ -107,7 +80,7 @@ public static class Gui
     {
         if (LabelButton(text))
         {
-            OpenUrl(url);
+            Raylib.OpenURL(url);
         }
     }
 
