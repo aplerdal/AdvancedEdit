@@ -191,7 +191,7 @@ public class TilesetEditor : IDisposable, IToolEditable
 
     public void OutlineCell(Vector2 position, Color color)
     {
-        // TODO
+        Raylib.DrawRectangleLinesEx(new Rectangle(position - new Vector2(1 / 8f), new(5 / 4f)), 1/8f, color);
     }
 
     public bool ValidCell(Vector2 position) => (position.X >= 0 && position.Y >= 0 && position.X <= _texture.Width && position.Y <= _texture.Height);
