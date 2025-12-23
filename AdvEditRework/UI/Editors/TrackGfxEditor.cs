@@ -16,7 +16,7 @@ public enum TrackGraphic
 public class TrackGfxEditor : Editor
 {
     private readonly Track _track;
-    private TrackGraphic _activeGraphic = TrackGraphic.Tileset;
+    private TrackGraphic _activeGraphic;
     private TilesetEditor _tilesetEditor;
 
     private readonly Palette _uiPalette = new Palette(
@@ -30,8 +30,8 @@ public class TrackGfxEditor : Editor
 
     public TrackGfxEditor(Track track)
     {
-        _track = track;
         Raylib.SetMouseCursor(MouseCursor.Default);
+        _track = track;
         _activeGraphic = TrackGraphic.Tileset;
         _tilesetEditor = new TilesetEditor(_track.Tileset, _track.TilesetPalette);
     }
@@ -80,6 +80,7 @@ public class TrackGfxEditor : Editor
 
             ImGui.EndCombo();
         }
+        _tilesetEditor.ShowOptions(new Rectangle(ImGui.GetCursorScreenPos(), ImGui.GetContentRegionAvail()));
 
         ImHelper.EndEmptyWindow();
     }

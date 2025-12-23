@@ -72,6 +72,11 @@ public class TilesetEditor : IDisposable, IToolEditable
         ColorPicker(position + new Vector2(ViewportSize + 4, 0));
     }
 
+    public void ShowOptions(Rectangle area)
+    {
+        ToolPicker.Draw(area.Position, area.Width, ref _activeTool);
+    }
+
     void UpdateViewport(Vector2 position)
     {
         if (Focused)
@@ -100,7 +105,7 @@ public class TilesetEditor : IDisposable, IToolEditable
 
     void UpdateCamera()
     {
-        var viewportRect = new Rectangle(Vector2.Zero, _viewport.Texture.Width, _viewport.Texture.Height);
+        var viewportRect = new Rectangle(_position, _viewport.Texture.Width, _viewport.Texture.Height);
 
         var hovered = Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), viewportRect);
 

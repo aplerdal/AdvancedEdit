@@ -101,7 +101,7 @@ public class MapEditor : Editor, IToolEditable
         Raylib.DrawRectangleLinesEx(panelRect, 1 * scale, ImHelper.Color(ImGuiCol.Border));
         UpdateTilePicker(panelRect.Position + new Vector2(3 * scale));
         var optionsPos = panelRect.Position + new Vector2(3 * scale, 16 * 8 * 2 * scale + 6 * scale);
-        ToolPicker(optionsPos, panelWidth - 6 * scale);
+        ToolPicker.Draw(optionsPos, panelWidth - 6 * scale, ref _activeToolType);
         Focused = Raylib.CheckCollisionPointRec(mousePos, panelRect);
     }
 
@@ -134,39 +134,6 @@ public class MapEditor : Editor, IToolEditable
             {
                 ActiveIndex = (byte)(tilePosition.X + 16 * tilePosition.Y);
             }
-        }
-    }
-
-    void ToolPicker(Vector2 position, float width)
-    {
-        var scale = Settings.Shared.UIScale;
-        Rectangle dest = new Rectangle(position, new Vector2(32 * scale));
-        Color fillColor = new Color(0.75f, 0.75f, 0.75f);
-        Color outlineColor = new Color(0.65f, 0.65f, 0.65f);
-        Color shadowColor = new Color(0.50f, 0.50f, 0.50f);
-        foreach (var tool in Enum.GetValues(typeof(MapEditorToolType)).Cast<MapEditorToolType>())
-        {
-            var atlasSrc = new Rectangle(16 * ((int)tool % 4), 16 * (int)((int)tool / 4), 16, 16);
-            var hovered = Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), dest);
-            if (hovered || tool == _activeToolType)
-            {
-                Raylib.DrawRectangleRec(dest with { Y = dest.Y + 2 * scale }, fillColor);
-                Raylib.DrawTexturePro(_iconAtlas, atlasSrc, dest with { Y = dest.Y + 2 * scale }, Vector2.Zero, 0, Color.White);
-                Raylib.DrawRectangleLinesEx(dest with { Y = dest.Y + 2 * scale }, 2 * scale, outlineColor);
-                if (hovered && Raylib.IsMouseButtonPressed(MouseButton.Left)) _activeToolType = tool;
-            }
-            else
-            {
-                Raylib.DrawRectangleLinesEx(dest with { Y = dest.Y + 2 * scale }, 2 * scale, shadowColor);
-                Raylib.DrawRectangleRec(dest, fillColor);
-                Raylib.DrawTexturePro(_iconAtlas, atlasSrc, dest, Vector2.Zero, 0, Color.White);
-                Raylib.DrawRectangleLinesEx(dest, 2 * scale, outlineColor);
-            }
-
-            //Raylib.DrawRectangleRec(dest, Color.Red);
-            var newDest = new Rectangle(dest.X + 32, dest.Y, dest.Size);
-            if (newDest.X + newDest.Width - position.X > width) newDest = new Rectangle(position.X, position.Y + 32, dest.Size);
-            dest = newDest;
         }
     }
 

@@ -15,7 +15,7 @@ public class RectangleTool : MapEditorTool
 
         if (Raylib.IsMouseButtonDown(MouseButton.Left))
         {
-            if (!_dragging)
+            if (!_dragging && editor.ViewportHovered)
             {
                 _dragging = true;
                 _start = Vector2.Clamp(editor.CellMousePos, Vector2.Zero, editor.GridSize - Vector2.One);
