@@ -139,15 +139,17 @@ public class MapEditor : Editor, IToolEditable
 
     void CheckKeybinds()
     {
-        // TODO: Customizable keybinds
         var ctrl = Raylib.IsKeyDown(KeyboardKey.LeftControl) || Raylib.IsKeyDown(KeyboardKey.RightControl);
         var shift = Raylib.IsKeyDown(KeyboardKey.LeftShift) || Raylib.IsKeyDown(KeyboardKey.RightShift);
+        
         if (ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.Z)) UndoManager.Undo();
         if (ctrl && shift && Raylib.IsKeyPressed(KeyboardKey.Z)) UndoManager.Redo();
-        if (!ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.V)) SetTool(MapEditorToolType.Eyedropper);
-        if (!ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.S)) SetTool(MapEditorToolType.Select);
-        if (!ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.B)) SetTool(MapEditorToolType.Draw);
-        if (!ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.R)) SetTool(MapEditorToolType.Rectangle);
+        var settings = Settings.Shared;
+        if (!ctrl && !shift && Raylib.IsKeyPressed(settings.EyedropperBind)) SetTool(MapEditorToolType.Eyedropper);
+        if (!ctrl && !shift && Raylib.IsKeyPressed(settings.SelectBind)) SetTool(MapEditorToolType.Select);
+        if (!ctrl && !shift && Raylib.IsKeyPressed(settings.DrawBind)) SetTool(MapEditorToolType.Draw);
+        if (!ctrl && !shift && Raylib.IsKeyPressed(settings.RectangleBind)) SetTool(MapEditorToolType.Rectangle);
+        if (!ctrl && !shift && Raylib.IsKeyPressed(settings.BucketBind)) SetTool(MapEditorToolType.Bucket);
     }
 
     public void SetTool(MapEditorToolType newEditorToolType)

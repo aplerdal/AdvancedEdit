@@ -37,12 +37,16 @@ static class Program
         PaletteShader.Load();
 
         ImGuiRenderer.Setup(false);
+        
+        // Load Settings
+        // var settings = Settings.Shared;
+        Settings.Load();
+        
         // Calculate UI scale based on DPI
         var dpiScale = Raylib.GetWindowScaleDPI();
-        var settings = Settings.Shared;
-        settings.UIScale = (int)Math.Round((dpiScale.X + dpiScale.Y) / 2);
+        Settings.Shared.UIScale = (int)Math.Round((dpiScale.X + dpiScale.Y) / 2);
         TextureManager = new TextureManager();
-        var imFont = ImGui.GetIO().Fonts.AddFontFromFileTTF("Resources/OpenSans.ttf", 16 * settings.UIScale);
+        var imFont = ImGui.GetIO().Fonts.AddFontFromFileTTF("Resources/OpenSans.ttf", 16 * Settings.Shared.UIScale);
         ImGuiRenderer.ReloadFonts();
         ImGui.GetIO().FontDefault = imFont;
         

@@ -425,8 +425,8 @@ namespace AdvEditRework.DearImGui
             while (keyId != 0)
             {
                 KeyboardKey key = (KeyboardKey)keyId;
-                if (_raylibKeyMap.ContainsKey(key))
-                    io.AddKeyEvent(_raylibKeyMap[key], true);
+                if (_raylibKeyMap.TryGetValue(key, out var value))
+                    io.AddKeyEvent(value, true);
                 keyId = Raylib.GetKeyPressed();
             }
 
