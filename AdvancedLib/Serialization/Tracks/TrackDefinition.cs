@@ -1,3 +1,4 @@
+using System.Drawing;
 using AuroraLib.Core.IO;
 using MessagePack;
 
@@ -13,6 +14,7 @@ public class TrackDefinition : ISerializable, IEquatable<TrackDefinition>
     public uint Theme { get; set; }
     public Pointer Turns { get; set; }
     public uint SongID { get; set; }
+    public Pointer PresetTimes { get; set; } // TODO: Implement this. This is a parameter for the sake of future compatibility
     public Pointer TargetOptions { get; set; }
     public Pointer CoverGfx { get; set; }
     public Pointer CoverPal { get; set; }
