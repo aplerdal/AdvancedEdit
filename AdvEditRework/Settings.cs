@@ -23,7 +23,15 @@ public class Settings
         var path = SettingsFile;
         if (!File.Exists(path)) Save();
         using var settingsStream = File.OpenRead(path);
-        Shared = MessagePackSerializer.Deserialize<Settings>(settingsStream);
+        try
+        {
+            Shared = MessagePackSerializer.Deserialize<Settings>(settingsStream);
+        }
+        catch
+        {
+            // If settings are not read correctly (ex. wrong version) just use default ones.
+            Shared = new Settings();
+        }
     }
 
     public static void Save()
