@@ -3,16 +3,24 @@ using Raylib_cs;
 
 namespace AdvEditRework;
 
-[MessagePackObject(keyAsPropertyName: true)]
+[MessagePackObject]
 public class Settings
 {
     public static Settings Shared { get; private set; } = new();
-    public int UIScale = 1;
-    
+
+    [Key(0)]
     public KeyboardKey EyedropperBind = KeyboardKey.V;
+
+    [Key(1)]
     public KeyboardKey SelectBind = KeyboardKey.S;
+
+    [Key(2)]
     public KeyboardKey DrawBind = KeyboardKey.P;
+
+    [Key(3)]
     public KeyboardKey RectangleBind = KeyboardKey.R;
+
+    [Key(4)]
     public KeyboardKey BucketBind = KeyboardKey.B;
 
     private static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AdvancedEdit");
@@ -22,9 +30,9 @@ public class Settings
     {
         var path = SettingsFile;
         if (!File.Exists(path)) Save();
-        using var settingsStream = File.OpenRead(path);
         try
         {
+            using var settingsStream = File.OpenRead(path);
             Shared = MessagePackSerializer.Deserialize<Settings>(settingsStream);
         }
         catch

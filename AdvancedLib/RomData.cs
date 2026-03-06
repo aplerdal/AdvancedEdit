@@ -5,7 +5,7 @@ public enum Region
     USA,
     JPN,
     PAL,
-    CHN,
+    CHN
 }
 
 public static class RomData
@@ -15,13 +15,13 @@ public static class RomData
     public static Pointer Cups => Region switch
     {
         Region.USA => new Pointer(0x080E7464),
-        _ => Pointer.Null,
+        _ => Pointer.Null
     };
 
     public static Pointer TrackOffsets => Region switch
     {
         Region.USA => new Pointer(0x08258000),
         Region.PAL => new Pointer(0x08258000),
-        _ => Pointer.Null,
+        _ => Pointer.Null
     };
 }

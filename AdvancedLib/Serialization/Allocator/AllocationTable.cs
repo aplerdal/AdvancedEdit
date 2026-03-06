@@ -5,7 +5,7 @@ namespace AdvancedLib.Serialization.Allocator;
 
 public class AllocationTable : ISerializable
 {
-    public List<RomSpan> Blocks { get; set; } = new List<RomSpan>();
+    public List<RomSpan> Blocks { get; set; } = new();
     public const int TableSize = 0x100;
     public const int MaxBlocks = (TableSize - 2) / 6;
 
@@ -42,7 +42,7 @@ public class AllocationTable : ISerializable
         stream.Seek(0x400000, SeekOrigin.Begin);
         Blocks = new List<RomSpan>();
         if (stream.ReadUInt8() != Version) throw new Exception("Unknown allocation table version.");
-        for (int i = 0; i < MaxBlocks; i++)
+        for (var i = 0; i < MaxBlocks; i++)
         {
             if (stream.PeekByte() == 0) break;
             Blocks.Add(new RomSpan(stream.ReadUInt24(), stream.ReadUInt24()));

@@ -1,15 +1,13 @@
 using AdvancedLib.Serialization;
+using AuroraLib.Core.IO;
 
 namespace AdvancedLib.Graphics;
 
-public class Palette
+public class Palette : IAsyncWritable
 {
     private BgrColor[] _colors;
 
-    public int Length
-    {
-        get => _colors.Length;
-    }
+    public int Length => _colors.Length;
 
     /// <summary>
     /// Creates empty palette of the given length
@@ -18,14 +16,14 @@ public class Palette
     public Palette(int length)
     {
         _colors = new BgrColor[length];
-        for (int i = 0; i < length; i++)
+        for (var i = 0; i < length; i++)
             _colors[i] = new BgrColor(0);
     }
 
     public Palette(Stream stream, int length)
     {
         _colors = new BgrColor[length];
-        for (int i = 0; i < length; i++)
+        for (var i = 0; i < length; i++)
             _colors[i] = stream.Read<BgrColor>();
     }
 
@@ -42,11 +40,18 @@ public class Palette
 
     public void Write(Stream stream)
     {
-        foreach (var entry in _colors)
-        {
-            stream.Write(entry);
-        }
+        foreach (var entry in _colors) stream.Write(entry);
     }
 
-    public Task WriteAsync(Stream stream) => Task.Run(() => Write(stream));
+    public byte[] GetData()
+    {
+        var stream = new MemoryPoolStream(_colors.Length * 2, true);
+        Write(stream);
+        return stream.ToArray();
+    }
+
+    public Task WriteAsync(Stream stream)
+    {
+        return Task.Run(() => Write(stream));
+    }
 }

@@ -30,40 +30,57 @@ public static class ImHelper
     public static KeyboardKey GetKeyPressed()
     {
         foreach (var key in Enum.GetValues(typeof(KeyboardKey)).Cast<KeyboardKey>())
-        {
             if (Raylib.IsKeyPressed(key))
                 return key;
-        }
 
         return KeyboardKey.Null;
     }
+
     private static string _activeId = string.Empty;
+
     public static void Keybind(string id, ref KeyboardKey key)
     {
         Debug.Assert(id != string.Empty);
         ImGui.PushID(id);
-        bool listening = id == _activeId;
-        
+        var listening = id == _activeId;
+
         var label = listening ? "Press a key..." : Enum.GetName(key);
         if (ImGui.Selectable(label, ref listening, Vector2.Zero)) _activeId = id;
-        
+
         if (listening)
         {
             var pressedKey = GetKeyPressed();
             if (pressedKey == KeyboardKey.Escape)
             {
                 _activeId = string.Empty;
-            } else if (pressedKey != KeyboardKey.Null) {
+            }
+            else if (pressedKey != KeyboardKey.Null)
+            {
                 key = pressedKey;
                 _activeId = string.Empty;
             }
         }
-        ImGui.PopID(); 
+
+        ImGui.PopID();
     }
 
     public static Color Color(ImGuiCol themeColor)
     {
         var imColor = ImGui.GetStyle().Colors[(int)themeColor];
         return new Color(imColor.X, imColor.Y, imColor.Z, imColor.W);
+    }
+
+    private static Vector4 Color(uint col)
+    {
+        return new Vector4(((col >> 16) & 0xff) / 255f, ((col >> 8) & 0xff) / 255f, ((col >> 0) & 0xff) / 255f, 1);
+    }
+
+    public static void LoadAltLight()
+    {
+        ImGui.StyleColorsLight();
+        var style = ImGui.GetStyle();
+        style.FrameRounding = 4f;
+        var colors = style.Colors;
+        colors[(int)ImGuiCol.FrameBg] = new Vector4(0.9f, 0.9f, 0.9f, 1.0f);
     }
 }

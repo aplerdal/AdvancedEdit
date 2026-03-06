@@ -8,7 +8,7 @@ using Raylib_cs;
 
 namespace AdvEditRework;
 
-static class Program
+internal static class Program
 {
     private static Scene _scene = new MainMenu();
     public static TextureManager TextureManager = null!;
@@ -23,33 +23,35 @@ static class Program
 
     private static Project? _project;
 
-    static void Main()
+    private static void Main()
     {
 #if !DEBUG
-            Raylib.SetTraceLogLevel(TraceLogLevel.Error);
+        Raylib.SetTraceLogLevel(TraceLogLevel.Error);
+#else
+        Raylib.SetTraceLogLevel(TraceLogLevel.All);
 #endif
         // Setup Raylib
         Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
-        Raylib.InitWindow(800, 600, "AdvEditRework");
+        Raylib.InitWindow(1920, 1080, "AdvEditRework");
         Raylib.SetTargetFPS(144);
         Raylib.SetExitKey(KeyboardKey.Null);
 
         PaletteShader.Load();
 
-        ImGuiRenderer.Setup(false);
-        
+        ImGuiRenderer.Setup();
+
         // Load Settings
         // var settings = Settings.Shared;
         Settings.Load();
-        
+
         // Calculate UI scale based on DPI
         var dpiScale = Raylib.GetWindowScaleDPI();
-        Settings.Shared.UIScale = (int)Math.Round((dpiScale.X + dpiScale.Y) / 2);
+        var scale = (int)Math.Round((dpiScale.X + dpiScale.Y) / 2);
         TextureManager = new TextureManager();
-        var imFont = ImGui.GetIO().Fonts.AddFontFromFileTTF("Resources/OpenSans.ttf", 16 * Settings.Shared.UIScale);
+        var imFont = ImGui.GetIO().Fonts.AddFontFromFileTTF("Resources/OpenSans.ttf", 16 * scale);
         ImGuiRenderer.ReloadFonts();
         ImGui.GetIO().FontDefault = imFont;
-        
+
         _scene.Init(ref _project);
         while (!(Raylib.WindowShouldClose() || ShouldClose))
         {
@@ -60,7 +62,7 @@ static class Program
         Close();
     }
 
-    static void Update()
+    private static void Update()
     {
         Raylib.BeginDrawing();
         Raylib.ClearBackground(Color.Black);
@@ -70,7 +72,7 @@ static class Program
         Raylib.EndDrawing();
     }
 
-    static void Close()
+    private static void Close()
     {
         TextureManager.Dispose();
         ImGuiRenderer.Shutdown();

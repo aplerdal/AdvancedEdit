@@ -11,14 +11,14 @@ public enum BackgroundSize
     TallBack = 16,
     WideFront = 32,
     WideMiddle = 64,
-    WideBack = 128,
+    WideBack = 128
 }
 
 [Flags]
 public enum CompressionMode
 {
     Compressed = 1,
-    Split = 2,
+    Split = 2
 }
 
 public struct BackgroundHeader : ISerializable, IEquatable<BackgroundHeader>

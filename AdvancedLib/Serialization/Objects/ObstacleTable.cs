@@ -37,7 +37,7 @@ public class ObstacleTable
         writer.Write(newTableAddress);
     }
 
-    private void WriteObstacleTable(Stream writer, List<Obstacle> obstacles)
+    private static void WriteObstacleTable(Stream writer, List<Obstacle> obstacles)
     {
         // Write basic objects (common to all tracks
         writer.Write((short)0);
@@ -53,11 +53,11 @@ public class ObstacleTable
 
     public static ObstacleTable ReadTable(Stream reader, int index)
     {
-        int caseIdx = index - 4;
+        var caseIdx = index - 4;
         if (caseIdx < 24)
         {
             reader.Seek(CaseTableAddress + caseIdx * 4, SeekOrigin.Begin);
-            Pointer casePtr = new Pointer(reader.ReadUInt32());
+            var casePtr = new Pointer(reader.ReadUInt32());
             // Read ASM code for case. The pointer to the object table is always 4 bytes after the instructions, except in the default case.
             reader.Seek(casePtr.Address + 4, SeekOrigin.Begin);
             if (casePtr.Address == 0x53ed4) // Default case, use global table
@@ -66,7 +66,7 @@ public class ObstacleTable
             }
             else
             {
-                Pointer obstacleTablePtr = new Pointer(reader.ReadUInt32());
+                var obstacleTablePtr = new Pointer(reader.ReadUInt32());
                 reader.Seek(obstacleTablePtr);
             }
         }
@@ -76,7 +76,7 @@ public class ObstacleTable
         }
 
         var table = new ObstacleTable();
-        bool secondTime = false;
+        var secondTime = false;
         while (true)
         {
             var param = reader.ReadInt16();

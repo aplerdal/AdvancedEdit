@@ -5,7 +5,7 @@ namespace AdvEditRework.Resources;
 
 public class TextureManager : IDisposable
 {
-    private Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>();
+    private Dictionary<string, Texture2D> _textures = new();
 
     public TextureManager()
     {

@@ -12,7 +12,7 @@ public enum EditMode
 {
     Map,
     Ai,
-    Graphics,
+    Graphics
 }
 
 public class TrackView : IDisposable
@@ -24,6 +24,7 @@ public class TrackView : IDisposable
     private RenderTexture2D _trackTexture;
     public Vector2 MouseWorldPos { get; private set; } = Vector2.Zero;
     public Vector2 MouseTilePos { get; private set; } = Vector2.Zero;
+
     public delegate void DrawCallback();
 
     public DrawCallback? DrawInTrack;
@@ -36,8 +37,8 @@ public class TrackView : IDisposable
         _shaderPalette = palette.ToIVec3();
         Camera = new Camera2D
         {
-            Offset = new(0),
-            Target = new(0),
+            Offset = new Vector2(0),
+            Target = new Vector2(0),
             Rotation = 0.0f,
             Zoom = 1.0f
         };
@@ -48,7 +49,7 @@ public class TrackView : IDisposable
     private void RegenMapTextures()
     {
         var tilemap = Track.Tilemap;
-        if (!Raylib.IsRenderTextureValid(_trackTexture) || (_trackTexture.Texture.Width != tilemap.Width * 8 || _trackTexture.Texture.Height != tilemap.Height * 8))
+        if (!Raylib.IsRenderTextureValid(_trackTexture) || _trackTexture.Texture.Width != tilemap.Width * 8 || _trackTexture.Texture.Height != tilemap.Height * 8)
         {
             Raylib.UnloadRenderTexture(_trackTexture);
             _trackTexture = Raylib.LoadRenderTexture(tilemap.Width * 8, tilemap.Height * 8);
@@ -56,8 +57,8 @@ public class TrackView : IDisposable
         }
 
         Raylib.BeginTextureMode(_trackTexture);
-        for (int y = 0; y < tilemap.Height; y++)
-        for (int x = 0; x < tilemap.Width; x++)
+        for (var y = 0; y < tilemap.Height; y++)
+        for (var x = 0; x < tilemap.Width; x++)
             Raylib.DrawTextureRec(Tileset, Extensions.GetTileRect(tilemap[x, y], 16), new Vector2(x, y) * 8, Color.White);
         Raylib.EndTextureMode();
     }
@@ -65,15 +66,15 @@ public class TrackView : IDisposable
     private bool _isPanning;
     private Vector2 _lastMousePosition = Vector2.Zero;
 
-    void UpdateCamera()
+    private void UpdateCamera()
     {
-        float wheel = Raylib.GetMouseWheelMove();
+        var wheel = Raylib.GetMouseWheelMove();
         if (wheel != 0.0f)
         {
-            float zoomFactor = 1.05f;
-            Vector2 mouseWorldPosBeforeZoom = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition(), Camera);
-            Camera.Zoom *= (wheel > 0) ? zoomFactor : 1.0f / zoomFactor;
-            Vector2 mouseWorldPosAfterZoom = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition(), Camera);
+            var zoomFactor = 1.05f;
+            var mouseWorldPosBeforeZoom = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition(), Camera);
+            Camera.Zoom *= wheel > 0 ? zoomFactor : 1.0f / zoomFactor;
+            var mouseWorldPosAfterZoom = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition(), Camera);
             Camera.Target += mouseWorldPosBeforeZoom - mouseWorldPosAfterZoom;
         }
 
@@ -90,8 +91,8 @@ public class TrackView : IDisposable
 
         if (_isPanning)
         {
-            Vector2 currentMousePosition = Raylib.GetMousePosition();
-            Vector2 delta = Raylib.GetScreenToWorld2D(_lastMousePosition, Camera) - Raylib.GetScreenToWorld2D(currentMousePosition, Camera);
+            var currentMousePosition = Raylib.GetMousePosition();
+            var delta = Raylib.GetScreenToWorld2D(_lastMousePosition, Camera) - Raylib.GetScreenToWorld2D(currentMousePosition, Camera);
             Camera.Target += delta;
             _lastMousePosition = currentMousePosition;
         }
@@ -114,6 +115,34 @@ public class TrackView : IDisposable
         Raylib.EndMode2D();
     }
 
+    public void TrackScreenshot(string outFile)
+    {
+        var target = Raylib.LoadRenderTexture(Track.Config.Size.X * 128 * 8, Track.Config.Size.Y * 128 * 8);
+        Raylib.BeginTextureMode(target);
+        {
+            Raylib.ClearBackground(Color.White);
+            PaletteShader.Begin();
+            Raylib.DrawTextureRec(_trackTexture.Texture, new Rectangle(0, 0, _trackTexture.Texture.Width, -_trackTexture.Texture.Height), new Vector2(0), Color.White);
+            PaletteShader.End();
+            DrawInTrack?.Invoke();
+        }
+        Raylib.EndTextureMode();
+        var flippedTarget = Raylib.LoadRenderTexture(Track.Config.Size.X * 128 * 8, Track.Config.Size.Y * 128 * 8);
+        Raylib.BeginTextureMode(flippedTarget);
+        {
+            Raylib.ClearBackground(Color.Black);
+            Raylib.DrawTexture(target.Texture, 0, 0, Color.White);
+        }
+        Raylib.EndTextureMode();
+
+        var image = Raylib.LoadImageFromTexture(flippedTarget.Texture);
+        Raylib.ExportImage(image, outFile);
+
+        Raylib.UnloadImage(image);
+        Raylib.UnloadRenderTexture(flippedTarget);
+        Raylib.UnloadRenderTexture(target);
+    }
+
     public void Dispose()
     {
         Raylib.UnloadTexture(Tileset);
@@ -122,7 +151,7 @@ public class TrackView : IDisposable
 
     public bool PointOnTrack(Vector2 point)
     {
-        return (point.X >= 0 && point.Y >= 0 && point.X < Track.Tilemap.Width && point.Y < Track.Tilemap.Height);
+        return point.X >= 0 && point.Y >= 0 && point.X < Track.Tilemap.Width && point.Y < Track.Tilemap.Height;
     }
 
     private void BeginTileMode()
@@ -183,10 +212,7 @@ public class TrackView : IDisposable
     private void SetTiles(List<CellEntry> tiles)
     {
         BeginTileMode();
-        foreach (var entry in tiles)
-        {
-            DrawSetTile(entry.Position, entry.Id);
-        }
+        foreach (var entry in tiles) DrawSetTile(entry.Position, entry.Id);
 
         EndTileMode();
     }

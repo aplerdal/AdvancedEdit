@@ -13,16 +13,18 @@ public enum StartingPlace
     Seventh = 7,
     Eighth = 8,
     SinglePakFirst = 9,
-    SinglePakSecond = 10,
+    SinglePakSecond = 10
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
+[MessagePackObject]
 public class StartPosition(Vec2I position, StartingPlace startingPlace)
 {
     public StartPosition() : this(new Vec2I(0, 0), StartingPlace.First)
     {
     }
 
+    [Key(0)]
     public StartingPlace Place { get; set; } = startingPlace;
+    [Key(1)]
     public Vec2I Position { get; set; } = position;
 }

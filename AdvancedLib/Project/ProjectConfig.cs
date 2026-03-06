@@ -2,11 +2,12 @@ using MessagePack;
 
 namespace AdvancedLib.Project;
 
-[MessagePackObject(keyAsPropertyName: true)]
-public record Cup(string Name, ProjectTrack[] Tracks);
+[MessagePackObject]
+public record Cup([property: Key(0)] string Name, [property: Key(1)]  ProjectTrack[] Tracks);
 
-[MessagePackObject(keyAsPropertyName: true)]
+[MessagePackObject]
 public class ProjectConfig
 {
-    public List<Cup> Cups { get; set; } = new List<Cup>();
+    [Key(0)]
+    public List<Cup> Cups { get; set; } = new();
 }

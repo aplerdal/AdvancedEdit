@@ -2,9 +2,9 @@ namespace AdvancedLib.Serialization.Allocator;
 
 public static class RomAllocator
 {
-    private static AllocationTable _allocationTable = new AllocationTable([
+    private static AllocationTable _allocationTable = new([
         new RomSpan(0x1E9E00, 0x4A300),
-        new RomSpan(0x400100, 0x1C00000),
+        new RomSpan(0x400100, 0x1C00000)
     ]);
 
     /// <summary>
@@ -14,7 +14,7 @@ public static class RomAllocator
     /// <returns>Address of allocated block</returns>
     public static Pointer Allocate(uint length)
     {
-        uint alignedLength = (uint)((length & ~3) + 4);
+        var alignedLength = (uint)((length & ~3) + 4);
         uint? address = null;
         for (var i = 0; i < _allocationTable.Blocks.Count; i++)
         {

@@ -8,14 +8,14 @@ public enum ObjectMode
     Regular,
     Affine,
     Hide,
-    AffineDouble,
+    AffineDouble
 }
 
 public enum GraphicsMode
 {
     Normal,
     AlphaBlend,
-    Window,
+    Window
 }
 
 public class OamAttribute : ISerializable, IEquatable<OamAttribute>
@@ -37,7 +37,7 @@ public class OamAttribute : ISerializable, IEquatable<OamAttribute>
 
     public void Serialize(Stream stream)
     {
-        ushort attr0 = (ushort)(
+        var attr0 = (ushort)(
             (YPosition & 0xff) |
             (((int)ObjectMode & 0b11) << 8) |
             (((int)GraphicsMode & 0b11) << 10) |
@@ -45,20 +45,16 @@ public class OamAttribute : ISerializable, IEquatable<OamAttribute>
             ((Is8Bit ? 1 : 0) << 13) |
             ((SpriteShape & 0b11) << 14)
         );
-        ushort attr1 = (ushort)(
+        var attr1 = (ushort)(
             (XPosition & 0x1ff) |
             ((SpriteSize & 0b11) << 14)
         );
         if (ObjectMode == ObjectMode.Affine || ObjectMode == ObjectMode.AffineDouble)
-        {
             attr1 |= (ushort)((AffineIndex & 0b11111) << 9);
-        }
         else
-        {
             attr1 |= (ushort)(((HorizontalFlip ? 1 : 0) << 12) | ((VerticalFlip ? 1 : 0) << 13));
-        }
 
-        ushort attr2 = (ushort)(
+        var attr2 = (ushort)(
             (TileIndex & 0x3ff) |
             ((Priority & 0b11) << 10) |
             ((Palette & 0b1111) << 12)

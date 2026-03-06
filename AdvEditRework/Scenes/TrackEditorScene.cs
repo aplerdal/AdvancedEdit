@@ -4,6 +4,7 @@ using AdvancedLib.Game;
 using AdvancedLib.Project;
 using AdvEditRework.UI;
 using AdvEditRework.UI.Editors;
+using AdvEditRework.UI.Editors.AI;
 using Hexa.NET.ImGui;
 using NativeFileDialogs.Net;
 
@@ -11,6 +12,8 @@ namespace AdvEditRework.Scenes;
 
 public class TrackEditorScene : Scene
 {
+    public static readonly Dictionary<string, string> ImageFilter = new() { { "Screenshot", "bmp" }, { "All files", "*" } };
+
     private ProjectTrack? _projectTrack;
     private TrackView? _view;
     private Editor? _editor;
@@ -20,14 +23,14 @@ public class TrackEditorScene : Scene
     {
     }
 
-    void SetView(TrackView view)
+    private void SetView(TrackView view)
     {
         _view?.Dispose();
         _view = view;
         SetEditor(new MapEditor(view));
     }
 
-    void SetEditor(Editor editor)
+    private void SetEditor(Editor editor)
     {
         _editor?.Dispose();
         _editor = editor;
@@ -35,9 +38,9 @@ public class TrackEditorScene : Scene
 
     private bool MainMenuBar(ref Project? project)
     {
-        bool isActive = false;
+        var isActive = false;
         if (project is null) return false;
-        
+
         if (ImGui.BeginMainMenuBar())
         {
             if (ImGui.BeginMenu("File"))
@@ -50,7 +53,7 @@ public class TrackEditorScene : Scene
                     var status = Nfd.SaveDialog(out var path, MainMenu.ProjectFilter, name + ".amkp");
                     if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
                     {
-                        if (_currentTrack is not null) _projectTrack?.SaveTrackData(_currentTrack);
+                        if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
                         project.Save(path);
                     }
                 }
@@ -58,16 +61,10 @@ public class TrackEditorScene : Scene
                 if (ImGui.MenuItem("Open Project"))
                 {
                     var status = Nfd.OpenDialog(out var path, MainMenu.ProjectFilter);
-                    if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
-                    {
-                        project = Project.Unpack(path);
-                    }
+                    if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path)) project = Project.Unpack(path);
                 }
 
-                if (ImGui.MenuItem("New Project"))
-                {
-                    Program.SetScene(new CreateProject());
-                }
+                if (ImGui.MenuItem("New Project")) Program.SetScene(new CreateProject());
 
                 if (ImGui.MenuItem("Close Project"))
                 {
@@ -82,7 +79,7 @@ public class TrackEditorScene : Scene
                 {
                     Debug.Assert(project != null);
                     // Save active track
-                    if (_currentTrack is not null) _projectTrack?.SaveTrackData(_currentTrack);
+                    if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
 
                     var openStatus = Nfd.OpenDialog(out var romPath, CreateProject.RomFilter);
                     if (openStatus == NfdStatus.Ok && !string.IsNullOrEmpty(romPath))
@@ -99,10 +96,7 @@ public class TrackEditorScene : Scene
                     }
                 }
 
-                if (ImGui.MenuItem("Quit"))
-                {
-                    Program.ShouldClose = true;
-                }
+                if (ImGui.MenuItem("Quit")) Program.ShouldClose = true;
 
                 ImGui.EndMenu();
             }
@@ -124,7 +118,12 @@ public class TrackEditorScene : Scene
         var windowPos = ImGui.GetWindowPos();
         var windowSize = ImGui.GetWindowSize();
         var windowCenter = windowPos + windowSize / 2;
-        float ButtonSize(string text) => ImGui.CalcTextSize(text).X + ImGui.GetStyle().FramePadding.X * 2.0f;
+
+        float ButtonSize(string text)
+        {
+            return ImGui.CalcTextSize(text).X + ImGui.GetStyle().FramePadding.X * 2.0f;
+        }
+
         var barSize = ButtonSize("Layout") + 16 + ButtonSize("AI Map") + 16 + ButtonSize("Graphics");
         var buttonPos = new Vector2(windowCenter.X - barSize / 2f, 0);
         ImGui.BeginDisabled(_view is null);
@@ -168,7 +167,7 @@ public class TrackEditorScene : Scene
             return false;
         }
 
-        bool isActive = false;
+        var isActive = false;
         if (ImGui.BeginMenu("Track"))
         {
             isActive = true;
@@ -184,8 +183,9 @@ public class TrackEditorScene : Scene
                             if (string.IsNullOrEmpty(track.Name)) continue;
                             if (ImGui.MenuItem(track.Name))
                             {
-                                if (_currentTrack is not null) _projectTrack?.SaveTrackData(_currentTrack);
+                                if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
                                 _projectTrack = track;
+                                track.ResolveFolder(Path.Combine(project.Folder, cup.Name));
                                 _currentTrack = track.LoadTrackData();
                                 SetView(new TrackView(_currentTrack));
                             }
@@ -198,6 +198,23 @@ public class TrackEditorScene : Scene
                 ImGui.EndMenu();
             }
 
+            ImGui.BeginDisabled(_editor is not MapEditor && _editor is not AiEditor);
+            if (ImGui.MenuItem("Screenshot"))
+            {
+                var openStatus = Nfd.SaveDialog(out var imgPath, ImageFilter, $"{_projectTrack?.Name}.bmp");
+                if (openStatus == NfdStatus.Ok && !string.IsNullOrEmpty(imgPath))
+                    switch (_editor)
+                    {
+                        case MapEditor mapEditor:
+                            mapEditor.View.TrackScreenshot(imgPath);
+                            break;
+                        case AiEditor aiEditor:
+                            aiEditor.View.TrackScreenshot(imgPath);
+                            break;
+                    }
+            }
+
+            ImGui.EndDisabled();
             ImGui.EndMenu();
         }
 
@@ -206,7 +223,7 @@ public class TrackEditorScene : Scene
 
     public override void Update(ref Project? project)
     {
-        bool hasFocus = MainMenuBar(ref project);
+        var hasFocus = MainMenuBar(ref project);
         _editor?.Update(!hasFocus);
     }
 

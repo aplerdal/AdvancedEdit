@@ -7,7 +7,7 @@ public enum TrackFlags
 {
     SplitTileset = 1,
     SplitTilemap = 2,
-    SplitObjects = 4,
+    SplitObjects = 4
 }
 
 public class TrackHeader : ISerializable, IEquatable<TrackHeader>
@@ -100,6 +100,7 @@ public class TrackHeader : ISerializable, IEquatable<TrackHeader>
         stream.Write(SharedObstacleGfx);
         stream.Write(padding[..19]);
     }
+
     public bool Equals(TrackHeader? other)
     {
         return other != null && CompressedTileset == other.CompressedTileset && Flags == other.Flags && TrackWidth == other.TrackWidth && TrackHeight == other.TrackHeight && SharedTileset == other.SharedTileset && TilemapOffset == other.TilemapOffset && TilesetOffset == other.TilesetOffset && TilesetPaletteOffset == other.TilesetPaletteOffset && BehaviorsOffset == other.BehaviorsOffset && ObstaclesOffset == other.ObstaclesOffset && CoinsOffset == other.CoinsOffset && ItemBoxOffset == other.ItemBoxOffset && StartPositionOffset == other.StartPositionOffset && MinimapOffset == other.MinimapOffset && AiOffset == other.AiOffset && ObstacleGfxOffset == other.ObstacleGfxOffset && ObstaclePaletteOffset == other.ObstaclePaletteOffset && SharedObstacleGfx == other.SharedObstacleGfx;

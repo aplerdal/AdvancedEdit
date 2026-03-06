@@ -39,6 +39,20 @@ public class BgrColor : ISerializable
     {
     }
 
+    public BgrColor(byte r, byte g, byte b)
+    {
+        R = (byte)(r * 8);
+        G = (byte)(g * 8);
+        B = (byte)(b * 8);
+    }
+
+    public BgrColor(float r, float g, float b)
+    {
+        R = (byte)((byte)(r * 255f) / 8);
+        G = (byte)((byte)(g * 255f) / 8);
+        B = (byte)((byte)(b * 255f) / 8);
+    }
+
     public BgrColor(ushort value)
     {
         _raw = value;

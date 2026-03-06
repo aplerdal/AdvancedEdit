@@ -11,24 +11,20 @@ public class DrawTool : MapEditorTool
 
     public override void Update(IToolEditable editor)
     {
-        if (!editor.ViewportHovered || !editor.Focused || !editor.ActiveIndex.HasValue) return;
+        if (!editor.ActiveIndex.HasValue) return;
+        if (!editor.Focused) return;
+        if (!editor.ViewportHovered && !(_drawnCells.Count > 0)) return;
+
 
         var tile = editor.ActiveIndex.Value;
         var drawPoints = GetCirclePoints(editor.CellMousePos, _radius);
-        foreach (var point in drawPoints)
-        {
-            editor.DrawCell(point, tile, Color.White);
-        }
+        foreach (var point in drawPoints) editor.DrawCell(point, tile, Color.White);
 
-        foreach (var cell in _drawnCells)
-        {
-            editor.DrawCell(cell.Position, cell.Id, Color.White);
-        }
+        foreach (var cell in _drawnCells) editor.DrawCell(cell.Position, cell.Id, Color.White);
 
         if (Raylib.IsMouseButtonDown(MouseButton.Left))
         {
             if (editor.ViewportHovered)
-            {
                 foreach (var point in drawPoints)
                 {
                     var entry = new CellEntry(point, tile);
@@ -38,7 +34,6 @@ public class DrawTool : MapEditorTool
                         _drawnCells.Add(entry);
                     }
                 }
-            }
         }
         else if (_drawnCells.Count > 0)
         {
@@ -47,12 +42,12 @@ public class DrawTool : MapEditorTool
         }
     }
 
-    List<Vector2> GetCirclePoints(Vector2 center, int radius)
+    private List<Vector2> GetCirclePoints(Vector2 center, int radius)
     {
         if (radius == 1) return [center];
         List<Vector2> points = new();
-        for (int y = -radius; y <= radius; y++)
-        for (int x = -radius; x <= radius; x++)
+        for (var y = -radius; y <= radius; y++)
+        for (var x = -radius; x <= radius; x++)
             if (x * x + y * y <= radius * radius)
                 points.Add(center + new Vector2(x, y));
         return points;

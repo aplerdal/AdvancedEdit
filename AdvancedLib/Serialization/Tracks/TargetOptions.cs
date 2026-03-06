@@ -10,15 +10,15 @@ public class TargetOptions : ISerializable
 
     public void Serialize(Stream stream)
     {
-        for (int place = 0; place < Places; place++)
-        for (int option = 0; option < PlaceOptions; option++)
+        for (var place = 0; place < Places; place++)
+        for (var option = 0; option < PlaceOptions; option++)
             stream.Write(_options[option + place * PlaceOptions]);
     }
 
     public void Deserialize(Stream stream)
     {
-        for (int place = 0; place < Places; place++)
-        for (int option = 0; option < PlaceOptions; option++)
+        for (var place = 0; place < Places; place++)
+        for (var option = 0; option < PlaceOptions; option++)
             _options[option + place * PlaceOptions] = stream.ReadUInt8();
     }
 

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AdvancedLib.Graphics;
 using Raylib_cs;
 
@@ -43,12 +44,15 @@ void main()
     finalColor = vec4(color / 255.0, texelColor.a);
 }";
 
-    private static Color ToColor(this BgrColor color) => new Color(color.R << 3, color.G << 3, color.B << 3);
+    private static Color ToColor(this BgrColor color)
+    {
+        return new Color(color.R << 3, color.G << 3, color.B << 3);
+    }
 
     public static int[] ToIVec3(this Palette palette)
     {
-        int[] iVec3 = new int[palette.Length * 3];
-        for (int i = 0; i < palette.Length; i++)
+        var iVec3 = new int[256 * 3];
+        for (var i = 0; i < palette.Length && i < 256; i++)
         {
             var color = palette[i].ToColor();
             iVec3[i * 3 + 0] = color.R;
@@ -67,6 +71,7 @@ void main()
 
     public static void SetPalette(int[] paletteIVec)
     {
+        Debug.Assert(paletteIVec.Length == PaletteColors * 3);
         Raylib.SetShaderValueV(_shader, _paletteLoc, paletteIVec.AsSpan(), ShaderUniformDataType.IVec3, PaletteColors);
     }
 

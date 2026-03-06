@@ -10,7 +10,7 @@ public class BucketTool : MapEditorTool
     public override void Update(IToolEditable editor)
     {
         if (!editor.ViewportHovered || !editor.Focused || !editor.ActiveIndex.HasValue) return;
-        
+
         editor.DrawCell(editor.CellMousePos, editor.ActiveIndex.Value, Color.White);
         if (Raylib.IsMouseButtonPressed(MouseButton.Left) && editor.ValidCell(editor.CellMousePos))
         {
@@ -33,19 +33,19 @@ public class BucketTool : MapEditorTool
         {
             var point = stack.Dequeue();
 
-            int leftBound = (int)point.X;
+            var leftBound = (int)point.X;
             while (leftBound >= 0 && editor.GetCell(point with { X = leftBound }) == target)
                 leftBound--;
 
-            int rightBound = (int)point.X;
+            var rightBound = (int)point.X;
             while (rightBound < editor.GridSize.X && editor.GetCell(point with { X = rightBound }) == target)
                 rightBound++;
 
 
             // Keep track of if above/below points are in a continuous span
-            bool aboveInSpan = false;
-            bool belowInSpan = false;
-            for (int x = (int)leftBound + 1; x < rightBound; x++)
+            var aboveInSpan = false;
+            var belowInSpan = false;
+            for (var x = (int)leftBound + 1; x < rightBound; x++)
             {
                 changedCells.Add(point with { X = x });
 
@@ -78,7 +78,7 @@ public class BucketTool : MapEditorTool
                 }
             }
         }
+
         return editor.SetCellsUndoable(changedCells, id);
     }
-
 }

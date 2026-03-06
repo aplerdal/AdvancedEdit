@@ -10,10 +10,16 @@ public static class Compressor
     private static readonly LZ10 LZ10 = new() { LookAhead = false };
     private const uint MaxPartSize = 4096;
 
-    public static void Decompress(Stream source, Stream destination) => LZ10.Decompress(source, destination);
+    public static void Decompress(Stream source, Stream destination)
+    {
+        LZ10.Decompress(source, destination);
+    }
 
     public static void Compress(ReadOnlySpan<byte> source, Stream destination, CompressionLevel compressionLevel =
-        CompressionLevel.Optimal) => LZ10.Compress(source, destination, compressionLevel);
+        CompressionLevel.Optimal)
+    {
+        LZ10.Compress(source, destination, compressionLevel);
+    }
 
     public static void SplitDecompress(Stream source, Stream destination, int maxParts = 16)
     {
@@ -41,15 +47,15 @@ public static class Compressor
         // Ceiling of integer division
         var blocks = (uint)(1 + (source.Length - 1) / MaxPartSize);
         var headerAddress = destination.Position;
-        var headerLength = ((blocks + 15) & ~15);
+        var headerLength = (blocks + 15) & ~15;
         destination.Seek(2 * headerLength, SeekOrigin.Current);
         var offsets = new ushort[blocks];
-        for (int i = 0; i < blocks; i++)
+        for (var i = 0; i < blocks; i++)
         {
             Debug.Assert(destination.Position % 2 == 0);
             offsets[i] = (ushort)(destination.Position - headerAddress);
-            int sourceOffset = (int)(i * MaxPartSize);
-            int sourceBlockEnd = (int)Math.Min(sourceOffset + MaxPartSize, source.Length);
+            var sourceOffset = (int)(i * MaxPartSize);
+            var sourceBlockEnd = (int)Math.Min(sourceOffset + MaxPartSize, source.Length);
             LZ10.Compress(source[sourceOffset..sourceBlockEnd], destination, compressionLevel);
             destination.Position = (destination.Position + 3) & ~3; // Align stream to word boundary
         }
@@ -58,7 +64,7 @@ public static class Compressor
         destination.Seek(headerAddress, SeekOrigin.Begin);
         foreach (var offset in offsets)
             destination.Write(offset);
-        for (int i = offsets.Length; i < headerLength; i++)
+        for (var i = offsets.Length; i < headerLength; i++)
             destination.Write((ushort)0);
         destination.Seek(endAddress, SeekOrigin.Begin);
     }

@@ -3,15 +3,12 @@ using AuroraLib.Core.IO;
 
 namespace AdvancedLib.Graphics;
 
-public class Tileset
+public class Tileset : IAsyncWritable
 {
     private readonly Tile[] _tiles;
     public PixelFormat PixelFormat { get; set; }
 
-    public int Length
-    {
-        get => _tiles.Length;
-    }
+    public int Length => _tiles.Length;
 
     public Tile this[int index]
     {
@@ -29,10 +26,10 @@ public class Tileset
         PixelFormat = pixelFormat;
         _tiles = new Tile[tiles];
         if (pixelFormat == PixelFormat.Bpp4)
-            for (int i = 0; i < tiles; i++)
+            for (var i = 0; i < tiles; i++)
                 _tiles[i] = Tile4Bpp.Empty;
         else if (pixelFormat == PixelFormat.Bpp8)
-            for (int i = 0; i < tiles; i++)
+            for (var i = 0; i < tiles; i++)
                 _tiles[i] = Tile8Bpp.Empty;
     }
 
@@ -47,27 +44,27 @@ public class Tileset
         PixelFormat = pixelFormat;
         _tiles = new Tile[tiles];
         if (pixelFormat == PixelFormat.Bpp4)
-            for (int i = 0; i < tiles; i++)
+            for (var i = 0; i < tiles; i++)
                 _tiles[i] = stream.Read<Tile4Bpp>();
         else if (pixelFormat == PixelFormat.Bpp8)
-            for (int i = 0; i < tiles; i++)
+            for (var i = 0; i < tiles; i++)
                 _tiles[i] = stream.Read<Tile8Bpp>();
     }
 
     public byte[] GetData()
     {
-        var stream = new MemoryPoolStream(((int)PixelFormat * 8) * _tiles.Length, true);
+        using var stream = new MemoryPoolStream((int)PixelFormat * 8 * _tiles.Length, true);
         Write(stream);
         return stream.ToArray();
     }
 
     public void Write(Stream stream)
     {
-        foreach (var tile in _tiles)
-        {
-            stream.Write(tile);
-        }
+        foreach (var tile in _tiles) stream.Write(tile);
     }
 
-    public Task WriteAsync(Stream stream) => Task.Run(() => Write(stream));
+    public Task WriteAsync(Stream stream)
+    {
+        return Task.Run(() => Write(stream));
+    }
 }

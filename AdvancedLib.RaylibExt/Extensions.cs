@@ -7,18 +7,18 @@ namespace AdvancedLib.RaylibExt;
 
 public static class Extensions
 {
-    public static Texture2D TilePaletteTexture(this Tileset tileset, int width, int height)
+    public static Texture2D TilePaletteTexture(this Tileset tileset, int width, int height, int skip = 0)
     {
-        Debug.Assert(width * height >= tileset.Length, "width * height >= tileset.Length");
-        Image image = Raylib.GenImageColor(width * 8, height * 8, Color.White);
-        for (var i = 0; i < tileset.Length; i++)
+        Debug.Assert(width * height + skip >= tileset.Length, "width * height >= tileset.Length");
+        var image = Raylib.GenImageColor(width * 8, height * 8, Color.Black);
+        for (var i = 0; i < tileset.Length - skip; i++)
         {
-            var tile = tileset[i];
+            var tile = tileset[i + skip];
             var tilePos = new Vector2(i % width, (int)(i / width)) * Tile.Size;
-            for (int y = 0; y < Tile.Size; y++)
-            for (int x = 0; x < Tile.Size; x++)
+            for (var y = 0; y < Tile.Size; y++)
+            for (var x = 0; x < Tile.Size; x++)
             {
-                byte index = tile[x, y];
+                var index = tile[x, y];
                 Raylib.ImageDrawPixel(ref image, (int)tilePos.X + x, (int)tilePos.Y + y, new Color(index, index, index, (byte)255));
             }
         }
@@ -39,6 +39,13 @@ public static class Extensions
         return new Color(color.R << 3, color.G << 3, color.B << 3);
     }
 
-    public static Vec2I ToVec2I(this Vector2 v) => new((int)v.X, (int)v.Y);
-    public static Vector2 AsVector2(this Vec2I v) => new(v.X, v.Y);
+    public static Vec2I ToVec2I(this Vector2 v)
+    {
+        return new Vec2I((int)v.X, (int)v.Y);
+    }
+
+    public static Vector2 AsVector2(this Vec2I v)
+    {
+        return new Vector2(v.X, v.Y);
+    }
 }

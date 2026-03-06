@@ -16,7 +16,7 @@ public enum MapEditorToolType
     Eyedropper,
     Rectangle,
     Bucket,
-    Stamp,
+    Stamp
 }
 
 public class MapEditor : Editor, IToolEditable
@@ -41,22 +41,45 @@ public class MapEditor : Editor, IToolEditable
         PaletteShader.End();
     }
 
-    public bool ValidCell(Vector2 position) => View.PointOnTrack(position);
-    public UndoActions SetCellsUndoable(HashSet<Vector2> positions, byte id) => View.SetTilesUndoable(positions, id);
-    public UndoActions SetCellsUndoable(List<CellEntry> cells) => View.SetTilesUndoable(cells);
-    public UndoActions SetCellsUndoable(Rectangle area, byte id) => View.SetTilesUndoable(area, id);
-    public void PushUndoable(UndoActions action) => UndoManager.Push(action);
-    public byte GetCell(Vector2 position) => View.Track.Tilemap[position];
+    public bool ValidCell(Vector2 position)
+    {
+        return View.PointOnTrack(position);
+    }
+
+    public UndoActions SetCellsUndoable(HashSet<Vector2> positions, byte id)
+    {
+        return View.SetTilesUndoable(positions, id);
+    }
+
+    public UndoActions SetCellsUndoable(List<CellEntry> cells)
+    {
+        return View.SetTilesUndoable(cells);
+    }
+
+    public UndoActions SetCellsUndoable(Rectangle area, byte id)
+    {
+        return View.SetTilesUndoable(area, id);
+    }
+
+    public void PushUndoable(UndoActions action)
+    {
+        UndoManager.Push(action);
+    }
+
+    public byte GetCell(Vector2 position)
+    {
+        return View.Track.Tilemap[position];
+    }
 
     public void OutlineCell(Vector2 position, Color color)
     {
-        Raylib.DrawRectangleLinesEx(new Rectangle(position * 8 - Vector2.One, new(10)), 1, color);
+        Raylib.DrawRectangleLinesEx(new Rectangle(position * 8 - Vector2.One, new Vector2(10)), 1, color);
     }
 
     public CellEntry[]? Stamp { get; set; }
 
-    public bool ViewportHovered => !((Raylib.GetMousePosition().Y <= ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2) ||
-                                     (Raylib.GetMousePosition().X >= Raylib.GetRenderWidth() - Settings.Shared.UIScale * 262));
+    public bool ViewportHovered => !(Raylib.GetMousePosition().Y <= ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2 ||
+                                     Raylib.GetMousePosition().X >= Raylib.GetRenderWidth() * 262);
 
     public MapEditor(TrackView view)
     {
@@ -73,51 +96,49 @@ public class MapEditor : Editor, IToolEditable
         UpdateUI();
     }
 
-    void TrackSpaceUpdate()
+    private void TrackSpaceUpdate()
     {
         _tools[(int)_activeToolType].Update(this);
         CheckKeybinds();
     }
 
-    void UpdateUI()
+    private void UpdateUI()
     {
         UpdatePanel();
     }
 
-    void UpdatePanel()
+    private void UpdatePanel()
     {
-        var scale = Settings.Shared.UIScale;
         var mousePos = Raylib.GetMousePosition();
         var windowSize = new Vector2(Raylib.GetRenderWidth(), Raylib.GetRenderHeight());
 
-        var panelWidth = scale * 262;
+        var panelWidth = 262;
         var panelRect = new Rectangle(windowSize.X - panelWidth, ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2, panelWidth, windowSize.Y);
-        var tabRect = new Rectangle(panelRect.X - 25 * scale, (32 + windowSize.Y) / 2.0f - 25 * scale, 25 * scale, 50 * scale);
-        tabRect.X += (25 * scale);
+        var tabRect = new Rectangle(panelRect.X - 25, (32 + windowSize.Y) / 2.0f - 25, 25, 50);
+        tabRect.X += 25;
 
         Raylib.DrawRectangleRec(tabRect, ImHelper.Color(ImGuiCol.WindowBg));
-        Raylib.DrawRectangleLinesEx(tabRect, 1 * scale, ImHelper.Color(ImGuiCol.Border));
+        Raylib.DrawRectangleLinesEx(tabRect, 1, ImHelper.Color(ImGuiCol.Border));
         Raylib.DrawRectangleRec(panelRect, ImHelper.Color(ImGuiCol.WindowBg));
-        Raylib.DrawRectangleLinesEx(panelRect, 1 * scale, ImHelper.Color(ImGuiCol.Border));
-        UpdateTilePicker(panelRect.Position + new Vector2(3 * scale));
-        var optionsPos = panelRect.Position + new Vector2(3 * scale, 16 * 8 * 2 * scale + 6 * scale);
-        ToolPicker.Draw(optionsPos, panelWidth - 6 * scale, ref _activeToolType);
+        Raylib.DrawRectangleLinesEx(panelRect, 1, ImHelper.Color(ImGuiCol.Border));
+        UpdateTilePicker(panelRect.Position + new Vector2(3));
+        var optionsPos = panelRect.Position + new Vector2(3, 16 * 8 * 2 + 6);
+        ToolPicker.Draw(optionsPos, panelWidth - 6, ref _activeToolType);
         Focused = Raylib.CheckCollisionPointRec(mousePos, panelRect);
     }
 
-    void UpdateTilePicker(Vector2 position)
+    private void UpdateTilePicker(Vector2 position)
     {
         PaletteShader.Begin();
-        int scale = Settings.Shared.UIScale * 2;
-        var tileSize = 8 * scale;
+        var tileSize = 16;
         var tilesetRect = new Rectangle(position, new Vector2(16 * tileSize));
-        Raylib.DrawTextureEx(View.Tileset, position, 0.0f, scale, Color.White);
+        Raylib.DrawTextureEx(View.Tileset, position, 0.0f, 2, Color.White);
         PaletteShader.End();
         if (ActiveIndex.HasValue)
         {
             var tilePos = new Vector2((int)(ActiveIndex.Value % 16), (int)(ActiveIndex.Value / 16));
             var selectedTileRect = new Rectangle(tilesetRect.Position + tilePos * tileSize, new Vector2(tileSize));
-            Raylib.DrawRectangleLinesEx(selectedTileRect, 1 * scale, Color.White);
+            Raylib.DrawRectangleLinesEx(selectedTileRect, 2, Color.White);
         }
 
         var mousePos = Raylib.GetMousePosition();
@@ -126,22 +147,19 @@ public class MapEditor : Editor, IToolEditable
             var relMousePos = mousePos - tilesetRect.Position;
             var tilePosition = relMousePos / tileSize;
             tilePosition = new Vector2((int)tilePosition.X, (int)tilePosition.Y);
-            var hoverTileRect = new Rectangle(tilesetRect.Position + (tilePosition * tileSize), tileSize, tileSize);
-            hoverTileRect.Position -= new Vector2(scale);
-            hoverTileRect.Size += new Vector2(2 * scale);
-            Raylib.DrawRectangleLinesEx(hoverTileRect, 2 * scale, Color.White);
-            if (Raylib.IsMouseButtonPressed(MouseButton.Left))
-            {
-                ActiveIndex = (byte)(tilePosition.X + 16 * tilePosition.Y);
-            }
+            var hoverTileRect = new Rectangle(tilesetRect.Position + tilePosition * tileSize, tileSize, tileSize);
+            hoverTileRect.Position -= new Vector2(2);
+            hoverTileRect.Size += new Vector2(4);
+            Raylib.DrawRectangleLinesEx(hoverTileRect, 4, Color.White);
+            if (Raylib.IsMouseButtonPressed(MouseButton.Left)) ActiveIndex = (byte)(tilePosition.X + 16 * tilePosition.Y);
         }
     }
 
-    void CheckKeybinds()
+    private void CheckKeybinds()
     {
         var ctrl = Raylib.IsKeyDown(KeyboardKey.LeftControl) || Raylib.IsKeyDown(KeyboardKey.RightControl);
         var shift = Raylib.IsKeyDown(KeyboardKey.LeftShift) || Raylib.IsKeyDown(KeyboardKey.RightShift);
-        
+
         if (ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.Z)) UndoManager.Undo();
         if (ctrl && shift && Raylib.IsKeyPressed(KeyboardKey.Z)) UndoManager.Redo();
         var settings = Settings.Shared;

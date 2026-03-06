@@ -16,17 +16,17 @@ public static class FontLoader
 
     public static unsafe Font LoadMkscFont()
     {
-        Font font = Raylib.GetFontDefault();
-        Image image = Raylib.LoadImage("Resources/font.png");
+        var font = Raylib.GetFontDefault();
+        var image = Raylib.LoadImage("Resources/font.png");
 
         font.Texture = Raylib.LoadTextureFromImage(image);
         Raylib.SetTextureFilter(font.Texture, TextureFilter.Point);
         font.GlyphCount = CharacterCount + IconCount;
-        font.Glyphs = (GlyphInfo*)Raylib.MemAlloc((uint)(font.GlyphCount * 40));
-        font.Recs = (Rectangle*)Raylib.MemAlloc((uint)(font.GlyphCount * 16));
+        font.Glyphs = (GlyphInfo*)Raylib.MemAlloc((uint)(font.GlyphCount * sizeof(GlyphInfo)));
+        font.Recs = (Rectangle*)Raylib.MemAlloc((uint)(font.GlyphCount * sizeof(Rectangle)));
 
         var rect = new Rectangle(0, 0, 8, 16);
-        for (int i = 0; i < CharacterCount; i++)
+        for (var i = 0; i < CharacterCount; i++)
         {
             rect.Position = new Vector2(8 * (i % 32), 16 * (int)(i / 32));
             font.Glyphs[i].Value = CharMap[i];
@@ -38,7 +38,7 @@ public static class FontLoader
         }
 
         rect = new Rectangle(0, 0, 16, 16);
-        for (int i = 0; i < IconCount; i++)
+        for (var i = 0; i < IconCount; i++)
         {
             rect.Position = new Vector2(16 * (i % 32), 16 * (int)(i / 32) + 128);
             font.Glyphs[CharacterCount + i].Value = CharMap[CharacterCount + i];

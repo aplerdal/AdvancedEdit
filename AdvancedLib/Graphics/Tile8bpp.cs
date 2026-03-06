@@ -8,8 +8,8 @@ public class Tile8Bpp : Tile
 
     public override byte this[int x, int y]
     {
-        get => _indicies[x + Tile.Size * y];
-        set => _indicies[x + Tile.Size * y] = value;
+        get => _indicies[x + Size * y];
+        set => _indicies[x + Size * y] = value;
     }
 
     public static Tile8Bpp Empty => new();

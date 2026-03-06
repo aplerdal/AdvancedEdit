@@ -3,33 +3,43 @@ using MessagePack;
 
 namespace AdvancedLib.Serialization.AI;
 
-public enum ZoneShape
+public enum CheckpointShape
 {
     Rectangle,
     TriangleTopLeft,
     TriangleTopRight,
     TriangleBottomRight,
-    TriangleBottomLeft,
+    TriangleBottomLeft
 }
 
-[MessagePackObject(keyAsPropertyName: true)]
-public class AiZone : ISerializable, IEquatable<AiZone>
+[MessagePackObject]
+public class Checkpoint : ISerializable, IEquatable<Checkpoint>
 {
-    public static int Precision = 2;
-    public static int Size = 12;
-    public ZoneShape Shape { get; set; }
+    public static readonly int Precision = 2;
+    public static readonly int Size = 12;
+
+    [Key(0)]
+    public CheckpointShape Shape { get; set; }
+
+    [Key(1)]
     public ushort X { get; set; }
+
+    [Key(2)]
     public ushort Y { get; set; }
+
+    [Key(3)]
     public ushort Width { get; set; }
+
+    [Key(4)]
     public ushort Height { get; set; }
 
-    public AiZone()
+    public Checkpoint()
     {
     }
 
-    public static AiZone Default => new(0, 0, 16, 16, ZoneShape.Rectangle);
+    public static Checkpoint Default => new(0, 0, 16, 16, CheckpointShape.Rectangle);
 
-    public AiZone(ushort x, ushort y, ushort width, ushort height, ZoneShape shape)
+    public Checkpoint(ushort x, ushort y, ushort width, ushort height, CheckpointShape shape)
     {
         X = x;
         Y = y;
@@ -50,7 +60,7 @@ public class AiZone : ISerializable, IEquatable<AiZone>
 
     public void Deserialize(Stream stream)
     {
-        Shape = (ZoneShape)stream.ReadUInt8();
+        Shape = (CheckpointShape)stream.ReadUInt8();
         X = stream.ReadUInt16();
         Y = stream.ReadUInt16();
         Width = stream.ReadUInt16();
@@ -64,16 +74,16 @@ public class AiZone : ISerializable, IEquatable<AiZone>
         var posY = Y;
         switch (Shape)
         {
-            case ZoneShape.Rectangle:
+            case CheckpointShape.Rectangle:
             {
-                for (int y = 0; y <= Height; y++)
+                for (var y = 0; y <= Height; y++)
                 {
-                    int destY = posY + y;
+                    var destY = posY + y;
                     if (destY >= mapWidth) continue;
 
-                    for (int x = 0; x <= Width; x++)
+                    for (var x = 0; x <= Width; x++)
                     {
-                        int destX = posX + x;
+                        var destX = posX + x;
                         if (destX >= mapWidth) continue;
 
                         map[destX + destY * mapWidth] = id;
@@ -81,26 +91,26 @@ public class AiZone : ISerializable, IEquatable<AiZone>
                 }
             }
                 break;
-            case ZoneShape.TriangleTopLeft:
-            case ZoneShape.TriangleTopRight:
-            case ZoneShape.TriangleBottomRight:
-            case ZoneShape.TriangleBottomLeft:
+            case CheckpointShape.TriangleTopLeft:
+            case CheckpointShape.TriangleTopRight:
+            case CheckpointShape.TriangleBottomRight:
+            case CheckpointShape.TriangleBottomLeft:
             {
                 var height = Width + 1;
-                for (int dy = 0; dy < height; dy++)
+                for (var dy = 0; dy < height; dy++)
                 {
                     int rowY;
-                    if (Shape == ZoneShape.TriangleTopLeft || Shape == ZoneShape.TriangleTopRight)
+                    if (Shape == CheckpointShape.TriangleTopLeft || Shape == CheckpointShape.TriangleTopRight)
                         rowY = posY + dy;
                     else
                         rowY = posY - dy;
                     if (rowY >= mapWidth) continue;
 
-                    int length = height - dy;
-                    for (int dx = 0; dx < length; dx++)
+                    var length = height - dy;
+                    for (var dx = 0; dx < length; dx++)
                     {
                         int colX;
-                        if (Shape == ZoneShape.TriangleTopLeft || Shape == ZoneShape.TriangleBottomLeft)
+                        if (Shape == CheckpointShape.TriangleTopLeft || Shape == CheckpointShape.TriangleBottomLeft)
                             colX = posX + dx;
                         else
                             colX = posX - dx;
@@ -114,7 +124,7 @@ public class AiZone : ISerializable, IEquatable<AiZone>
         }
     }
 
-    public bool Equals(AiZone? other)
+    public bool Equals(Checkpoint? other)
     {
         return other != null && Shape == other.Shape && X == other.X && Y == other.Y && Width == other.Width && Height == other.Height;
     }

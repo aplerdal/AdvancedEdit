@@ -7,14 +7,14 @@ public class ObjectPlacement : ISerializable, IEquatable<ObjectPlacement>
     public byte ID { get; set; }
     public byte X { get; set; }
     public byte Y { get; set; }
-    public byte Zone { get; set; }
+    public byte Checkpoint { get; set; }
 
     public void Deserialize(Stream stream)
     {
         ID = stream.ReadUInt8();
         X = stream.ReadUInt8();
         Y = stream.ReadUInt8();
-        Zone = stream.ReadUInt8();
+        Checkpoint = stream.ReadUInt8();
     }
 
     public void Serialize(Stream stream)
@@ -22,11 +22,11 @@ public class ObjectPlacement : ISerializable, IEquatable<ObjectPlacement>
         stream.Write(ID);
         stream.Write(X);
         stream.Write(Y);
-        stream.Write(Zone);
+        stream.Write(Checkpoint);
     }
 
     public bool Equals(ObjectPlacement? other)
     {
-        return other != null && ID == other.ID && X == other.X && Y == other.Y && Zone == other.Zone;
+        return other != null && ID == other.ID && X == other.X && Y == other.Y && Checkpoint == other.Checkpoint;
     }
 }

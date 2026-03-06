@@ -2,6 +2,7 @@ using System.Numerics;
 using AdvancedLib.Game;
 using AdvancedLib.Graphics;
 using AdvEditRework.DearImGui;
+using AdvEditRework.UI.Editors.Gfx;
 using Hexa.NET.ImGui;
 using Raylib_cs;
 
@@ -11,6 +12,7 @@ public enum TrackGraphic
 {
     Tileset,
     Minimap,
+    Cover
 }
 
 public class TrackGfxEditor : Editor
@@ -19,12 +21,12 @@ public class TrackGfxEditor : Editor
     private TrackGraphic _activeGraphic;
     private TilesetEditor _tilesetEditor;
 
-    private readonly Palette _uiPalette = new Palette(
+    private readonly Palette _uiPalette = new(
         [
-            new(0x7C1F), new(0xFFFF), new(0xFFD2), new(0xFB6E),
-            new(0xDE69), new(0x3D82), new(0x83FF), new(0x83CC),
-            new(0x8256), new(0x82BF), new(0x01FF), new(0xC210),
-            new(0xD6B5), new(0xE318), new(0xFFFF), new(0x0000)
+            new BgrColor(0x7C1F), new BgrColor(0xFFFF), new BgrColor(0xFFD2), new BgrColor(0xFB6E),
+            new BgrColor(0xDE69), new BgrColor(0x3D82), new BgrColor(0x83FF), new BgrColor(0x83CC),
+            new BgrColor(0x8256), new BgrColor(0x82BF), new BgrColor(0x01FF), new BgrColor(0xC210),
+            new BgrColor(0xD6B5), new BgrColor(0xE318), new BgrColor(0xFFFF), new BgrColor(0x0000)
         ]
     );
 
@@ -42,7 +44,7 @@ public class TrackGfxEditor : Editor
         GfxSelectorPanel(hasFocus);
     }
 
-    void GfxSelectorPanel(bool hasFocus)
+    private void GfxSelectorPanel(bool hasFocus)
     {
         var windowSize = new Vector2(Raylib.GetRenderWidth(), Raylib.GetRenderHeight());
         var menuBarHeight = ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2;
@@ -54,6 +56,7 @@ public class TrackGfxEditor : Editor
         var optionsX = position.X + _tilesetEditor.RenderSize.X + 4;
         var optionsRect = new Rectangle(optionsX, menuBarHeight, windowSize.X - optionsX, windowSize.Y - position.Y);
 
+        Raylib.DrawRectangleLinesEx(optionsRect, 2, Color.LightGray);
         ImHelper.BeginEmptyWindow("GfxOptionsWindow", optionsRect);
 
         var trackGraphics = Enum.GetValues(typeof(TrackGraphic)).Cast<TrackGraphic>();
@@ -61,26 +64,34 @@ public class TrackGfxEditor : Editor
         if (ImGui.BeginCombo("Active Graphics", graphicName))
         {
             foreach (var graphic in trackGraphics)
-            {
-                if (ImGui.Selectable(Enum.GetName(graphic)))
+                if (graphic == TrackGraphic.Cover && _track.CoverArt is null)
                 {
-                    if (_activeGraphic == graphic) continue;
-                    _activeGraphic = graphic;
-                    switch (graphic)
+                    ImGui.BeginDisabled();
+                    ImGui.Selectable(Enum.GetName(graphic));
+                    ImGui.EndDisabled();
+                }
+                else
+                {
+                    if (ImGui.Selectable(Enum.GetName(graphic)))
                     {
-                        case TrackGraphic.Minimap:
-                            _tilesetEditor = new TilesetEditor(_track.Minimap, _uiPalette);
-                            break;
-                        case TrackGraphic.Tileset:
-                            _tilesetEditor = new TilesetEditor(_track.Tileset, _track.TilesetPalette);
-                            break;
+                        if (_activeGraphic == graphic) continue;
+                        _activeGraphic = graphic;
+                        _tilesetEditor.Dispose();
+                        _tilesetEditor = graphic switch
+                        {
+                            TrackGraphic.Minimap => new TilesetEditor(_track.Minimap, _uiPalette, true),
+                            TrackGraphic.Tileset => new TilesetEditor(_track.Tileset, _track.TilesetPalette),
+                            TrackGraphic.Cover => new TilesetEditor(_track.CoverArt!, _track.CoverPalette!, 10, 8, 1),
+                            _ => throw new ArgumentOutOfRangeException(nameof(graphic))
+                        };
                     }
                 }
-            }
 
             ImGui.EndCombo();
         }
-        _tilesetEditor.ShowOptions(new Rectangle(ImGui.GetCursorScreenPos(), ImGui.GetContentRegionAvail()));
+
+        _tilesetEditor.ShowOptions();
+        _tilesetEditor.ShowPaletteOptions();
 
         ImHelper.EndEmptyWindow();
     }

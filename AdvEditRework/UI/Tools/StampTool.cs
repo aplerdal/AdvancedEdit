@@ -16,13 +16,11 @@ public class StampTool : MapEditorTool
 
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
-                List<CellEntry> offset = new List<CellEntry>();
+                var offset = new List<CellEntry>();
 
                 foreach (var entry in editor.Stamp)
-                {
                     if (editor.ValidCell(editor.CellMousePos + entry.Position))
                         offset.Add(entry with { Position = editor.CellMousePos + entry.Position });
-                }
 
                 editor.PushUndoable(editor.SetCellsUndoable(offset));
             }

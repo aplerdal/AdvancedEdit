@@ -6,7 +6,8 @@ using Raylib_cs;
 namespace AdvEditRework.UI;
 
 /// <summary>
-/// A custom immediate mode GUI
+/// A custom immediate mode GUI for the main menu
+/// This probably needs to be removed, but it looks cool, so that can come later ;)
 /// </summary>
 public static class Gui
 {
@@ -16,8 +17,8 @@ public static class Gui
     private static float Scale => Style.FontSize / 16.0f;
     private static Vector2 _cursor;
 
-    private static Stack<Style> _styleStack = new Stack<Style>();
-    public static Style Style { get; private set; } = new Style();
+    private static Stack<Style> _styleStack = new();
+    public static Style Style { get; private set; } = new();
 
     public static Vector2 MeasureText(string text)
     {
@@ -60,8 +61,8 @@ public static class Gui
 
     public static bool LabelButton(string text)
     {
-        bool clicked = false;
-        bool hovered = false;
+        var clicked = false;
+        var hovered = false;
         var textSize = MeasureText(text);
         var textRect = new Rectangle(_cursor.X, _cursor.Y, textSize.X, textSize.Y);
         if (Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), textRect))
@@ -78,10 +79,7 @@ public static class Gui
 
     public static void LabelLink(string text, string url)
     {
-        if (LabelButton(text))
-        {
-            Raylib.OpenURL(url);
-        }
+        if (LabelButton(text)) Raylib.OpenURL(url);
     }
 
     public static void PushStyle(Action<Style> modifier)
@@ -93,12 +91,8 @@ public static class Gui
     public static void PopStyle()
     {
         if (_styleStack.Count > 0)
-        {
             Style = _styleStack.Pop();
-        }
         else
-        {
             throw new InvalidOperationException("Style stack underflow");
-        }
     }
 }

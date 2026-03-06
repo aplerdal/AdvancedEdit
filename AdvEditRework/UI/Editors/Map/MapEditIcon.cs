@@ -8,5 +8,5 @@ public enum MapEditIcon
     File = '\uE003',
     Help = '\uE004',
     Discord = '\uE005',
-    Settings = '\uE006',
+    Settings = '\uE006'
 }

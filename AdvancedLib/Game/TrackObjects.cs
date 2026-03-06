@@ -3,11 +3,16 @@ using MessagePack;
 
 namespace AdvancedLib.Game;
 
-[MessagePackObject(keyAsPropertyName: true)]
+[MessagePackObject]
 public class TrackObjects
 {
+    [Key(0)]
     public List<ObstaclePlacement> ObstaclePlacements { get; set; } = new();
+
+    [Key(1)]
     public List<Vec2I> ItemBoxes { get; set; } = new();
+
+    [Key(2)]
     public List<StartPosition> StartPositions { get; set; } = new();
 
     public List<Obstacle> GetObstacles()

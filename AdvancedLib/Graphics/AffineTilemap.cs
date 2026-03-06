@@ -5,7 +5,7 @@ namespace AdvancedLib.Graphics;
 /// <summary>
 /// A class containing a GBA affine tilemap
 /// </summary>
-public class AffineTilemap
+public class AffineTilemap : IAsyncWritable
 {
     private byte[] _indicies;
     public int Width { get; set; }
@@ -49,12 +49,18 @@ public class AffineTilemap
         stream.ReadExactly(_indicies);
     }
 
-    public byte[] GetData() => _indicies;
+    public byte[] GetData()
+    {
+        return _indicies;
+    }
 
     public void Write(Stream stream)
     {
         stream.Write(_indicies);
     }
 
-    public Task WriteAsync(Stream stream) => Task.Run(() => Write(stream));
+    public Task WriteAsync(Stream stream)
+    {
+        return Task.Run(() => Write(stream));
+    }
 }

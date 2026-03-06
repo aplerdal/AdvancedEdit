@@ -38,9 +38,9 @@ public class SelectionTool : MapEditorTool
             var max = new Vector2(Math.Max(p1.X, p2.X) + 1, Math.Max(p1.Y, p2.Y) + 1);
             var selRect = new Rectangle(min, max - min);
             var stamp = new CellEntry[(int)selRect.Width * (int)selRect.Height];
-            for (int y = 0; y < (int)selRect.Height; y++)
-            for (int x = 0; x < (int)selRect.Width; x++)
-                stamp[y * (int)selRect.Width + x] = new CellEntry(new Vector2(x, y), editor.GetCell(new(x + selRect.X, y + selRect.Y)));
+            for (var y = 0; y < (int)selRect.Height; y++)
+            for (var x = 0; x < (int)selRect.Width; x++)
+                stamp[y * (int)selRect.Width + x] = new CellEntry(new Vector2(x, y), editor.GetCell(new Vector2(x + selRect.X, y + selRect.Y)));
             editor.Stamp = stamp;
             editor.SetTool(MapEditorToolType.Stamp);
         }

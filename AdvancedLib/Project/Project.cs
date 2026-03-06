@@ -9,8 +9,8 @@ namespace AdvancedLib.Project;
 public class Project(string name)
 {
     public string Name { get; set; } = name;
-    public string Folder => Path.Combine(Path.GetTempPath(), "AdvLib", Name);
-    public ProjectConfig Config = new ProjectConfig();
+    public readonly string Folder = Path.Combine(Path.GetTempPath(), "AdvLib", Guid.NewGuid().ToString("N"));
+    public ProjectConfig Config = new();
 
     /// <summary>
     /// Load project from a .amkp file
@@ -19,26 +19,25 @@ public class Project(string name)
     public static Project Unpack(string path)
     {
         var project = new Project(Path.GetFileNameWithoutExtension(path));
-        var folder = project.Folder;
-        if (Directory.Exists(folder))
-        {
-            Directory.Delete(folder, true);
-        }
+        if (Directory.Exists(project.Folder)) Directory.Delete(project.Folder, true);
 
-        Directory.CreateDirectory(folder);
-        TarFile.ExtractToDirectory(path, folder, false);
+        Directory.CreateDirectory(project.Folder);
+        TarFile.ExtractToDirectory(path, project.Folder, false);
 
-        using var configStream = File.OpenRead(Path.Combine(folder, "config.msp"));
+        using var configStream = File.OpenRead(Path.Combine(project.Folder, "config.msp"));
         project.Config = MessagePackSerializer.Deserialize<ProjectConfig>(configStream);
+
+        foreach (var cup in project.Config.Cups)
+        foreach (var track in cup.Tracks)
+            track.ResolveFolder(Path.Combine(project.Folder, cup.Name));
 
         return project;
     }
 
     public void Save(string path)
     {
-        var configStream = File.Create(Path.Combine(Folder, "config.msp"));
+        using var configStream = File.Create(Path.Combine(Folder, "config.msp"));
         MessagePackSerializer.Serialize(configStream, Config);
-        configStream.Dispose();
         if (File.Exists(path)) File.Delete(path);
         TarFile.CreateFromDirectory(Folder, path, false);
     }
@@ -48,7 +47,7 @@ public class Project(string name)
         // Apply Patches
         Patcher.Apply("Resources/Patches/objRework.ips", stream);
 
-        int headerIdx = 0;
+        var headerIdx = 0;
         stream.Seek(new Pointer(0x08400000));
         foreach (var cup in Config.Cups)
         foreach (var projectTrack in cup.Tracks)
@@ -66,29 +65,26 @@ public class Project(string name)
         }
     }
 
-    public static Project FromRom(Stream romStream, string projectName)
+    public static async Task<Project> FromRomAsync(Stream romStream, string projectName)
     {
         var project = new Project(projectName);
-        var folder = Path.Combine(Path.GetTempPath(), "AdvLib", projectName);
-        if (Directory.Exists(folder))
-        {
-            Directory.Delete(folder, true);
-        }
+        if (Directory.Exists(project.Folder)) Directory.Delete(project.Folder, true);
 
-        Directory.CreateDirectory(folder);
+        Directory.CreateDirectory(project.Folder);
 
         for (var i = 0; i < TrackNames.Cups.Length; i++)
         {
             var cupName = TrackNames.Cups[i];
             if (cupName == "Victory") continue; // TODO: Editable Podium Track
-            ProjectTrack[] cupTracks = new ProjectTrack[4];
-            for (int j = 0; j < 4; j++)
+            var cupTracks = new ProjectTrack[4];
+            for (var j = 0; j < 4; j++)
             {
                 romStream.Seek(RomData.Cups.Address + 16 * i + j * 4, SeekOrigin.Begin);
                 var headerIdx = romStream.Read<int>();
                 var name = TrackNames.GetTrackNameFromHeaderIndex(headerIdx);
-                cupTracks[j] = new ProjectTrack(Path.Combine(folder, name), name);
-                cupTracks[j].SaveTrackData(Track.FromRom(romStream, headerIdx));
+                cupTracks[j] = new ProjectTrack(name);
+                cupTracks[j].ResolveFolder(Path.Combine(project.Folder, cupName));
+                await cupTracks[j].SaveTrackDataAsync(Track.FromRom(romStream, headerIdx));
             }
 
             project.Config.Cups.Add(new Cup(cupName, cupTracks));

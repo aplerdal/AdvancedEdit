@@ -10,12 +10,12 @@ public static class TrackNames
         44, 45, 46, 47, //         Star
         48, 49, 50, 51, //         Special
         52, 53, 54, 55, //         Battle
-        4, 5, 9, 7,     // MKSC    Mushroom
+        4, 5, 9, 7, // MKSC    Mushroom
         12, 17, 18, 11, //         Flower 
-        8, 20, 13, 6,   //         Lightning
+        8, 20, 13, 6, //         Lightning
         16, 14, 10, 15, //         Star
         23, 21, 22, 19, //         Special
-        24, 25, 26, 27  //         Battle
+        24, 25, 26, 27 //         Battle
     ];
 
     public static readonly string[] Cups =
@@ -34,7 +34,7 @@ public static class TrackNames
         "Retro Star Cup",
         "Retro Special Cup",
         "Retro Battle",
-        "Battle",
+        "Battle"
     ];
 
     private static readonly string[] TrackNameMap =
@@ -101,7 +101,10 @@ public static class TrackNames
         "Battle Course 4"
     ];
 
-    private static int GetHeaderCupIndex(int headerIdx) => Array.IndexOf(CupTracks, headerIdx);
+    private static int GetHeaderCupIndex(int headerIdx)
+    {
+        return Array.IndexOf(CupTracks, headerIdx);
+    }
 
     public static string GetTrackNameFromHeaderIndex(int headerIdx)
     {

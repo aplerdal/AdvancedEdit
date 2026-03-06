@@ -10,7 +10,7 @@ public class SettingsMenu : Scene
     public override void Init(ref Project? project)
     {
     }
-    
+
     public override void Update(ref Project? project)
     {
         var viewport = ImGui.GetMainViewport();
@@ -20,10 +20,7 @@ public class SettingsMenu : Scene
         {
             ImGui.Text("Settings");
             ImGui.Separator();
-            
-            // General settings
-            ImGui.InputInt("UI Scale", ref Settings.Shared.UIScale);
-            
+
             // Keybinds
             if (ImGui.BeginTable("Keybinds", 2, ImGuiTableFlags.BordersOuter | ImGuiTableFlags.BordersInnerV))
             {
@@ -38,7 +35,7 @@ public class SettingsMenu : Scene
                 KeybindRow("Bucket Tool Hotkey", ref settings.BucketBind);
                 ImGui.EndTable();
             }
-            
+
             if (ImGui.Button("Exit"))
             {
                 Settings.Save();
@@ -56,7 +53,7 @@ public class SettingsMenu : Scene
         ImGui.TableSetColumnIndex(1);
         ImHelper.Keybind(text, ref key);
     }
-    
+
     public override void Dispose()
     {
         //

@@ -1,111 +1,136 @@
 using AdvancedLib.Game;
 using AdvancedLib.Graphics;
 using AdvancedLib.Serialization.AI;
+using AdvancedLib.Serialization.Tracks;
 using MessagePack;
 
 namespace AdvancedLib.Project;
 
-[MessagePackObject(keyAsPropertyName: true)]
+[MessagePackObject]
 public class ProjectTrack
 {
-    public string Folder { get; set; }
+    [Key(0)]
     public string Name { get; set; }
 
-    private readonly string _configPath, _tilesetPath, _tilemapPath, _minimapPath, _obstacleGraphicsPath, _objectsPath, _obstaclePalettePath, _aiPath, _tilesetPalPath, _behaviorsPath, _coinsPath;
+    // Folder is derived at runtime, never serialized
+    [IgnoreMember] public string Folder { get; private set; }
 
-    public ProjectTrack(string folder, string name)
+    public static string Config => "track.msp";
+    public static string Tileset => "tileset.chr";
+    public static string TilesetPal => "tileset.pal";
+    public static string Tilemap => "tilemap.scr";
+    public static string Minimap => "minimap.chr";
+    public static string ObstacleGfx => "obstacles.chr";
+    public static string ObstaclePal => "obstacles.pal";
+    public static string Objects => "objects.msp";
+    public static string Coins => "coins.msp";
+    public static string Behaviors => "behaviors.msp";
+    public static string Ai => "ai.msp";
+    public static string CoverArt => "cover.chr";
+    public static string CoverPal => "cover.pal";
+    public static string TargetTimes => "times.msp";
+
+    private string PathFor(string file)
+    {
+        return Path.Combine(Folder, file);
+    }
+
+    public ProjectTrack(string name)
     {
         Name = name;
-        Folder = folder;
-        _configPath = Path.Combine(Folder, "track.msp");
-        _tilesetPath = Path.Combine(Folder, "tileset.chr");
-        _tilesetPalPath = Path.Combine(Folder, "tileset.pal");
-        _tilemapPath = Path.Combine(Folder, "tilemap.scr");
-        _minimapPath = Path.Combine(Folder, "minimap.chr");
-        _obstacleGraphicsPath = Path.Combine(Folder, "obstacles.chr");
-        _obstaclePalettePath = Path.Combine(Folder, "obstacles.pal");
-        _objectsPath = Path.Combine(Folder, "objects.msp");
-        _coinsPath = Path.Combine(Folder, "coins.msp");
-        _behaviorsPath = Path.Combine(Folder, "behaviors.bin");
-        _aiPath = Path.Combine(Folder, "ai.msp");
+    }
+
+    public void ResolveFolder(string baseDirectory)
+    {
+        Folder = Path.Combine(baseDirectory, Name);
         if (!Directory.Exists(Folder))
             Directory.CreateDirectory(Folder);
     }
 
-    public void SaveTrackData(Track track)
+    private async Task SerializeMspAsync<T>(string file, T value)
     {
-        using var configStream = File.Create(_configPath);
-        using var tilesetStream = File.Create(_tilesetPath);
-        using var tilesetPalStream = File.Create(_tilesetPalPath);
-        using var tilemapStream = File.Create(_tilemapPath);
-        using var minimapStream = File.Create(_minimapPath);
-        using var objectsStream = File.Create(_objectsPath);
-        using var aiStream = File.Create(_aiPath);
-        using var coinsStream = File.Create(_coinsPath);
-        using var behaviorsStream = File.Create(_behaviorsPath);
+        await using var stream = File.Create(PathFor(file));
+        await MessagePackSerializer.SerializeAsync(stream, value);
+    }
+
+    private async Task SerializeAsync<T>(string file, T value) where T : IAsyncWritable
+    {
+        await using var stream = File.Create(PathFor(file));
+        await value.WriteAsync(stream);
+    }
+
+
+    public async Task SaveTrackDataAsync(Track track)
+    {
+        var tasks = new List<Task>();
 
         if (track.ObstacleGfx is not null && track.ObstaclePalette is not null)
         {
-            using var obstacleGfxStream = File.Create(_obstacleGraphicsPath);
-            track.ObstacleGfx.Write(obstacleGfxStream);
-            using var obstaclePaletteStream = File.Create(_obstaclePalettePath);
-            track.ObstaclePalette.Write(obstaclePaletteStream);
+            tasks.Add(SerializeAsync(ObstacleGfx, track.ObstacleGfx));
+            tasks.Add(SerializeAsync(ObstaclePal, track.ObstaclePalette));
         }
 
-        Task.WaitAll(
-            MessagePackSerializer.SerializeAsync(configStream, track.Config),
-            track.Tileset.WriteAsync(tilesetStream),
-            track.TilesetPalette.WriteAsync(tilesetPalStream),
-            track.Tilemap.WriteAsync(tilemapStream),
-            track.Minimap.WriteAsync(minimapStream),
-            MessagePackSerializer.SerializeAsync(coinsStream, track.Coins),
-            behaviorsStream.WriteAsync(track.Behaviors).AsTask(),
-            MessagePackSerializer.SerializeAsync(objectsStream, track.Objects),
-            MessagePackSerializer.SerializeAsync(aiStream, track.Ai)
-        );
+        if (track.CoverArt is not null && track.CoverPalette is not null)
+        {
+            tasks.Add(SerializeAsync(CoverArt, track.CoverArt));
+            tasks.Add(SerializeAsync(CoverPal, track.CoverPalette));
+        }
+
+        tasks.AddRange([
+            SerializeMspAsync(Config, track.Config),
+            SerializeAsync(Tileset, track.Tileset),
+            SerializeAsync(TilesetPal, track.TilesetPalette),
+            SerializeAsync(Tilemap, track.Tilemap),
+            SerializeAsync(Minimap, track.Minimap),
+            SerializeMspAsync(Coins, track.Coins),
+            SerializeMspAsync(Objects, track.Objects),
+            SerializeMspAsync(Ai, track.Ai),
+            SerializeMspAsync(TargetTimes, track.TargetTimes),
+            SerializeMspAsync(Behaviors, track.Behaviors)
+        ]);
+
+        await Task.WhenAll(tasks);
     }
+
+    private T DeserializeMsp<T>(string file)
+    {
+        using var stream = File.OpenRead(PathFor(file));
+        return MessagePackSerializer.Deserialize<T>(stream);
+    }
+
+    private T Deserialize<T>(string file, Func<Stream, T> factory)
+    {
+        using var stream = File.OpenRead(PathFor(file));
+        return factory(stream);
+    }
+
+    private T? DeserializeIfExists<T>(string file, Func<Stream, T> factory) where T : class
+    {
+        if (!File.Exists(PathFor(file))) return null;
+        using var stream = File.OpenRead(PathFor(file));
+        return factory(stream);
+    }
+
 
     public Track LoadTrackData()
     {
-        using var configStream = File.OpenRead(_configPath);
-        using var tilesetStream = File.OpenRead(_tilesetPath);
-        using var tilesetPalStream = File.OpenRead(_tilesetPalPath);
-        using var tilemapStream = File.OpenRead(_tilemapPath);
-        using var minimapStream = File.OpenRead(_minimapPath);
-        using var coinsStream = File.OpenRead(_coinsPath);
-        Stream? obstacleGfxStream = null;
-        Stream? obstaclePaletteStream = null;
-        if (File.Exists(_obstacleGraphicsPath))
-        {
-            obstacleGfxStream = File.OpenRead(_obstacleGraphicsPath);
-            obstaclePaletteStream = File.OpenRead(_obstaclePalettePath);
-        }
-
-        using var objectsStream = File.OpenRead(_objectsPath);
-        using var aiStream = File.OpenRead(_aiPath);
-        using var behaviorsStream = File.OpenRead(_behaviorsPath);
-
-        byte[] behaviors = new byte[256];
-        behaviorsStream.ReadExactly(behaviors);
-
-        var trackConfig = MessagePackSerializer.Deserialize<TrackConfig>(configStream);
-        var obstacleGfxTileset = (obstacleGfxStream is null) ? null : new Tileset(obstacleGfxStream, 256, PixelFormat.Bpp4);
-        var obstaclePalette = (obstaclePaletteStream is null) ? null : new Palette(obstaclePaletteStream, 48);
-        obstacleGfxStream?.Dispose();
-        obstaclePaletteStream?.Dispose();
+        var trackConfig = DeserializeMsp<TrackConfig>(Config);
         return new Track
         {
             Config = trackConfig,
-            Tileset = new Tileset(tilesetStream, 256, PixelFormat.Bpp8),
-            TilesetPalette = new Palette(tilesetPalStream, 64),
-            Tilemap = new AffineTilemap(tilemapStream, trackConfig.Size.X * 128, trackConfig.Size.Y * 128),
-            Minimap = new Tileset(minimapStream, 64, PixelFormat.Bpp4),
-            ObstacleGfx = obstacleGfxTileset,
-            ObstaclePalette = obstaclePalette,
-            Behaviors = behaviors,
-            Coins = MessagePackSerializer.Deserialize<List<Vec2I>>(coinsStream),
-            Objects = MessagePackSerializer.Deserialize<TrackObjects>(objectsStream),
-            Ai = MessagePackSerializer.Deserialize<TrackAi>(aiStream),
+            Tileset = Deserialize(Tileset, s => new Tileset(s, 256, PixelFormat.Bpp8)),
+            TilesetPalette = Deserialize(TilesetPal, s => new Palette(s, 64)),
+            Tilemap = Deserialize(Tilemap, s => new AffineTilemap(s, trackConfig.Size.X * 128, trackConfig.Size.Y * 128)),
+            Minimap = Deserialize(Minimap, s => new Tileset(s, 64, PixelFormat.Bpp4)),
+            ObstacleGfx = DeserializeIfExists(ObstacleGfx, s => new Tileset(s, 256, PixelFormat.Bpp4)),
+            ObstaclePalette = DeserializeIfExists(ObstaclePal, s => new Palette(s, 48)),
+            CoverArt = DeserializeIfExists(CoverArt, s => new Tileset(s, 81, PixelFormat.Bpp8)),
+            CoverPalette = DeserializeIfExists(CoverPal, s => new Palette(s, 80)),
+            Behaviors = DeserializeMsp<byte[]>(Behaviors),
+            Coins = DeserializeMsp<List<Vec2I>>(Coins),
+            Objects = DeserializeMsp<TrackObjects>(Objects),
+            Ai = DeserializeMsp<TrackAi>(Ai),
+            TargetTimes = DeserializeMsp<TargetTime[]>(TargetTimes)
         };
     }
 }
