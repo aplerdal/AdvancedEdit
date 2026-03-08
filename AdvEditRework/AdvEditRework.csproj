@@ -18,6 +18,7 @@
     <ItemGroup>
         <ProjectReference Include="..\AdvancedLib.RaylibExt\AdvancedLib.RaylibExt.csproj"/>
         <ProjectReference Include="..\AdvancedLib\AdvancedLib.csproj"/>
+        <ProjectReference Include="..\GifLib\GifLib.csproj" />
     </ItemGroup>
     <PropertyGroup>
         <DebugType>full</DebugType>

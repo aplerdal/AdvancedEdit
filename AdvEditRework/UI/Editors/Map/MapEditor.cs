@@ -79,7 +79,7 @@ public class MapEditor : Editor, IToolEditable
     public CellEntry[]? Stamp { get; set; }
 
     public bool ViewportHovered => !(Raylib.GetMousePosition().Y <= ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2 ||
-                                     Raylib.GetMousePosition().X >= Raylib.GetRenderWidth() * 262);
+                                     Raylib.GetMousePosition().X >= Raylib.GetRenderWidth() - 262);
 
     public MapEditor(TrackView view)
     {

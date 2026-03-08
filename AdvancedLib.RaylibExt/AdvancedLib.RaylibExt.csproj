@@ -12,6 +12,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\AdvancedLib\AdvancedLib.csproj"/>
+        <ProjectReference Include="..\GifLib\GifLib.csproj" />
     </ItemGroup>
 
 </Project>

@@ -18,9 +18,9 @@ public enum EditMode
 public class TrackView : IDisposable
 {
     public Texture2D Tileset;
-    private readonly int[] _shaderPalette;
+    private int[] _shaderPalette;
     public Camera2D Camera;
-    public readonly Track Track;
+    public Track Track;
     private RenderTexture2D _trackTexture;
     public Vector2 MouseWorldPos { get; private set; } = Vector2.Zero;
     public Vector2 MouseTilePos { get; private set; } = Vector2.Zero;
@@ -32,9 +32,6 @@ public class TrackView : IDisposable
     public TrackView(Track track)
     {
         Track = track;
-        Tileset = track.Tileset.TilePaletteTexture(16, 16);
-        var palette = track.TilesetPalette;
-        _shaderPalette = palette.ToIVec3();
         Camera = new Camera2D
         {
             Offset = new Vector2(0),
@@ -43,12 +40,14 @@ public class TrackView : IDisposable
             Zoom = 1.0f
         };
         DrawInTrack = null;
-        RegenMapTextures();
+        RegenTextureBuffers();
     }
 
-    private void RegenMapTextures()
+    public void RegenTextureBuffers()
     {
         var tilemap = Track.Tilemap;
+        if (Raylib.IsTextureValid(Tileset)) Raylib.UnloadTexture(Tileset); 
+        Tileset = Track.Tileset.TilePaletteTexture(16, 16);
         if (!Raylib.IsRenderTextureValid(_trackTexture) || _trackTexture.Texture.Width != tilemap.Width * 8 || _trackTexture.Texture.Height != tilemap.Height * 8)
         {
             Raylib.UnloadRenderTexture(_trackTexture);
@@ -61,6 +60,7 @@ public class TrackView : IDisposable
         for (var x = 0; x < tilemap.Width; x++)
             Raylib.DrawTextureRec(Tileset, Extensions.GetTileRect(tilemap[x, y], 16), new Vector2(x, y) * 8, Color.White);
         Raylib.EndTextureMode();
+        _shaderPalette = Track.TilesetPalette.ToIVec3();
     }
 
     private bool _isPanning;

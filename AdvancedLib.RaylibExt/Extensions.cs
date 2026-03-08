@@ -36,7 +36,7 @@ public static class Extensions
 
     public static Color ToColor(this BgrColor color)
     {
-        return new Color(color.R << 3, color.G << 3, color.B << 3);
+        return new Color(color.R5 << 3, color.G5 << 3, color.B5 << 3);
     }
 
     public static Vec2I ToVec2I(this Vector2 v)

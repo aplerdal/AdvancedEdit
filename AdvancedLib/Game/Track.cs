@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using AdvancedLib.Graphics;
 using AdvancedLib.Serialization;
 using AdvancedLib.Serialization.AI;
@@ -26,8 +25,11 @@ public class Track
     public required TrackAi Ai { get; set; }
     public required Tileset? CoverArt { get; set; }
     public required Palette? CoverPalette { get; set; }
+    public required Palette? LockedCoverPalette { get; set; }
     public required byte[] Behaviors { get; set; }
     public required TargetTime[] TargetTimes { get; set; }
+    public required TurnSign[]? TurnSigns { get; set; }
+    public required RivalTargets RivalTargets { get; set; }
 
     /// <summary>
     /// Initialize empty <see cref="Track"/> object
@@ -60,7 +62,10 @@ public class Track
             Ai = LoadAi(stream, header, definition),
             CoverArt = LoadCoverArt(stream, definition),
             CoverPalette = LoadCoverPalette(stream, definition),
-            TargetTimes = LoadTargetTimes(stream, definition)
+            LockedCoverPalette = LoadLockedCoverPalette(stream, definition),
+            TargetTimes = LoadTargetTimes(stream, definition),
+            TurnSigns = LoadTurnSigns(stream, definition),
+            RivalTargets = LoadRivalTargets(stream, definition),
         };
     }
 
@@ -76,38 +81,37 @@ public class Track
         Minimap = new Tileset(64, PixelFormat.Bpp4),
         ObstacleGfx = new Tileset(256, PixelFormat.Bpp4),
         ObstaclePalette = new Palette(48),
-        Objects = new TrackObjects(), // TODO: Default starting positions
+        Objects = new TrackObjects(),
         Behaviors = new byte[256],
         Coins = new List<Vec2I>(),
         Ai = new TrackAi(),
         CoverArt = null,
         CoverPalette = null,
-        TargetTimes =
-        [
-            new TargetTime(0, 60 * 100), new TargetTime(0, 60 * 100), new TargetTime(0, 60 * 100),
-            new TargetTime(0, 60 * 100), new TargetTime(0, 60 * 100), new TargetTime(0, 60 * 100)
-        ]
+        LockedCoverPalette = null,
+        RivalTargets = new(),
+        TargetTimes = TargetTime.Defaults,
+        TurnSigns = null,
     };
 
     #region Load Track Data
 
-    private static TrackDefinition LoadDefinition(Stream reader, int index)
+    private static TrackDefinition LoadDefinition(Stream stream, int index)
     {
         const uint definitionPointerTableAddress = 0x0E7FEC;
-        reader.Seek(definitionPointerTableAddress + index * 4, SeekOrigin.Begin);
-        var definitionAddress = reader.Read<Pointer>();
+        stream.Seek(definitionPointerTableAddress + index * 4, SeekOrigin.Begin);
+        var definitionAddress = stream.Read<Pointer>();
         if (definitionAddress.IsNull) throw new ArgumentOutOfRangeException(nameof(index), "Invalid header index");
-        reader.Seek(definitionAddress);
-        return reader.Read<TrackDefinition>();
+        stream.Seek(definitionAddress);
+        return stream.Read<TrackDefinition>();
     }
 
-    private static TrackHeader LoadHeader(Stream reader, int index)
+    private static TrackHeader LoadHeader(Stream stream, int index)
     {
         const uint trackTableAddress = 0x258000;
-        reader.Seek(trackTableAddress + index * 4, SeekOrigin.Begin);
-        var offset = reader.ReadUInt32();
-        reader.Seek(trackTableAddress + offset, SeekOrigin.Begin);
-        return reader.Read<TrackHeader>();
+        stream.Seek(trackTableAddress + index * 4, SeekOrigin.Begin);
+        var offset = stream.ReadUInt32();
+        stream.Seek(trackTableAddress + offset, SeekOrigin.Begin);
+        return stream.Read<TrackHeader>();
     }
 
     private static TrackConfig LoadConfig(TrackHeader header, TrackDefinition definition)
@@ -121,86 +125,86 @@ public class Track
             Theme = definition.Theme,
             SongID = definition.SongID,
             Laps = definition.LapsCount,
-            TurnsPointer = definition.Turns.Raw,
-            TargetOptionsPointer = definition.TargetOptions.Raw,
+            TurnsPointer = definition.TurnSigns.Raw,
+            TargetOptionsPointer = definition.RivalTargets.Raw,
             CoverGfxPointer = definition.CoverGfx.Raw,
             CoverPalPointer = definition.CoverPalette.Raw,
-            LockedTrackPalPointer = definition.LockedTrackPal.Raw,
+            LockedTrackPalPointer = definition.LockedCoverPal.Raw,
             TrackNameGfxPointer = definition.TrackNameGfx.Raw,
             TargetTimesPtr = definition.TargetTimes.Raw
         };
     }
 
-    private static Palette LoadTilesetPalette(Stream reader, TrackHeader header)
+    private static Palette LoadTilesetPalette(Stream stream, TrackHeader header)
     {
         var palAddress = header.Address + header.TilesetPaletteOffset;
-        reader.Seek(palAddress, SeekOrigin.Begin);
-        return new Palette(reader, 64);
+        stream.Seek(palAddress, SeekOrigin.Begin);
+        return new Palette(stream, 64);
     }
 
-    private static Tileset LoadTileset(Stream reader, TrackHeader header, int headerIndex)
+    private static Tileset LoadTileset(Stream stream, TrackHeader header, int headerIndex)
     {
         const int tilesetSize = 256;
 
         using var tilesetStream = new MemoryPoolStream(tilesetSize * Tile.Size * Tile.Size, true);
         if (header.SharedTileset != 0)
         {
-            var sharedTrackDef = LoadDefinition(reader, headerIndex + header.SharedTileset);
-            var sharedTrackHeader = LoadHeader(reader, sharedTrackDef.HeaderIndex);
+            var sharedTrackDef = LoadDefinition(stream, headerIndex + header.SharedTileset);
+            var sharedTrackHeader = LoadHeader(stream, sharedTrackDef.HeaderIndex);
             var tilesAddress = sharedTrackHeader.Address + sharedTrackHeader.TilesetOffset;
-            reader.Seek(tilesAddress, SeekOrigin.Begin);
+            stream.Seek(tilesAddress, SeekOrigin.Begin);
             if (sharedTrackHeader.Flags.HasFlag(TrackFlags.SplitTileset))
-                Compressor.SplitDecompress(reader, tilesetStream);
+                Compressor.SplitDecompress(stream, tilesetStream);
             else
-                Compressor.Decompress(reader, tilesetStream);
+                Compressor.Decompress(stream, tilesetStream);
         }
         else
         {
             var tilesAddress = header.Address + header.TilesetOffset;
-            reader.Seek(tilesAddress, SeekOrigin.Begin);
+            stream.Seek(tilesAddress, SeekOrigin.Begin);
             if (header.Flags.HasFlag(TrackFlags.SplitTileset))
-                Compressor.SplitDecompress(reader, tilesetStream);
+                Compressor.SplitDecompress(stream, tilesetStream);
             else
-                Compressor.Decompress(reader, tilesetStream);
+                Compressor.Decompress(stream, tilesetStream);
         }
 
         tilesetStream.Seek(0, SeekOrigin.Begin);
         return new Tileset(tilesetStream, tilesetSize, PixelFormat.Bpp8);
     }
 
-    private static AffineTilemap LoadTilemap(Stream reader, TrackHeader header)
+    private static AffineTilemap LoadTilemap(Stream stream, TrackHeader header)
     {
         var trackWidth = header.TrackWidth * 128;
         var trackHeight = header.TrackHeight * 128;
 
         using var tilemapStream = new MemoryPoolStream(trackWidth * trackHeight, true);
         var tilemapAddress = header.Address + header.TilemapOffset;
-        reader.Seek(tilemapAddress, SeekOrigin.Begin);
+        stream.Seek(tilemapAddress, SeekOrigin.Begin);
         if (header.Flags.HasFlag(TrackFlags.SplitTilemap))
-            Compressor.SplitDecompress(reader, tilemapStream);
+            Compressor.SplitDecompress(stream, tilemapStream);
         else
-            Compressor.Decompress(reader, tilemapStream);
+            Compressor.Decompress(stream, tilemapStream);
         tilemapStream.Seek(0, SeekOrigin.Begin);
         return new AffineTilemap(tilemapStream, trackWidth, trackHeight);
     }
 
-    private static Tileset LoadMinimap(Stream reader, TrackHeader header)
+    private static Tileset LoadMinimap(Stream stream, TrackHeader header)
     {
         const int minimapTiles = 64;
         using var minimapStream = new MemoryPoolStream(minimapTiles * Tile4Bpp.DataSize, true);
         var minimapAddress = header.Address + header.MinimapOffset;
-        reader.Seek(minimapAddress, SeekOrigin.Begin);
-        Compressor.Decompress(reader, minimapStream);
+        stream.Seek(minimapAddress, SeekOrigin.Begin);
+        Compressor.Decompress(stream, minimapStream);
         minimapStream.Seek(0, SeekOrigin.Begin);
         return new Tileset(minimapStream, minimapTiles, PixelFormat.Bpp4);
     }
 
-    private static byte[] LoadBehaviors(Stream reader, TrackHeader header)
+    private static byte[] LoadBehaviors(Stream stream, TrackHeader header)
     {
         var behaviorsAddress = header.Address + header.BehaviorsOffset;
-        reader.Seek(behaviorsAddress, SeekOrigin.Begin);
+        stream.Seek(behaviorsAddress, SeekOrigin.Begin);
         var behaviors = new byte[256];
-        reader.ReadExactly(behaviors);
+        stream.ReadExactly(behaviors);
         return behaviors;
     }
 
@@ -211,30 +215,30 @@ public class Track
         return new Palette(reader, 48);
     }
 
-    private static Tileset? LoadObstacleGraphics(Stream reader, TrackHeader header, int headerIndex)
+    private static Tileset? LoadObstacleGraphics(Stream stream, TrackHeader header, int headerIndex)
     {
         using var obstacleGraphicsStream = new MemoryPoolStream(256 * Tile4Bpp.DataSize, true);
         if (header.ObstacleGfxOffset != 0)
         {
             if (header.SharedObstacleGfx != 0)
             {
-                var sharedTrackDef = LoadDefinition(reader, headerIndex + header.SharedTileset);
-                var sharedTrackHeader = LoadHeader(reader, sharedTrackDef.HeaderIndex);
+                var sharedTrackDef = LoadDefinition(stream, headerIndex + header.SharedTileset);
+                var sharedTrackHeader = LoadHeader(stream, sharedTrackDef.HeaderIndex);
                 var obstacleGraphicsAddress = sharedTrackHeader.Address + sharedTrackHeader.ObstacleGfxOffset;
-                reader.Seek(obstacleGraphicsAddress, SeekOrigin.Begin);
+                stream.Seek(obstacleGraphicsAddress, SeekOrigin.Begin);
                 if (sharedTrackHeader.Flags.HasFlag(TrackFlags.SplitObjects))
-                    Compressor.SplitDecompress(reader, obstacleGraphicsStream);
+                    Compressor.SplitDecompress(stream, obstacleGraphicsStream);
                 else
-                    Compressor.Decompress(reader, obstacleGraphicsStream);
+                    Compressor.Decompress(stream, obstacleGraphicsStream);
             }
             else
             {
                 var obstacleGraphicsAddress = header.Address + header.ObstacleGfxOffset;
-                reader.Seek(obstacleGraphicsAddress, SeekOrigin.Begin);
+                stream.Seek(obstacleGraphicsAddress, SeekOrigin.Begin);
                 if (header.Flags.HasFlag(TrackFlags.SplitObjects))
-                    Compressor.SplitDecompress(reader, obstacleGraphicsStream);
+                    Compressor.SplitDecompress(stream, obstacleGraphicsStream);
                 else
-                    Compressor.Decompress(reader, obstacleGraphicsStream);
+                    Compressor.Decompress(stream, obstacleGraphicsStream);
             }
 
             obstacleGraphicsStream.SetLength(256 * Tile4Bpp.DataSize);
@@ -245,18 +249,18 @@ public class Track
         return null;
     }
 
-    private static TrackObjects LoadObjects(Stream reader, TrackHeader header, int headerIndex)
+    private static TrackObjects LoadObjects(Stream stream, TrackHeader header, int headerIndex)
     {
-        var obstacles = ObstacleTable.ReadTable(reader, headerIndex);
+        var obstacles = ObstacleTable.ReadTable(stream, headerIndex);
         var trackObjects = new TrackObjects();
 
         if (header.ObstaclesOffset != 0)
         {
             var obstaclesAddress = header.Address + header.ObstaclesOffset;
-            reader.Seek(obstaclesAddress, SeekOrigin.Begin);
-            while (reader.PeekByte() != 0)
+            stream.Seek(obstaclesAddress, SeekOrigin.Begin);
+            while (stream.PeekByte() != 0)
             {
-                var placement = reader.Read<ObjectPlacement>();
+                var placement = stream.Read<ObjectPlacement>();
                 var trackObstacle = new ObstaclePlacement(obstacles[placement.ID], new Vec2I(placement.X, placement.Y));
                 trackObjects.ObstaclePlacements.Add(trackObstacle);
             }
@@ -265,19 +269,19 @@ public class Track
         if (header.ItemBoxOffset != 0)
         {
             var itemBoxAddress = header.Address + header.ItemBoxOffset;
-            reader.Seek(itemBoxAddress, SeekOrigin.Begin);
-            while (reader.PeekByte() != 0)
+            stream.Seek(itemBoxAddress, SeekOrigin.Begin);
+            while (stream.PeekByte() != 0)
             {
-                var placement = reader.Read<ObjectPlacement>();
+                var placement = stream.Read<ObjectPlacement>();
                 trackObjects.ItemBoxes.Add(new Vec2I(placement.X, placement.Y));
             }
         }
 
         var startPositionAddress = header.Address + header.StartPositionOffset;
-        reader.Seek(startPositionAddress, SeekOrigin.Begin);
-        while (reader.PeekByte() != 0)
+        stream.Seek(startPositionAddress, SeekOrigin.Begin);
+        while (stream.PeekByte() != 0)
         {
-            var placement = reader.Read<ObjectPlacement>();
+            var placement = stream.Read<ObjectPlacement>();
             var startPos = new StartPosition(new Vec2I(placement.X, placement.Y), (StartingPlace)(placement.ID & ~0x80));
             trackObjects.StartPositions.Add(startPos);
         }
@@ -285,16 +289,16 @@ public class Track
         return trackObjects;
     }
 
-    private static List<Vec2I> LoadCoins(Stream reader, TrackHeader header)
+    private static List<Vec2I> LoadCoins(Stream stream, TrackHeader header)
     {
         var coins = new List<Vec2I>();
         if (header.CoinsOffset != 0)
         {
             var coinsAddress = header.Address + header.CoinsOffset;
-            reader.Seek(coinsAddress, SeekOrigin.Begin);
-            while (reader.PeekByte() != 0)
+            stream.Seek(coinsAddress, SeekOrigin.Begin);
+            while (stream.PeekByte() != 0)
             {
-                var coin = reader.Read<ObjectPlacement>();
+                var coin = stream.Read<ObjectPlacement>();
                 coins.Add(new Vec2I(coin.X, coin.Y));
             }
         }
@@ -302,73 +306,99 @@ public class Track
         return coins;
     }
 
-    private static TrackAi LoadAi(Stream reader, TrackHeader header, TrackDefinition definition)
+    private static TrackAi LoadAi(Stream stream, TrackHeader header, TrackDefinition definition)
     {
         var trackAi = new TrackAi();
         var aiAddress = header.Address + header.AiOffset;
-        reader.Seek(aiAddress, SeekOrigin.Begin);
-        var aiHeader = reader.Read<AiHeader>();
+        stream.Seek(aiAddress, SeekOrigin.Begin);
+        var aiHeader = stream.Read<AiHeader>();
         var zonesAddress = aiAddress + aiHeader.CheckpointsOffset;
         var targetsAddress = aiAddress + aiHeader.TargetsOffset;
 
-        reader.Seek(zonesAddress, SeekOrigin.Begin);
-        for (var i = 0; i < aiHeader.CheckpointCount; i++) trackAi.Checkpoints.Add(reader.Read<Checkpoint>());
+        stream.Seek(zonesAddress, SeekOrigin.Begin);
+        for (var i = 0; i < aiHeader.CheckpointCount; i++) trackAi.Checkpoints.Add(stream.Read<Checkpoint>());
 
-        reader.Seek(definition.TargetOptions);
-        var targetOptions = reader.Read<TargetOptions>();
+        stream.Seek(definition.RivalTargets);
+        var targetOptions = stream.Read<TargetOptions>();
 
-        reader.Seek(targetsAddress, SeekOrigin.Begin);
+        stream.Seek(targetsAddress, SeekOrigin.Begin);
         for (var set = 0; set < targetOptions.SetCount; set++)
         {
             var currentSet = new List<AiTarget>(aiHeader.CheckpointCount);
-            for (var i = 0; i < aiHeader.CheckpointCount; i++) currentSet.Add(reader.Read<AiTarget>());
+            for (var i = 0; i < aiHeader.CheckpointCount; i++) currentSet.Add(stream.Read<AiTarget>());
 
             trackAi.TargetSets.Add(currentSet);
         }
 
-        //reader.Seek(definition.Turns);
-        //while (reader.PeekByte() != 0xff)
-        //trackAi.Add(reader.Read<TurnMarker>());
-
         return trackAi;
     }
 
-    private static Tileset? LoadCoverArt(Stream reader, TrackDefinition definition)
+    private static Tileset? LoadCoverArt(Stream stream, TrackDefinition definition)
     {
         if (definition.CoverGfx.IsNull) return null;
 
         const int tilesetSize = 81;
         using var tilesetStream = new MemoryPoolStream(tilesetSize * Tile.Size * Tile.Size, true);
 
-        reader.Seek(definition.CoverGfx);
-        Compressor.Decompress(reader, tilesetStream);
+        stream.Seek(definition.CoverGfx);
+        Compressor.Decompress(stream, tilesetStream);
 
         tilesetStream.Seek(0, SeekOrigin.Begin);
         return new Tileset(tilesetStream, tilesetSize, PixelFormat.Bpp8);
     }
 
-    private static Palette? LoadCoverPalette(Stream reader, TrackDefinition definition)
+    private static Palette? LoadCoverPalette(Stream stream, TrackDefinition definition)
     {
         if (definition.CoverPalette.IsNull) return null;
 
         using var palStream = new MemoryPoolStream(80 * 2, true);
 
-        reader.Seek(definition.CoverPalette);
-        Compressor.Decompress(reader, palStream);
+        stream.Seek(definition.CoverPalette);
+        Compressor.Decompress(stream, palStream);
 
         palStream.Seek(0, SeekOrigin.Begin);
         return new Palette(palStream, 80);
     }
 
-    private static TargetTime[] LoadTargetTimes(Stream reader, TrackDefinition definition)
+    private static Palette? LoadLockedCoverPalette(Stream stream, TrackDefinition definition)
+    {
+        if (definition.LockedCoverPal.IsNull) return null;
+
+        using var palStream = new MemoryPoolStream(80 * 2, true);
+
+        stream.Seek(definition.LockedCoverPal);
+        Compressor.Decompress(stream, palStream);
+
+        palStream.Seek(0, SeekOrigin.Begin);
+        return new Palette(palStream, 80);
+    }
+
+    private static TargetTime[] LoadTargetTimes(Stream stream, TrackDefinition definition)
     {
         if (definition.TargetTimes.IsNull)
             return TargetTime.Defaults;
-        reader.Seek(definition.TargetTimes);
+        stream.Seek(definition.TargetTimes);
         var times = new TargetTime[6];
         for (var i = 0; i < times.Length; i++)
-            times[i] = reader.Read<TargetTime>();
+            times[i] = stream.Read<TargetTime>();
         return times;
+    }
+
+    private static TurnSign[]? LoadTurnSigns(Stream stream, TrackDefinition definition)
+    {
+        var signs = new List<TurnSign>();
+        if (definition.TurnSigns.IsNull)
+            return null;
+        stream.Seek(definition.TurnSigns);
+        while (stream.PeekByte() != 0xff)
+            signs.Add(stream.Read<TurnSign>());
+        return signs.ToArray();
+    }
+
+    private static RivalTargets LoadRivalTargets(Stream stream, TrackDefinition definition)
+    {
+        stream.Seek(definition.RivalTargets);
+        return stream.Read<RivalTargets>();
     }
 
     #endregion
@@ -414,8 +444,14 @@ public class Track
         AlignStream(trackStream);
         WriteCoverPalette(trackAddress, trackStream, ref trackDefinition);
         AlignStream(trackStream);
+        WriteLockedCoverPalette(trackAddress, trackStream, ref trackDefinition);
+        AlignStream(trackStream);
         WriteTargetTimes(trackAddress, trackStream, ref trackDefinition);
         AlignStream(trackStream);
+        WriteTurnSigns(trackAddress, trackStream, ref trackDefinition);
+        AlignStream(stream);
+        WriteRivalTargets(trackAddress, trackStream, ref trackDefinition);
+        AlignStream(stream);
 
         trackStream.Seek(0, SeekOrigin.Begin);
         trackStream.Write(trackHeader);
@@ -441,11 +477,11 @@ public class Track
         definition.SongID = config.SongID;
         definition.LapsCount = config.Laps;
 
-        definition.Turns = new Pointer(config.TurnsPointer);
-        definition.TargetOptions = new Pointer(config.TargetOptionsPointer);
+        definition.TurnSigns = new Pointer(config.TurnsPointer);
+        definition.RivalTargets = new Pointer(config.TargetOptionsPointer);
         definition.CoverGfx = new Pointer(config.CoverGfxPointer);
         definition.CoverPalette = new Pointer(config.CoverPalPointer);
-        definition.LockedTrackPal = new Pointer(config.LockedTrackPalPointer);
+        definition.LockedCoverPal = new Pointer(config.LockedTrackPalPointer);
         definition.TrackNameGfx = new Pointer(config.TrackNameGfxPointer);
         definition.TargetTimes = new Pointer(config.TargetTimesPtr);
 
@@ -653,12 +689,45 @@ public class Track
         Compressor.Compress(CoverPalette.GetData(), trackStream);
     }
 
+    private void WriteLockedCoverPalette(long trackAddress, Stream trackStream, ref TrackDefinition definition)
+    {
+        if (LockedCoverPalette is null)
+        {
+            definition.LockedCoverPal = Pointer.Null;
+            return;
+        }
+
+        definition.CoverPalette = new Pointer((uint)(trackAddress + trackStream.Position));
+        Compressor.Compress(LockedCoverPalette.GetData(), trackStream);
+    }
+
     private void WriteTargetTimes(long trackAddress, Stream trackStream, ref TrackDefinition definition)
     {
         definition.TargetTimes = new Pointer((uint)(trackAddress + trackStream.Position));
 
         foreach (var time in TargetTimes)
             trackStream.Write(time);
+    }
+
+    private void WriteTurnSigns(long trackAddress, Stream trackStream, ref TrackDefinition definition)
+    {
+        definition.TurnSigns = new Pointer((uint)(trackAddress + trackStream.Position));
+        if (TurnSigns is null)
+        {
+            trackStream.Write(0xff);
+            return;
+        }
+
+        foreach (var sign in TurnSigns)
+            trackStream.Write(sign);
+
+        trackStream.Write(0xff);
+    }
+
+    private void WriteRivalTargets(long trackAddress, Stream trackStream, ref TrackDefinition definition)
+    {
+        definition.RivalTargets = new Pointer((uint)(trackAddress + trackStream.Position));
+        trackStream.Write(RivalTargets);
     }
 
     #endregion

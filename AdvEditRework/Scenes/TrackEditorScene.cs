@@ -12,7 +12,7 @@ namespace AdvEditRework.Scenes;
 
 public class TrackEditorScene : Scene
 {
-    public static readonly Dictionary<string, string> ImageFilter = new() { { "Screenshot", "bmp" }, { "All files", "*" } };
+    public static readonly Dictionary<string, string> MAKEFilter = new() { { "MAKE track", "smkc" }, { "All files", "*" } };
 
     private ProjectTrack? _projectTrack;
     private TrackView? _view;
@@ -74,27 +74,62 @@ public class TrackEditorScene : Scene
                 }
 
                 ImGui.Separator();
-
-                if (ImGui.MenuItem("Create Rom"))
+                
+                ImGui.BeginDisabled(_currentTrack is null || _projectTrack is null);
+                if (ImGui.BeginMenu("Import"))
                 {
-                    Debug.Assert(project != null);
-                    // Save active track
-                    if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
-
-                    var openStatus = Nfd.OpenDialog(out var romPath, CreateProject.RomFilter);
-                    if (openStatus == NfdStatus.Ok && !string.IsNullOrEmpty(romPath))
+                    if (ImGui.MenuItem("SMK Track (.smkc)"))
                     {
-                        var name = new string(project.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray());
-                        if (string.IsNullOrWhiteSpace(name)) name = "mksc_hack";
-                        var status = Nfd.SaveDialog(out var savePath, CreateProject.RomFilter, name + ".gba");
-                        if (status == NfdStatus.Ok && !string.IsNullOrEmpty(savePath))
+                        var status = Nfd.OpenDialog(out var path, MAKEFilter);
+                        if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
                         {
-                            File.Copy(romPath, savePath, true);
-                            using var fileStream = File.Open(savePath, FileMode.Open);
-                            project.ToRom(fileStream);
+                            var track = MakeTrack.ModifyFromStream(File.OpenRead(path), project!);
+                            _projectTrack!.SaveTrackDataAsync(track).Wait();
+                            _currentTrack = _projectTrack.LoadTrackData();
+                            SetView(new TrackView(_currentTrack));
                         }
                     }
+
+                    // if (ImGui.MenuItem("MKSC Track (.amkt)"))
+                    // {
+                    //
+                    // }
+                    ImGui.EndMenu();
                 }
+
+                if (ImGui.BeginMenu("Export"))
+                {
+                    // if (ImGui.MenuItem("MKSC Track (.amkt)"))
+                    // {
+                    //     
+                    // }
+
+                    if (ImGui.MenuItem("Rom (.gba)"))
+                    {
+                        Debug.Assert(project != null);
+                        // Save active track
+                        if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
+
+                        var openStatus = Nfd.OpenDialog(out var romPath, CreateProject.RomFilter);
+                        if (openStatus == NfdStatus.Ok && !string.IsNullOrEmpty(romPath))
+                        {
+                            var name = new string(project.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray());
+                            if (string.IsNullOrWhiteSpace(name)) name = "mksc_hack";
+                            var status = Nfd.SaveDialog(out var savePath, CreateProject.RomFilter, name + ".gba");
+                            if (status == NfdStatus.Ok && !string.IsNullOrEmpty(savePath))
+                            {
+                                File.Copy(romPath, savePath, true);
+                                using var fileStream = File.Open(savePath, FileMode.Open);
+                                project.ToRom(fileStream);
+                            }
+                        }
+                    }
+                    ImGui.EndMenu();
+                }
+                
+                ImGui.EndDisabled();
+                
+                ImGui.Separator();
 
                 if (ImGui.MenuItem("Quit")) Program.ShouldClose = true;
 
@@ -130,7 +165,8 @@ public class TrackEditorScene : Scene
         ImGui.SetCursorScreenPos(buttonPos);
         if (ImGui.MenuItem("Layout", "", _mode == EditMode.Map))
         {
-            Debug.Assert(_view != null);
+            Debug.Assert(_view != null && _projectTrack != null);
+            _view.RegenTextureBuffers();
             SetEditor(new MapEditor(_view));
             _mode = EditMode.Map;
         }
@@ -140,6 +176,7 @@ public class TrackEditorScene : Scene
         if (ImGui.MenuItem("AI Map", "", _mode == EditMode.Ai))
         {
             Debug.Assert(_view != null);
+            _view.RegenTextureBuffers();
             SetEditor(new AiEditor(_view));
             _mode = EditMode.Ai;
         }
@@ -199,20 +236,20 @@ public class TrackEditorScene : Scene
             }
 
             ImGui.BeginDisabled(_editor is not MapEditor && _editor is not AiEditor);
-            if (ImGui.MenuItem("Screenshot"))
-            {
-                var openStatus = Nfd.SaveDialog(out var imgPath, ImageFilter, $"{_projectTrack?.Name}.bmp");
-                if (openStatus == NfdStatus.Ok && !string.IsNullOrEmpty(imgPath))
-                    switch (_editor)
-                    {
-                        case MapEditor mapEditor:
-                            mapEditor.View.TrackScreenshot(imgPath);
-                            break;
-                        case AiEditor aiEditor:
-                            aiEditor.View.TrackScreenshot(imgPath);
-                            break;
-                    }
-            }
+            // if (ImGui.MenuItem("Screenshot"))
+            // {
+            //     var openStatus = Nfd.SaveDialog(out var imgPath, ImageFilter, $"{_projectTrack?.Name}.bmp");
+            //     if (openStatus == NfdStatus.Ok && !string.IsNullOrEmpty(imgPath))
+            //         switch (_editor)
+            //         {
+            //             case MapEditor mapEditor:
+            //                 mapEditor.View.TrackScreenshot(imgPath);
+            //                 break;
+            //             case AiEditor aiEditor:
+            //                 aiEditor.View.TrackScreenshot(imgPath);
+            //                 break;
+            //         }
+            // }
 
             ImGui.EndDisabled();
             ImGui.EndMenu();

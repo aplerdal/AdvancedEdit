@@ -1,22 +1,29 @@
 using System.Diagnostics;
 using System.Numerics;
 using AdvancedLib.Graphics;
+using AdvancedLib.Project;
 using AdvancedLib.RaylibExt;
+using AdvEditRework.Scenes;
 using AdvEditRework.Shaders;
 using AdvEditRework.UI.Tools;
 using AdvEditRework.UI.Undo;
 using AuroraLib.Core;
+using GifLib;
 using Hexa.NET.ImGui;
+using NativeFileDialogs.Net;
 using Raylib_cs;
+using PixelFormat = AdvancedLib.Graphics.PixelFormat;
 
 namespace AdvEditRework.UI.Editors.Gfx;
 
 public class TilesetEditor : IDisposable, IToolEditable
 {
-    private readonly Tileset _tileset;
-    private readonly Palette _palette;
-    private readonly Texture2D _texture;
-    private readonly Image _tilesetImage;
+    private static readonly Dictionary<string, string> ImageFilter = new() { { "GIF Image", "gif" }, { "All files", "*" } };
+    
+    private Tileset _tileset;
+    private Palette _palette;
+    private Texture2D _texture;
+    private Image _tilesetImage;
     private readonly RenderTexture2D _viewport;
     private readonly UndoManager _undoManager;
     private readonly MapEditorTool[] _tools = [new DrawTool(), new SelectionTool(), new Eyedropper(), new RectangleTool(), new BucketTool(), new StampTool()];
@@ -113,6 +120,36 @@ public class TilesetEditor : IDisposable, IToolEditable
     {
         ImGui.SeparatorText("Options");
         ImGui.Checkbox("Show Grid?", ref _showGrid);
+
+        if (ImGui.Button("Import"))
+        {
+            var status = Nfd.OpenDialog(out var path, ImageFilter, "tiles.gif");
+            if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
+            {
+                var gif = GifDocument.Load(path);
+                gif.LoadGifToGBA(ref _tileset, ref _palette);
+                PaletteShader.SetPalette(_palette.ToIVec3());
+                Raylib.UnloadTexture(_texture);
+                _texture = _tileset.TilePaletteTexture(_tilesetWidth, _tilesetHeight, _tilesetSkip);
+                Raylib.UnloadImage(_tilesetImage);
+                _tilesetImage = Raylib.LoadImageFromTexture(_texture);
+            }
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Export"))
+        {
+            var status = Nfd.SaveDialog(out var path, ImageFilter, "tiles.gif");
+            if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
+            {
+                var gif = _tileset.ToGif(_palette, _tilesetWidth, _tilesetHeight, _tilesetSkip);
+                gif.Save(path);
+            }
+        }
+    }
+
+    private void ExportGif(string path)
+    {
+        
     }
 
     public void ShowPaletteOptions()
@@ -128,8 +165,8 @@ public class TilesetEditor : IDisposable, IToolEditable
         }
 
         var color = _palette[ActiveIndex.Value];
-        float[] colors = [color.R * 8 / 255f, color.G * 8 / 255f, color.B * 8 / 255f];
-        float[] colorsOld = [color.R * 8 / 255f, color.G * 8 / 255f, color.B * 8 / 255f];
+        float[] colors = [color.R5 * 8 / 255f, color.G5 * 8 / 255f, color.B5 * 8 / 255f];
+        float[] colorsOld = [color.R5 * 8 / 255f, color.G5 * 8 / 255f, color.B5 * 8 / 255f];
         unsafe
         {
             fixed (float* colorPtr = colors)
@@ -169,8 +206,7 @@ public class TilesetEditor : IDisposable, IToolEditable
             _oldPaletteColor = color;
             _modifyingColor = true;
         }
-
-        ;
+        
         _palette[ActiveIndex.Value] = newColor;
         PaletteShader.SetPalette(_palette.ToIVec3());
     }

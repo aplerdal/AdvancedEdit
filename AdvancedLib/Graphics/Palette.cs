@@ -54,4 +54,9 @@ public class Palette : IAsyncWritable
     {
         return Task.Run(() => Write(stream));
     }
+
+    public void Trim(int totalLength)
+    {
+        _colors = _colors[..totalLength];
+    }
 }

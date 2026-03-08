@@ -38,6 +38,7 @@ public class Project(string name)
     {
         using var configStream = File.Create(Path.Combine(Folder, "config.msp"));
         MessagePackSerializer.Serialize(configStream, Config);
+        configStream.Close();
         if (File.Exists(path)) File.Delete(path);
         TarFile.CreateFromDirectory(Folder, path, false);
     }
@@ -72,7 +73,7 @@ public class Project(string name)
 
         Directory.CreateDirectory(project.Folder);
 
-        for (var i = 0; i < TrackNames.Cups.Length; i++)
+        for (int i = 0; i < TrackNames.Cups.Length; i++)
         {
             var cupName = TrackNames.Cups[i];
             if (cupName == "Victory") continue; // TODO: Editable Podium Track
@@ -90,6 +91,27 @@ public class Project(string name)
             project.Config.Cups.Add(new Cup(cupName, cupTracks));
         }
 
+        var themes = Enum.GetNames(typeof(RetroTheme));
+        for (int i = 0; i < themes.Length; i++)
+        {
+            var theme = (RetroTheme)i;
+            var themeName = themes[i];
+            var headerIdx = theme switch
+            {
+                RetroTheme.GhostValley => 34,
+                RetroTheme.MarioCircuit => 32,
+                RetroTheme.VanillaLake => 44,
+                RetroTheme.DonutPlains => 33,
+                RetroTheme.ChocoIsland => 37,
+                RetroTheme.KoopaBeach => 42,
+                RetroTheme.BowserCastle => 35,
+                RetroTheme.RainbowRoad => 51,
+                _ => 34,
+            };
+            var themeBaseTrack = new ProjectTrack(themeName);
+            themeBaseTrack.ResolveFolder(Path.Combine(project.Folder, "themeBase"));
+            await themeBaseTrack.SaveTrackDataAsync(Track.FromRom(romStream, headerIdx));
+        }
         return project;
     }
 }

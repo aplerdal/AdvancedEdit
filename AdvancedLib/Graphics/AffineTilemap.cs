@@ -49,6 +49,13 @@ public class AffineTilemap : IAsyncWritable
         stream.ReadExactly(_indicies);
     }
 
+    public AffineTilemap(byte[] data, int width, int height)
+    {
+        Width = width;
+        Height = height;
+        _indicies = data;
+    }
+
     public byte[] GetData()
     {
         return _indicies;

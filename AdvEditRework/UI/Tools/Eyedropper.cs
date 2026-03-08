@@ -8,7 +8,7 @@ public class Eyedropper : MapEditorTool
 {
     public override void Update(IToolEditable editor)
     {
-        if (!editor.ViewportHovered || !editor.Focused) return;
+        if (!editor.ViewportHovered || !editor.Focused || !editor.ValidCell(editor.CellMousePos)) return;
 
         if (ImGui.IsMouseDown(ImGuiMouseButton.Left))
         {
