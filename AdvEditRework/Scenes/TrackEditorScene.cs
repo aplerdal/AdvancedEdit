@@ -5,6 +5,7 @@ using AdvancedLib.Project;
 using AdvEditRework.UI;
 using AdvEditRework.UI.Editors;
 using AdvEditRework.UI.Editors.AI;
+using AdvEditRework.UI.Editors.Object;
 using Hexa.NET.ImGui;
 using NativeFileDialogs.Net;
 
@@ -138,7 +139,7 @@ public class TrackEditorScene : Scene
 
             isActive |= TrackSelectorMenu(project);
 
-            isActive |= ModeSelector();
+            isActive |= ModeSelector(project);
 
             ImGui.EndMainMenuBar();
         }
@@ -148,7 +149,7 @@ public class TrackEditorScene : Scene
 
     private EditMode _mode;
 
-    private bool ModeSelector()
+    private bool ModeSelector(Project project)
     {
         var windowPos = ImGui.GetWindowPos();
         var windowSize = ImGui.GetWindowSize();
@@ -159,7 +160,7 @@ public class TrackEditorScene : Scene
             return ImGui.CalcTextSize(text).X + ImGui.GetStyle().FramePadding.X * 2.0f;
         }
 
-        var barSize = ButtonSize("Layout") + 16 + ButtonSize("AI Map") + 16 + ButtonSize("Graphics");
+        var barSize = ButtonSize("Layout") + 16 + ButtonSize("AI Map") + 16 + ButtonSize("Graphics") + 16 + ButtonSize("Objects");
         var buttonPos = new Vector2(windowCenter.X - barSize / 2f, 0);
         ImGui.BeginDisabled(_view is null);
         ImGui.SetCursorScreenPos(buttonPos);
@@ -189,6 +190,16 @@ public class TrackEditorScene : Scene
             SetEditor(new TrackGfxEditor(_view.Track));
             _mode = EditMode.Graphics;
         }
+        ImGui.BeginDisabled(_view?.Track.ObstacleGfx is null);
+        buttonPos += new Vector2(ButtonSize("Graphics") + 16, 0);
+        ImGui.SetCursorScreenPos(buttonPos);
+        if (ImGui.MenuItem("Objects", "", _mode == EditMode.Objects))
+        {
+            Debug.Assert(_view != null);
+            SetEditor(new ObjectEditor(_view.Track, project.Config.ObstacleOam));
+            _mode = EditMode.Objects;
+        }
+        ImGui.EndDisabled();
 
         ImGui.EndDisabled();
         return false;
@@ -224,6 +235,7 @@ public class TrackEditorScene : Scene
                                 _projectTrack = track;
                                 track.ResolveFolder(Path.Combine(project.Folder, cup.Name));
                                 _currentTrack = track.LoadTrackData();
+                                _mode = EditMode.Map;
                                 SetView(new TrackView(_currentTrack));
                             }
                         }

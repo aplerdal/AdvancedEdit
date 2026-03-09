@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using System.Formats.Tar;
 using AdvancedLib.Game;
 using AdvancedLib.Serialization;
+using AdvancedLib.Serialization.Objects;
 using AuroraLib.Core.IO;
 using MessagePack;
 
@@ -37,6 +39,7 @@ public class Project(string name)
     public void Save(string path)
     {
         using var configStream = File.Create(Path.Combine(Folder, "config.msp"));
+        Debug.Assert(Config.ObstacleOam != null);
         MessagePackSerializer.Serialize(configStream, Config);
         configStream.Close();
         if (File.Exists(path)) File.Delete(path);
@@ -112,6 +115,14 @@ public class Project(string name)
             themeBaseTrack.ResolveFolder(Path.Combine(project.Folder, "themeBase"));
             await themeBaseTrack.SaveTrackDataAsync(Track.FromRom(romStream, headerIdx));
         }
+
+        {
+            var oamData = new ObstacleOam(romStream);
+            project.Config.ObstacleOam = oamData;
+            Debug.Assert(project.Config.ObstacleOam != null);
+        }
+        
+        
         return project;
     }
 }

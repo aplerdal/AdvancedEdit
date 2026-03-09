@@ -12,7 +12,8 @@ public enum EditMode
 {
     Map,
     Ai,
-    Graphics
+    Graphics,
+    Objects
 }
 
 public class TrackView : IDisposable

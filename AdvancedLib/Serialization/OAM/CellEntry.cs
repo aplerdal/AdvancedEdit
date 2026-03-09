@@ -1,62 +1,76 @@
 using AuroraLib.Core.IO;
+using MessagePack;
 
 namespace AdvancedLib.Serialization.OAM;
 
+[MessagePackObject]
 public class CellEntry : ISerializable, IEquatable<CellEntry>
 {
+    [Key(0)]
     public ushort Attr0 { get; set; }
+    [Key(1)]
     public ushort Attr1 { get; set; }
+    [Key(2)]
     public ushort Attr2 { get; set; }
 
 
+    [IgnoreMember]
     public byte Shape
     {
         get => (byte)((Attr0 >> 14) & 0x3);
         set => Attr0 = (ushort)((Attr0 & ~0xC000) | ((value & 0x3) << 14));
     }
 
+    [IgnoreMember]
     public bool ColorMode8bpp
     {
         get => ((Attr0 >> 13) & 0x1) != 0;
         set => Attr0 = (ushort)((Attr0 & ~0x2000) | ((value ? 1 : 0) << 13));
     }
 
+    [IgnoreMember]
     public bool Mosaic
     {
         get => ((Attr0 >> 12) & 0x1) != 0;
         set => Attr0 = (ushort)((Attr0 & ~0x1000) | ((value ? 1 : 0) << 12));
     }
 
+    [IgnoreMember]
     public byte ObjMode
     {
         get => (byte)((Attr0 >> 10) & 0x3);
         set => Attr0 = (ushort)((Attr0 & ~0x0C00) | ((value & 0x3) << 10));
     }
 
+    [IgnoreMember]
     public sbyte YOffset
     {
         get => (sbyte)(Attr0 & 0xFF);
         set => Attr0 = (ushort)((Attr0 & ~0x00FF) | (byte)value);
     }
 
+    [IgnoreMember]
     public byte Size
     {
         get => (byte)((Attr1 >> 14) & 0x3);
         set => Attr1 = (ushort)((Attr1 & ~0xC000) | ((value & 0x3) << 14));
     }
 
+    [IgnoreMember]
     public bool VFlip
     {
         get => ((Attr1 >> 13) & 0x1) != 0;
         set => Attr1 = (ushort)((Attr1 & ~0x2000) | ((value ? 1 : 0) << 13));
     }
 
+    [IgnoreMember]
     public bool HFlip
     {
         get => ((Attr1 >> 12) & 0x1) != 0;
         set => Attr1 = (ushort)((Attr1 & ~0x1000) | ((value ? 1 : 0) << 12));
     }
 
+    [IgnoreMember]
     public short XOffset
     {
         get
@@ -70,18 +84,22 @@ public class CellEntry : ISerializable, IEquatable<CellEntry>
             Attr1 = (ushort)((Attr1 & ~0x01FF) | raw);
         }
     }
+
+    [IgnoreMember]
     public byte Palette
     {
         get => (byte)((Attr2 >> 12) & 0xF);
         set => Attr2 = (ushort)((Attr2 & ~0xF000) | ((value & 0xF) << 12));
     }
 
+    [IgnoreMember]
     public byte Priority
     {
         get => (byte)((Attr2 >> 10) & 0x3);
         set => Attr2 = (ushort)((Attr2 & ~0x0C00) | ((value & 0x3) << 10));
     }
 
+    [IgnoreMember]
     public ushort TileIndex
     {
         get => (ushort)(Attr2 & 0x3FF);

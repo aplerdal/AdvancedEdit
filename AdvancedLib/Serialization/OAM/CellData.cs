@@ -1,11 +1,14 @@
 using AuroraLib.Core.IO;
+using MessagePack;
 
 namespace AdvancedLib.Serialization.OAM;
 
+[MessagePackObject]
 public class CellData : ISerializable, IEquatable<CellData>
 {
+    [Key(0)]
     public List<CellEntry> Entries { get; set; } = [];
-
+    [IgnoreMember]
     public byte SortPriority => Entries.Count > 0 ? Entries[0].Priority : (byte)0;
 
     public void Deserialize(Stream stream)

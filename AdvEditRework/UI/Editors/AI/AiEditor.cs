@@ -685,6 +685,6 @@ public class AiEditor : Editor
 
     public override void Dispose()
     {
-        //
+        Raylib.SetMouseCursor(MouseCursor.Default);
     }
 }

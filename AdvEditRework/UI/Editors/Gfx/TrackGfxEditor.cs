@@ -32,7 +32,6 @@ public class TrackGfxEditor : Editor
 
     public TrackGfxEditor(Track track)
     {
-        Raylib.SetMouseCursor(MouseCursor.Default);
         _track = track;
         _activeGraphic = TrackGraphic.Tileset;
         _tilesetEditor = new TilesetEditor(_track.Tileset, _track.TilesetPalette);
