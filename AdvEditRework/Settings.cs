@@ -1,3 +1,4 @@
+using AuroraLib.Core.Collections;
 using MessagePack;
 using Raylib_cs;
 
@@ -22,6 +23,9 @@ public class Settings
 
     [Key(4)]
     public KeyboardKey BucketBind = KeyboardKey.B;
+
+    [Key(5)]
+    public List<string> RecentProjectFiles = new();
 
     private static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AdvancedEdit");
     private static string SettingsFile => Path.Combine(SettingsDirectory, "config.msp");
@@ -48,5 +52,20 @@ public class Settings
             Directory.CreateDirectory(SettingsDirectory);
         using var settingsStream = File.Create(SettingsFile);
         MessagePackSerializer.Serialize(settingsStream, Shared);
+    }
+
+    public void UpdateProjectList(string path)
+    {
+        if (RecentProjectFiles.Contains(path))
+        {
+            var index = RecentProjectFiles.IndexOf(path);
+            RecentProjectFiles.Move(index, 0);
+        }
+        else
+        {
+            RecentProjectFiles.Insert(0, path);
+        }
+        if (RecentProjectFiles.Count > 16) RecentProjectFiles.RemoveAt(16);
+        Save();
     }
 }

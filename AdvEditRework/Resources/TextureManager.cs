@@ -12,6 +12,7 @@ public class TextureManager : IDisposable
         LoadTexture("tools.png");
         LoadTexture("shapes.png");
         LoadTexture("zoneIcons.png");
+        LoadTexture("font.png");
     }
 
     private void LoadTexture(string file)

@@ -15,7 +15,7 @@ public class SettingsMenu : Scene
     {
         var viewport = ImGui.GetMainViewport();
 
-        Raylib.ClearBackground(Color.RayWhite);
+        Raylib.ClearBackground(Color.White);
         ImHelper.BeginEmptyWindow("Settings", new Rectangle(viewport.Pos, viewport.Size));
         {
             ImGui.Text("Settings");

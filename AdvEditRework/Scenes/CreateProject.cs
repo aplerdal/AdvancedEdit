@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using AdvancedLib.Project;
+using AdvEditRework.DearImGui;
 using Hexa.NET.ImGui;
 using NativeFileDialogs.Net;
 using Raylib_cs;
@@ -34,15 +35,9 @@ public class CreateProject : Scene
         
         var viewport = ImGui.GetMainViewport();
 
-        ImGui.SetNextWindowSize(viewport.WorkSize);
-        ImGui.SetNextWindowPos(viewport.WorkPos);
-        ImGui.SetNextWindowViewport(viewport.ID);
-        ImGui.Begin("Create New Project",
-            ImGuiWindowFlags.NoResize |
-            ImGuiWindowFlags.NoTitleBar |
-            ImGuiWindowFlags.NoCollapse |
-            ImGuiWindowFlags.NoMove
-        );
+        var bounds = new Rectangle(0, 0, Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
+        Raylib.ClearBackground(Color.White);
+        ImHelper.BeginEmptyWindow("CreateProjectWindow", bounds);
         {
             ImGui.Text("Create New Project");
             ImGui.Separator();
@@ -76,7 +71,7 @@ public class CreateProject : Scene
             ImGui.SameLine();
             if (ImGui.Button("Cancel")) Program.SetScene(new MainMenu());
         }
-        ImGui.End();
+        ImHelper.EndEmptyWindow();
 
         // Loading modal — rendered on top while task is in flight
         if (_loadTask is { IsCompleted: false })

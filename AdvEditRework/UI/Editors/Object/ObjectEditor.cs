@@ -148,6 +148,7 @@ public class ObjectEditor : Editor
                 Raylib.EndScissorMode();
                 
                 ImGui.TableSetColumnIndex(1);
+                ImGui.SetNextItemWidth(-1);
                 int typeVal = obstacle.Type;
                 if (ImGui.InputInt($"##type{i}", ref typeVal))
                 {

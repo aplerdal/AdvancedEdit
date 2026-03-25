@@ -134,7 +134,7 @@ public class TrackView : IDisposable
         var flippedTarget = Raylib.LoadRenderTexture(Track.Config.Size.X * 128 * 8, Track.Config.Size.Y * 128 * 8);
         Raylib.BeginTextureMode(flippedTarget);
         {
-            Raylib.ClearBackground(Color.Black);
+            Raylib.ClearBackground(Color.Gray);
             Raylib.DrawTexture(target.Texture, 0, 0, Color.White);
         }
         Raylib.EndTextureMode();

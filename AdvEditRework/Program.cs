@@ -65,7 +65,7 @@ internal static class Program
     private static void Update()
     {
         Raylib.BeginDrawing();
-        Raylib.ClearBackground(Color.Black);
+        Raylib.ClearBackground(Color.White);
         ImGuiRenderer.Begin();
         _scene.Update(ref _project);
         ImGuiRenderer.End();

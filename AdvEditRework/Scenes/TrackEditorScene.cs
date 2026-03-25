@@ -14,6 +14,7 @@ namespace AdvEditRework.Scenes;
 
 public class TrackEditorScene : Scene
 {
+    public static readonly Dictionary<string, string> ProjectFilter = new() { { "Advanced Project", "amkp" }, { "All files", "*" } };
     public static readonly Dictionary<string, string> MAKEFilter = new() { { "MAKE track", "smkc" }, { "All files", "*" } };
     public static readonly Dictionary<string, string> TrackFilter = new() { { "Advanced Edit track", "amkt" }, { "All files", "*" } };
 
@@ -53,18 +54,47 @@ public class TrackEditorScene : Scene
                 {
                     var name = new string(project.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray());
                     if (string.IsNullOrWhiteSpace(name)) name = "mksc";
-                    var status = Nfd.SaveDialog(out var path, MainMenu.ProjectFilter, name + ".amkp");
+                    var status = Nfd.SaveDialog(out var path, ProjectFilter, name + ".amkp");
                     if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
                     {
                         if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
                         project.Save(path);
+                        Settings.Shared.UpdateProjectList(path);
                     }
                 }
 
-                if (ImGui.MenuItem("Open Project"))
+                if (ImGui.BeginMenu("Open Project"))
                 {
-                    var status = Nfd.OpenDialog(out var path, MainMenu.ProjectFilter);
-                    if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path)) project = Project.Unpack(path);
+                    if (ImGui.MenuItem("Open File"))
+                    {
+                        var status = Nfd.OpenDialog(out var path, ProjectFilter);
+                        if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
+                        {
+                            Settings.Shared.UpdateProjectList(path);
+                            project = Project.Unpack(path);
+                        }
+                    }
+
+                    ImGui.Separator();
+
+                    var recents = Settings.Shared.RecentProjectFiles;
+                    for (int i = 0; i < 4 && i < recents.Count; i++)
+                    {
+                        var path = recents[i];
+                        var display = path;
+                        if (path.Length > 24)
+                        {
+                            display = path[..10] + "..." + path[^10..];
+                        }
+
+                        if (ImGui.MenuItem(display))
+                        {
+                            Settings.Shared.UpdateProjectList(path);
+                            project = Project.Unpack(path);
+                        }
+                    }
+                    
+                    ImGui.EndMenu();
                 }
 
                 if (ImGui.MenuItem("New Project")) Program.SetScene(new CreateProject());
