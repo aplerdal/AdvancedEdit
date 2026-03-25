@@ -7,17 +7,17 @@ namespace AdvancedLib.Serialization.OAM;
 public class CellData : ISerializable, IEquatable<CellData>
 {
     [Key(0)]
-    public List<CellEntry> Entries { get; set; } = [];
+    public List<OAMCellEntry> Entries { get; set; } = [];
     [IgnoreMember]
     public byte SortPriority => Entries.Count > 0 ? Entries[0].Priority : (byte)0;
 
     public void Deserialize(Stream stream)
     {
         ushort count = stream.ReadUInt16();
-        Entries = new List<CellEntry>(count);
+        Entries = new List<OAMCellEntry>(count);
         for (int i = 0; i < count; i++)
         {
-            var entry = new CellEntry();
+            var entry = new OAMCellEntry();
             entry.Deserialize(stream);
             Entries.Add(entry);
         }

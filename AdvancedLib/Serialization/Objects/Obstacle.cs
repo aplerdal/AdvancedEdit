@@ -1,9 +1,10 @@
+using AuroraLib.Core;
 using MessagePack;
 
 namespace AdvancedLib.Serialization.Objects;
 
 [MessagePackObject]
-public class Obstacle(short type, short parameter) : IEquatable<Obstacle>
+public class Obstacle(short type, short parameter) : IEquatable<Obstacle>, ICloneable<Obstacle>
 {
     [Key(0)]
     public short Type { get; set; } = type;
@@ -17,5 +18,10 @@ public class Obstacle(short type, short parameter) : IEquatable<Obstacle>
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
         return Type == other.Type && Parameter == other.Parameter;
+    }
+
+    public Obstacle Clone()
+    {
+        return new Obstacle(Type, Parameter);
     }
 }

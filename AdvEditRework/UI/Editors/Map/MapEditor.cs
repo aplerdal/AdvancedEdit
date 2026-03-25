@@ -92,6 +92,7 @@ public class MapEditor : Editor, IToolEditable
     public override void Update(bool hasFocus)
     {
         Focused = hasFocus;
+        View.Update();
         View.Draw();
         UpdateUI();
     }

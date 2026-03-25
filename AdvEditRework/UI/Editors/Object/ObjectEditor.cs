@@ -1,29 +1,54 @@
 using System.Diagnostics;
 using System.Numerics;
 using AdvancedLib.Game;
-using AdvancedLib.Project;
 using AdvancedLib.RaylibExt;
 using AdvancedLib.Serialization.OAM;
 using AdvancedLib.Serialization.Objects;
+using AdvancedLib.Serialization.Tracks;
 using AdvEditRework.DearImGui;
 using AdvEditRework.Shaders;
+using AdvEditRework.UI.Undo;
 using Hexa.NET.ImGui;
 using Raylib_cs;
 
 namespace AdvEditRework.UI.Editors.Object;
 
-public class ObjectEditor :  Editor
+internal record PlacementDrag(Vector2 StartPosition, ObjectPlacement Placement)
 {
+    public readonly ObjectPlacement OriginalPlacement = new()
+    {
+        X = Placement.X,
+        Y = Placement.Y,
+        Checkpoint = Placement.Checkpoint,
+        ID = Placement.ID,
+    };
+}
+
+public class ObjectEditor : Editor
+{
+    private readonly TrackView _view;
     private readonly Track _track;
     private readonly Texture2D _obstacleGfx;
     private readonly ObstacleOam _obstacleOam;
     private readonly int[] _vecPalette;
+    private readonly UndoManager _undoManager;
 
-    public ObjectEditor(Track track, ObstacleOam oamData)
+    private PlacementDrag? _placementDrag;
+    private int _selectedIndex = -1;
+    private ObjectPlacement? _selectedPlacement;
+    private const int PanelSize = 400;
+    private bool IsPanelHovered => Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), new Rectangle(Raylib.GetRenderWidth() - PanelSize, ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2, PanelSize, Raylib.GetRenderHeight() - (ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2) + 4));
+
+    private const float CellSize = 64f;
+
+    public ObjectEditor(TrackView view, ObstacleOam oamData)
     {
-        _track = track;
+        _view = view;
+        _view.DrawInTrack = TrackDraw;
+        _track = view.Track;
+        _undoManager = new();
         Debug.Assert(_track.ObstacleGfx is not null && _track.ObstaclePalette is not null);
-        _obstacleGfx = _track.ObstacleGfx.TilePaletteTexture(8, _track.ObstacleGfx.Length / 8);
+        _obstacleGfx = _track.ObstacleGfx.TileTexture(8, _track.ObstacleGfx.Length / 8);
         _vecPalette = new int[256 * 3 * 2]; // Space for blank colors when we read a slice of the palette
         var palette = _track.ObstaclePalette.ToIVec3();
         Array.Copy(palette, 0, _vecPalette, 0, 256 * 3);
@@ -31,71 +56,284 @@ public class ObjectEditor :  Editor
     }
     public override void Update(bool hasFocus)
     {
-        Raylib.ClearBackground(Color.White);
-        PaletteShader.SetPalette(_vecPalette[..(256 * 3)]);
-        PaletteShader.Begin();
-            Raylib.DrawTexture(_obstacleGfx, 32, 32, Color.White);
-        PaletteShader.End();
-
-        
-        var list = _track.Objects.GetObstacles();
-        Vector2 pos = new Vector2(32 + 8 * 8 + 4, 32);
-        foreach (var obstacle in list)
-        {
-            if (obstacle.Type is 0 or -1 or -8 or -16) continue;
-            var cellData = _obstacleOam.GetObjectDistanceCells(obstacle.Type, obstacle.Parameter);
-            float yOffs = 0;
-            foreach (var dist in cellData.Distances)
-            {
-                var size = DrawObstacleCellData(pos, dist, (int)Raylib.GetTime());
-                pos.X += size.X + 4;
-                if (size.Y > yOffs) yOffs = size.Y;
-            }
-
-            pos.Y += yOffs + 4;
-            pos.X = 100;
-        }
-
+        CheckBinds();
+        if (!IsPanelHovered)
+            _view.Update();
+        _view.Draw();
         OptionsWindow();
     }
 
-    
-    
-    private Vector2 DrawObstacleCellData(Vector2 pos, CellData data, int frame)
+    private void DrawObstacleCellData(Vector2 origin, CellData data, int frame, float size)
     {
         var entry = data.Entries[frame % data.Entries.Count];
         var layout = entry.GetTileGrid();
-        var width = layout.GetLength(0);
-        var height = layout.GetLength(1);
+        int width = layout.GetLength(0);
+        int height = layout.GetLength(1);
+
+        float pixW = width * 8f;
+        float pixH = height * 8f;
+
+        float scale = MathF.Min(size / pixW, size / pixH);
+        scale = MathF.Min(scale, 1f);
+
+        float scaledW = pixH * scale;
+        float scaledH = pixW * scale;
+
+        float offsetX = origin.X + (size - scaledW) * 0.5f;
+        float offsetY = origin.Y + (size - scaledH) * 0.5f;
+
         var slice = _vecPalette[(entry.Palette * 16 * 3)..((256 + entry.Palette * 16) * 3)];
         PaletteShader.SetPalette(slice);
         PaletteShader.Begin();
+
         for (int y = 0; y < height; y++)
         for (int x = 0; x < width; x++)
         {
             var src = Extensions.GetTileRect(layout[x, y], 8);
-            
-            Raylib.DrawTextureRec(_obstacleGfx, src, pos + new Vector2(y*8,x*8), Color.White);
-        }
-        PaletteShader.End();
+            var destPos = new Vector2(offsetX + y * 8 * scale, offsetY + x * 8 * scale);
 
-        return new Vector2(height * 8, width * 8);
+            var dest = new Rectangle(destPos.X, destPos.Y, 8 * scale, 8 * scale);
+            Raylib.DrawTexturePro(_obstacleGfx, src, dest, Vector2.Zero, 0f, Color.White);
+        }
+
+        PaletteShader.End();
     }
 
+    private void ObstacleTableView()
+    {
+        ImGui.PushID("ObstacleTableView");
+        
+        int frame = (int)Raylib.GetTime();
+        var tableRect = new Rectangle(ImGui.GetCursorScreenPos(), new Vector2(ImGui.GetContentRegionAvail().X - 8, PanelSize));
+        var tableFlags = ImGuiTableFlags.Borders
+                       | ImGuiTableFlags.RowBg
+                       | ImGuiTableFlags.ScrollY
+                       | ImGuiTableFlags.SizingFixedFit;
+        if (ImGui.BeginTable("ObstacleTable", 3, tableFlags, tableRect.Size))
+        {
+            // Column headers
+            ImGui.TableSetupScrollFreeze(0, 1);
+            ImGui.TableSetupColumn("Sprite",     ImGuiTableColumnFlags.WidthFixed, CellSize);
+            ImGui.TableSetupColumn("Type",       ImGuiTableColumnFlags.WidthStretch);
+            ImGui.TableSetupColumn("Parameter",  ImGuiTableColumnFlags.WidthStretch);
+            ImGui.TableHeadersRow();
+
+            for (var i = 0; i < _track.Objects.ObstacleTable.Obstacles.Count; i++)
+            {
+                var obstacle = _track.Objects.ObstacleTable.Obstacles[i];
+                if (obstacle.Type is 0 or -1 or -8 or -16) continue;
+
+                var cellData = _obstacleOam.GetObjectDistanceCells(obstacle.Type, obstacle.Parameter);
+
+                ImGui.TableNextRow(ImGuiTableRowFlags.None, CellSize);
+                ImGui.TableSetColumnIndex(0);
+
+                var cursorPos = ImGui.GetCursorScreenPos();
+                
+                ImGui.SetCursorScreenPos(cursorPos);
+                ImGui.Dummy(new Vector2(CellSize));
+
+                Raylib.BeginScissorMode((int)tableRect.X, (int)tableRect.Y, (int)tableRect.Width, (int)tableRect.Height);
+                var area = new Rectangle(cursorPos, new Vector2(CellSize));
+                if (Raylib.IsMouseButtonPressed(MouseButton.Left) && Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), area))
+                {
+                    if (_selectedIndex == i) _selectedIndex = -1;
+                    else _selectedIndex = i;
+                }
+                if (_selectedIndex == i)
+                {
+                    Raylib.DrawRectangleRec(area, new Color(0x8a,0xa1,0xf6));
+                }
+                DrawObstacleCellData(cursorPos, cellData.Distances[0], frame, CellSize);
+                Raylib.EndScissorMode();
+                
+                ImGui.TableSetColumnIndex(1);
+                int typeVal = obstacle.Type;
+                if (ImGui.InputInt($"##type{i}", ref typeVal))
+                {
+                    typeVal = Math.Clamp(typeVal, 1, short.MaxValue);
+                    _track.Objects.ObstacleTable.Obstacles[i] = new Obstacle((short)typeVal, obstacle.Parameter);
+                }
+
+                ImGui.TableSetColumnIndex(2);
+                ImGui.SetNextItemWidth(-1);
+                int paramVal = obstacle.Parameter;
+                if (ImGui.InputInt($"##param{i}", ref paramVal))
+                {
+                    _track.Objects.ObstacleTable.Obstacles[i] = new Obstacle(obstacle.Type, (short)paramVal);
+                }
+            }
+
+            ImGui.EndTable();
+        }
+
+        ImGui.BeginDisabled(_selectedIndex == -1);
+        if (ImGui.Button("Duplicate"))
+        {
+            _track.Objects.ObstacleTable.Obstacles.Add(_track.Objects.ObstacleTable[_selectedIndex].Clone());
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("New"))
+        {
+            _track.Objects.ObstacleTable.Obstacles.Add(new Obstacle(0,0));
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Delete"))
+        {
+            foreach (var placement in _track.Objects.ObstaclePlacements.Where(placement => placement.ID == _selectedIndex).ToList())
+                _track.Objects.ObstaclePlacements.Remove(placement);
+            _track.Objects.ObstacleTable.Obstacles.RemoveAt(_selectedIndex);
+        }
+        ImGui.EndDisabled();
+        ImGui.PopID();
+    }
+
+    private void ObstaclePreview(Obstacle? obstacle)
+    {
+        if (obstacle is null)
+        {
+            ImGui.BeginDisabled(_selectedIndex == -1);
+            ImGui.Text("Distances Preview:");
+            ImGui.Dummy(new Vector2(64));
+            ImGui.EndDisabled();
+            return;
+        }
+
+        ImGui.Text("Distances Preview:");
+        var cellData = _obstacleOam.GetObjectDistanceCells(obstacle.Type, obstacle.Parameter);
+        for (var i = 0; i < cellData.Distances.Length; i++)
+        {
+            var dist = cellData.Distances[i];
+            var cursor = ImGui.GetCursorScreenPos();
+            ImGui.Dummy(new Vector2(64));
+            DrawObstacleCellData(cursor, dist, ((int)Raylib.GetTime()), 64);
+            if (i != cellData.Distances.Length-1)
+                ImGui.SameLine();
+        }
+    }
+    
     private void OptionsWindow()
     {
-        var windowSize = new Vector2(Raylib.GetRenderWidth(), Raylib.GetRenderHeight());
+        var windowSize   = new Vector2(PanelSize, Raylib.GetRenderHeight());
         var menuBarHeight = ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2;
+        var position     = new Vector2(4, menuBarHeight + 4);
+        var optionsRect  = new Rectangle(Raylib.GetRenderWidth()- windowSize.X, menuBarHeight, windowSize.X, windowSize.Y - position.Y);
 
-        var position = new Vector2(4, menuBarHeight + 4);
-
-        var optionsX = 0;
-        var optionsRect = new Rectangle(optionsX, menuBarHeight, windowSize.X - optionsX, windowSize.Y - position.Y);
-
+        Raylib.DrawRectangleRec(optionsRect, Color.White);
         Raylib.DrawRectangleLinesEx(optionsRect, 2, Color.LightGray);
         ImHelper.BeginEmptyWindow("GfxOptionsWindow", optionsRect);
+
+        ObstacleTableView();
+        
+        ImGui.Separator();
+
+        ObstaclePreview(_selectedIndex == -1? null :_track.Objects.ObstacleTable[_selectedIndex]);
+        
+        ImGui.Separator();
+        
+        ImGui.BeginDisabled(_selectedPlacement is null);
+        // TODO: Keybinds
+        var bindPressed = (Raylib.IsKeyDown(KeyboardKey.LeftControl) || Raylib.IsKeyDown(KeyboardKey.RightControl)) && Raylib.IsKeyPressed(KeyboardKey.D);
+        if (ImGui.Button("Duplicate") || bindPressed)
+        {
+            Debug.Assert(_selectedPlacement is not null);
+            var newPlacement = _selectedPlacement.Clone();
+            newPlacement.X += 1;
+            newPlacement.Y += 1;
+            _track.Objects.ObstaclePlacements.Add(newPlacement);
+            _selectedPlacement = newPlacement;
+        }
+        ImGui.SameLine();
+        bindPressed = Raylib.IsKeyPressed(KeyboardKey.Delete);
+        if (ImGui.Button("Delete") || bindPressed)
+        {
+            Debug.Assert(_selectedPlacement is not null);
+            _track.Objects.ObstaclePlacements.Remove(_selectedPlacement);
+        }
+        ImGui.EndDisabled();
         
         ImHelper.EndEmptyWindow();
+    }
+
+    private void TrackDraw()
+    {
+        ObjectPlacement? hoveredPlacement = null;
+        foreach (var placement in _track.Objects.ObstaclePlacements)
+        {
+            var pos = new Vector2(placement.X, placement.Y) * 8;
+            var obstacle = _track.Objects.ObstacleTable[placement.ID];
+            var cellData = _obstacleOam.GetObjectDistanceCells(obstacle.Type, obstacle.Parameter);
+            var area = new Rectangle(pos - new Vector2(16), new Vector2(32));
+            if (_selectedPlacement == placement)
+            {
+                Raylib.DrawRectangleRec(area, Color.White with { A = 196 });
+            }
+            else if (Raylib.CheckCollisionPointRec(_view.MouseWorldPos, area))
+            {
+                hoveredPlacement = placement;
+                Raylib.DrawRectangleRec(area, Color.White with {A = 128});
+            }
+            DrawObstacleCellData(pos - new Vector2(16), cellData.Distances[0], 0, 32f);
+            Raylib.DrawRectangleLinesEx(area, 1, Color.White);
+        }
+
+        var panelHovered = IsPanelHovered;
+        if (_placementDrag is not null) hoveredPlacement = _placementDrag.Placement;
+
+        if (Raylib.IsMouseButtonDown(MouseButton.Left) && !panelHovered)
+        {
+            if (hoveredPlacement is null)
+            {
+                _selectedPlacement = null;
+            }
+            if (_placementDrag is null && hoveredPlacement is not null) _placementDrag = new PlacementDrag(_view.MouseTilePos, hoveredPlacement);
+
+            if (_placementDrag is not null)
+            {
+                var dragDelta = _view.MouseTilePos - _placementDrag.StartPosition;
+                _placementDrag.Placement.X = (byte)Math.Max(_placementDrag.OriginalPlacement.X + dragDelta.X, 0);
+                _placementDrag.Placement.Y = (byte)Math.Max(_placementDrag.OriginalPlacement.Y + dragDelta.Y, 0);
+            }
+        }
+        else if (_placementDrag is not null)
+        {
+            var placementRef = _placementDrag.Placement;
+            var oldPlacementRef = _placementDrag.OriginalPlacement;
+            var newPlacement = placementRef.Clone();
+            var oldPlacement = oldPlacementRef.Clone();
+
+            if (placementRef.Equals(oldPlacementRef))
+            {
+                _selectedPlacement = placementRef;
+            }
+            else
+                _undoManager.Push(new UndoActions(
+                    () =>
+                    {
+                        placementRef.X = newPlacement.X;
+                        placementRef.Y = newPlacement.Y;
+                        placementRef.ID = newPlacement.ID;
+                        placementRef.Checkpoint = newPlacement.Checkpoint;
+                    },
+                    () =>
+                    {
+                        placementRef.X = oldPlacement.X;
+                        placementRef.Y = oldPlacement.Y;
+                        placementRef.ID = oldPlacement.ID;
+                        placementRef.Checkpoint = oldPlacement.Checkpoint;
+                    }
+                ));
+
+            _placementDrag = null;
+        }
+    }
+
+    private void CheckBinds()
+    {
+        var ctrl = Raylib.IsKeyDown(KeyboardKey.LeftControl) || Raylib.IsKeyDown(KeyboardKey.RightControl);
+        var shift = Raylib.IsKeyDown(KeyboardKey.LeftShift) || Raylib.IsKeyDown(KeyboardKey.RightShift);
+        if (ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.Z)) _undoManager.Undo();
+        if (ctrl && shift && Raylib.IsKeyPressed(KeyboardKey.Z)) _undoManager.Redo();
     }
 
     public override void Dispose()

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Formats.Tar;
 using System.Numerics;
 using AdvancedLib.Game;
 using AdvancedLib.Project;
@@ -14,6 +15,7 @@ namespace AdvEditRework.Scenes;
 public class TrackEditorScene : Scene
 {
     public static readonly Dictionary<string, string> MAKEFilter = new() { { "MAKE track", "smkc" }, { "All files", "*" } };
+    public static readonly Dictionary<string, string> TrackFilter = new() { { "Advanced Edit track", "amkt" }, { "All files", "*" } };
 
     private ProjectTrack? _projectTrack;
     private TrackView? _view;
@@ -91,23 +93,42 @@ public class TrackEditorScene : Scene
                         }
                     }
 
-                    // if (ImGui.MenuItem("MKSC Track (.amkt)"))
-                    // {
-                    //
-                    // }
+                    ImGui.BeginDisabled(_projectTrack is null || _currentTrack is null);
+                    if (ImGui.MenuItem("MKSC Track (.amkt)"))
+                    {
+                        Debug.Assert(_projectTrack is not null && _currentTrack is not null);
+                        var status = Nfd.OpenDialog(out var path, TrackFilter);
+                        if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
+                        {
+                            TarFile.ExtractToDirectory(path, _projectTrack.Folder, true);
+                            _currentTrack = _projectTrack.LoadTrackData();
+                            SetView(new TrackView(_currentTrack));
+                        }
+                    }
+
+                    ImGui.EndDisabled();
                     ImGui.EndMenu();
                 }
 
                 if (ImGui.BeginMenu("Export"))
                 {
-                    // if (ImGui.MenuItem("MKSC Track (.amkt)"))
-                    // {
-                    //     
-                    // }
+                    ImGui.BeginDisabled(_projectTrack is null || _currentTrack is null);
+                    if (ImGui.MenuItem("MKSC Track (.amkt)"))
+                    {
+                        Debug.Assert(_projectTrack is not null && _currentTrack is not null);
+                        _projectTrack.SaveTrackDataAsync(_currentTrack).Wait();
+                        var trackFolder = _projectTrack.Folder;
+                        var status = Nfd.SaveDialog(out var path, TrackFilter,$"{_projectTrack.Name}.amkt");
+                        if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
+                        {
+                            TarFile.CreateFromDirectory(trackFolder, path, false);
+                        }
+                    }
+                    ImGui.EndDisabled();
 
                     if (ImGui.MenuItem("Rom (.gba)"))
                     {
-                        Debug.Assert(project != null);
+                        Debug.Assert(project is not null);
                         // Save active track
                         if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
 
@@ -196,7 +217,7 @@ public class TrackEditorScene : Scene
         if (ImGui.MenuItem("Objects", "", _mode == EditMode.Objects))
         {
             Debug.Assert(_view != null);
-            SetEditor(new ObjectEditor(_view.Track, project.Config.ObstacleOam));
+            SetEditor(new ObjectEditor(_view, project.Config.ObstacleOam));
             _mode = EditMode.Objects;
         }
         ImGui.EndDisabled();

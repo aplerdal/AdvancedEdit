@@ -99,13 +99,16 @@ public class TrackView : IDisposable
         }
     }
 
-    public void Draw()
+    public void Update()
     {
         MouseWorldPos = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition(), Camera);
         MouseTilePos = new Vector2((int)(MouseWorldPos.X / 8), (int)(MouseWorldPos.Y / 8));
-
-        PaletteShader.SetPalette(_shaderPalette);
         UpdateCamera();
+    }
+
+    public void Draw()
+    {
+        PaletteShader.SetPalette(_shaderPalette);
         Raylib.BeginMode2D(Camera);
         {
             PaletteShader.Begin();

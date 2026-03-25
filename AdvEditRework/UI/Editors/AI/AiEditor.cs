@@ -60,6 +60,7 @@ public class AiEditor : Editor
 
     public override void Update(bool hasFocus)
     {
+        View.Update();
         View.Draw();
         UpdatePanel();
         CheckUndo();
@@ -205,22 +206,31 @@ public class AiEditor : Editor
                 ImGui.EndTabItem();
             }
 
-            if (ImGui.BeginTabItem("Slow Path"))
+            for (int i = 1; i <= 3; i++)
             {
-                _tab = AiEditorTab.SlowPath;
-                ImGui.EndTabItem();
-            }
-
-            if (ImGui.BeginTabItem("Med Path"))
-            {
-                _tab = AiEditorTab.MedPath;
-                ImGui.EndTabItem();
-            }
-
-            if (ImGui.BeginTabItem("Fast Path"))
-            {
-                _tab = AiEditorTab.FastPath;
-                ImGui.EndTabItem();
+                if (ImGui.BeginTabItem(Enum.GetNames(typeof(AiEditorTab))[i]))
+                {
+                    _tab = (AiEditorTab)i;
+                    if (_selectedTarget is not null)
+                    {
+                        int speed = _selectedTarget.Speed;
+                        ImGui.InputInt("Speed", ref speed);
+                        _selectedTarget.Speed = (byte)(speed & 0x3);
+                        bool intersection = _selectedTarget.Intersection;
+                        ImGui.Checkbox("Intersection", ref intersection);
+                        _selectedTarget.Intersection = intersection;
+                    }
+                    else
+                    {
+                        ImGui.BeginDisabled();
+                        int speed = 0;
+                        bool intersection = false;
+                        ImGui.InputInt("Speed", ref speed);
+                        ImGui.Checkbox("Intersection", ref intersection);
+                        ImGui.EndDisabled();
+                    }
+                    ImGui.EndTabItem();
+                }
             }
 
             ImGui.EndTabBar();
@@ -359,8 +369,8 @@ public class AiEditor : Editor
                 Intersection = oldTargetRef.Intersection,
             };
 
-            if (newTarget.Equals(oldTarget))
-                _selectedTarget = targetRef;
+            if (_targetDrag.Target.Equals(_targetDrag.OriginalTarget))
+                _selectedTarget = _targetDrag.Target;
             else
                 _undoManager.Push(new UndoActions(
                     () =>
@@ -399,8 +409,9 @@ public class AiEditor : Editor
 
     private AiTarget? GetHoveredTarget(int set)
     {
-        bool TargetHovered(AiTarget target)
+        bool TargetHovered(AiTarget? target)
         {
+            if (target is null) return false;
             var rec = new Rectangle(new Vector2(target.X, target.Y) * 8 - new Vector2(TargetDrawSize / 2), new Vector2(TargetDrawSize));
             return Raylib.CheckCollisionPointRec(View.MouseWorldPos, rec);
         }
@@ -436,7 +447,8 @@ public class AiEditor : Editor
                 3 => new Color(0xff, 0x69, 0x69),
                 _ => Color.White
             };
-            if (target == hovered) color = Color.White;
+            if (ReferenceEquals(target, hovered)) color = Color.White;
+            if (ReferenceEquals(_selectedTarget, target)) color = Color.White;
             DrawTarget(target, checkpoint, color);
         }
     }
@@ -482,26 +494,11 @@ public class AiEditor : Editor
         var checkpointMin = rect.Position;
         var checkpointMax = rect.Position + rect.Size;
 
-        void TopLeft()
-        {
-            if (checkpoint.Shape != CheckpointShape.TriangleBottomRight) Raylib.DrawLineEx(new Vector2(checkpointMin.X, checkpointMin.Y), pos, 1, Color.White);
-        }
-
-        void TopRight()
-        {
-            if (checkpoint.Shape != CheckpointShape.TriangleBottomLeft) Raylib.DrawLineEx(new Vector2(checkpointMax.X, checkpointMin.Y), pos, 1, Color.White);
-        }
-
-        void BottomLeft()
-        {
-            if (checkpoint.Shape != CheckpointShape.TriangleTopRight) Raylib.DrawLineEx(new Vector2(checkpointMin.X, checkpointMax.Y), pos, 1, Color.White);
-        }
-
-        void BottomRight()
-        {
-            if (checkpoint.Shape != CheckpointShape.TriangleTopLeft) Raylib.DrawLineEx(new Vector2(checkpointMax.X, checkpointMax.Y), pos, 1, Color.White);
-        }
-
+        void TopLeft() => Raylib.DrawLineEx(new Vector2(checkpointMin.X, checkpointMin.Y), pos, 1, Color.White);
+        void TopRight() => Raylib.DrawLineEx(new Vector2(checkpointMax.X, checkpointMin.Y), pos, 1, Color.White);
+        void BottomLeft() => Raylib.DrawLineEx(new Vector2(checkpointMin.X, checkpointMax.Y), pos, 1, Color.White);
+        void BottomRight() => Raylib.DrawLineEx(new Vector2(checkpointMax.X, checkpointMax.Y), pos, 1, Color.White);
+        
         var overlapX = pos.X > checkpointMin.X && pos.X < checkpointMax.X;
         var overlapY = pos.Y > checkpointMin.Y && pos.Y < checkpointMax.Y;
         var leftOf = pos.X <= checkpointMin.X;
@@ -511,38 +508,38 @@ public class AiEditor : Editor
 
         if (checkpoint.Shape != CheckpointShape.Rectangle)
         {
-            TopLeft();
-            BottomLeft();
-            TopRight();
-            BottomRight();
+            if (checkpoint.Shape != CheckpointShape.TriangleBottomRight) TopLeft();
+            if (checkpoint.Shape != CheckpointShape.TriangleTopRight) BottomLeft();
+            if (checkpoint.Shape != CheckpointShape.TriangleBottomLeft) TopRight();
+            if (checkpoint.Shape != CheckpointShape.TriangleTopLeft) BottomRight();
         }
         else if (above && leftOf)
         {
-            /* Top Left    */
+            // Top Left
             BottomLeft();
             TopRight();
         }
         else if (above && overlapX)
         {
-            /* Top         */
+            // Top
             TopLeft();
             TopRight();
         }
         else if (above && rightOf)
         {
-            /* Top Right   */
+            // Top Right
             TopLeft();
             BottomRight();
         }
         else if (overlapY && leftOf)
         {
-            /* Left        */
+            // Left
             TopLeft();
             BottomLeft();
         }
         else if (overlapX && overlapY)
         {
-            /* In Rect     */
+            // Inside
             TopLeft();
             BottomLeft();
             TopRight();
@@ -550,25 +547,25 @@ public class AiEditor : Editor
         }
         else if (overlapY && rightOf)
         {
-            /* Right       */
+            // Right
             TopRight();
             BottomRight();
         }
         else if (below && leftOf)
         {
-            /* Bottom Left */
+            // Bottom Left
             TopLeft();
             BottomRight();
         }
         else if (below && overlapX)
         {
-            /* Bottom      */
+            // Bottom
             BottomLeft();
             BottomRight();
         }
         else if (below && rightOf)
         {
-            /* Bottom Right*/
+            // Bottom Right
             TopRight();
             BottomLeft();
         }

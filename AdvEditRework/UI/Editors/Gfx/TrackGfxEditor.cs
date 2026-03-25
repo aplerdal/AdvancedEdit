@@ -12,7 +12,8 @@ public enum TrackGraphic
 {
     Tileset,
     Minimap,
-    Cover
+    Cover,
+    Obstacles,
 }
 
 public class TrackGfxEditor : Editor

@@ -1,14 +1,17 @@
-using AdvancedLib.Serialization.Allocator;
 using AuroraLib.Core.IO;
+using MessagePack;
 
 namespace AdvancedLib.Serialization.Objects;
 
+[MessagePackObject]
 public class ObstacleTable
 {
     private const uint CaseTableAddress = 0x53de8;
 
+    [Key(0)]
     public List<Obstacle> Obstacles { get; set; } = new();
 
+    [IgnoreMember]
     public uint Size => (uint)(Obstacles.Count * 4 + 8);
 
     public Obstacle this[int i]
@@ -21,29 +24,23 @@ public class ObstacleTable
     {
         var index = Obstacles.IndexOf(obstacle);
         if (index == -1) throw new Exception("Obstacle not found in table");
-        return index + 2;
+        return index;
     }
 
-    public void OverrideExistingTable(Stream writer, int definitionIndex)
+    public void OverrideExistingTable(Stream romStream, Stream trackStream, Pointer newAddress, int definitionIndex)
     {
-        if (definitionIndex > 50) throw new Exception("Table not big enough");
+        if (definitionIndex > 50) throw new IndexOutOfRangeException("Table not big enough");
         var tablePointerPointer = new Pointer((uint)(0x8053DFC + definitionIndex * 4));
-        var newTableAddress = RomAllocator.Allocate(Size);
-        writer.Seek(newTableAddress);
-        WriteObstacleTable(writer, Obstacles);
+        WriteObstacleTable(trackStream, Obstacles);
 
         // Write custom ASM to edit table location
-        writer.Seek(tablePointerPointer);
-        writer.Write(newTableAddress);
+        romStream.Seek(tablePointerPointer);
+        romStream.Write(newAddress);
     }
 
     private static void WriteObstacleTable(Stream writer, List<Obstacle> obstacles)
     {
         // Write basic objects (common to all tracks
-        writer.Write((short)0);
-        writer.Write((short)0);
-        writer.Write((short)0);
-        writer.Write((short)-1);
         foreach (var obstacle in obstacles)
         {
             writer.Write(obstacle.Parameter);

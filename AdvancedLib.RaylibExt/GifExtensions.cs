@@ -1,8 +1,6 @@
 using System.Numerics;
 using AdvancedLib.Graphics;
 using GifLib;
-using Raylib_cs;
-using PixelFormat = AdvancedLib.Graphics.PixelFormat;
 
 namespace AdvancedLib.RaylibExt;
 

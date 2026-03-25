@@ -1,9 +1,7 @@
 using System.Diagnostics;
 using System.Numerics;
 using AdvancedLib.Graphics;
-using AdvancedLib.Project;
 using AdvancedLib.RaylibExt;
-using AdvEditRework.Scenes;
 using AdvEditRework.Shaders;
 using AdvEditRework.UI.Tools;
 using AdvEditRework.UI.Undo;
@@ -12,7 +10,6 @@ using GifLib;
 using Hexa.NET.ImGui;
 using NativeFileDialogs.Net;
 using Raylib_cs;
-using PixelFormat = AdvancedLib.Graphics.PixelFormat;
 
 namespace AdvEditRework.UI.Editors.Gfx;
 
@@ -145,11 +142,6 @@ public class TilesetEditor : IDisposable, IToolEditable
                 gif.Save(path);
             }
         }
-    }
-
-    private void ExportGif(string path)
-    {
-        
     }
 
     public void ShowPaletteOptions()

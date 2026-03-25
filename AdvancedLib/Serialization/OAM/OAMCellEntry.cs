@@ -4,7 +4,7 @@ using MessagePack;
 namespace AdvancedLib.Serialization.OAM;
 
 [MessagePackObject]
-public class CellEntry : ISerializable, IEquatable<CellEntry>
+public class OAMCellEntry : ISerializable, IEquatable<OAMCellEntry>
 {
     [Key(0)]
     public ushort Attr0 { get; set; }
@@ -161,9 +161,9 @@ public class CellEntry : ISerializable, IEquatable<CellEntry>
         return screen;
     }
 
-    public bool Equals(CellEntry? other)
+    public bool Equals(OAMCellEntry? other)
         => other != null && Attr0 == other.Attr0 && Attr1 == other.Attr1 && Attr2 == other.Attr2;
 
-    public override bool Equals(object? obj) => Equals(obj as CellEntry);
+    public override bool Equals(object? obj) => Equals(obj as OAMCellEntry);
     public override int GetHashCode() => HashCode.Combine(Attr0, Attr1, Attr2);
 }

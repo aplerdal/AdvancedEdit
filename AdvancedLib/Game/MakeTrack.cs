@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Numerics;
 using AdvancedLib.Graphics;
 using AdvancedLib.Project;
 using AdvancedLib.Serialization.AI;
