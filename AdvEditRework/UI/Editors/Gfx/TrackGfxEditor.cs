@@ -1,9 +1,14 @@
 using System.Numerics;
 using AdvancedLib.Game;
 using AdvancedLib.Graphics;
+using AdvancedLib.RaylibExt;
 using AdvEditRework.DearImGui;
+using AdvEditRework.Shaders;
 using AdvEditRework.UI.Editors.Gfx;
+using AdvEditRework.UI.Undo;
+using GifLib;
 using Hexa.NET.ImGui;
+using NativeFileDialogs.Net;
 using Raylib_cs;
 
 namespace AdvEditRework.UI.Editors;
@@ -13,14 +18,19 @@ public enum TrackGraphic
     Tileset,
     Minimap,
     Cover,
-    // Obstacles,
 }
 
 public class TrackGfxEditor : Editor
 {
+    private static readonly Dictionary<string, string> ImageFilter = new() { { "GIF Image", "gif" }, { "All files", "*" } };
+
     private readonly Track _track;
     private TrackGraphic _activeGraphic;
-    private TilesetEditor _tilesetEditor;
+    private TilesetEditor _tileEditor;
+    private bool _lockedPalette;
+    
+    private BgrColor _oldPaletteColor;
+    private bool _modifyingColor = false;
 
     private readonly Palette _uiPalette = new(
         [
@@ -35,7 +45,7 @@ public class TrackGfxEditor : Editor
     {
         _track = track;
         _activeGraphic = TrackGraphic.Tileset;
-        _tilesetEditor = new TilesetEditor(_track.Tileset, _track.TilesetPalette);
+        _tileEditor = new TilesetEditor(_track.Tileset, _track.TilesetPalette);
     }
 
     public override void Update(bool hasFocus)
@@ -50,10 +60,13 @@ public class TrackGfxEditor : Editor
         var menuBarHeight = ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2;
 
         var position = new Vector2(4, menuBarHeight + 4);
+        var viewportArea = new Rectangle(position, new Vector2(Raylib.GetScreenHeight()-position.Y-4));
 
-        _tilesetEditor.Update(position, hasFocus);
+        _tileEditor.Update(viewportArea, hasFocus);
+        _tileEditor.UpdatePaletteView(new Vector2(viewportArea.X + viewportArea.Width + 4, viewportArea.Y));
+        
 
-        var optionsX = position.X + _tilesetEditor.RenderSize.X + 4;
+        var optionsX = position.X + _tileEditor.RenderSize.X + 4;
         var optionsRect = new Rectangle(optionsX, menuBarHeight, windowSize.X - optionsX, windowSize.Y - position.Y);
 
         Raylib.DrawRectangleLinesEx(optionsRect, 2, Color.LightGray);
@@ -76,28 +89,114 @@ public class TrackGfxEditor : Editor
                     {
                         if (_activeGraphic == graphic) continue;
                         _activeGraphic = graphic;
-                        _tilesetEditor.Dispose();
-                        _tilesetEditor = graphic switch
+                        _tileEditor.Dispose();
+                        _tileEditor = graphic switch
                         {
-                            TrackGraphic.Minimap => new TilesetEditor(_track.Minimap, _uiPalette, true),
+                            TrackGraphic.Minimap => new TilesetEditor(_track.Minimap, _uiPalette),
                             TrackGraphic.Tileset => new TilesetEditor(_track.Tileset, _track.TilesetPalette),
                             TrackGraphic.Cover => new TilesetEditor(_track.CoverArt!, _track.CoverPalette!, 10, 8, 1),
                             _ => throw new ArgumentOutOfRangeException(nameof(graphic))
                         };
+                        _lockedPalette = graphic == TrackGraphic.Minimap;
                     }
                 }
 
             ImGui.EndCombo();
         }
 
-        _tilesetEditor.ShowOptions();
-        _tilesetEditor.ShowPaletteOptions();
+        ShowOptions();
+        ShowPaletteOptions();
 
         ImHelper.EndEmptyWindow();
+    }
+    private void ShowPaletteOptions()
+    {
+        ImGui.SeparatorText("Palette");
+        if (!_tileEditor.ActiveIndex.HasValue || _lockedPalette)
+        {
+            ImGui.BeginDisabled();
+            float _ = 0;
+            ImGui.ColorPicker3("Edit Selected Color:", ref _);
+            ImGui.EndDisabled();
+            return;
+        }
+
+        var color = _tileEditor.Palette[_tileEditor.ActiveIndex.Value];
+        float[] colors = [color.R5 * 8 / 255f, color.G5 * 8 / 255f, color.B5 * 8 / 255f];
+        float[] colorsOld = [color.R5 * 8 / 255f, color.G5 * 8 / 255f, color.B5 * 8 / 255f];
+        unsafe
+        {
+            fixed (float* colorPtr = colors)
+            {
+                ImGui.ColorPicker3("Edit Selected Color:", colorPtr);
+            }
+        }
+
+        var newColor = new BgrColor(colors[0], colors[1], colors[2]);
+        if (colorsOld[0] == colors[0] && colorsOld[1] == colors[1] && colorsOld[2] == colors[2])
+        {
+            if (_modifyingColor)
+            {
+                var capturedOld = _oldPaletteColor; // capture the value now
+                var capturedNew = newColor;
+                var capturedIndex = _tileEditor.ActiveIndex.Value;
+                _tileEditor.UndoManager.Push(new UndoActions(
+                    () =>
+                    {
+                        _tileEditor.Palette[capturedIndex] = capturedNew;
+                        PaletteShader.SetPalette(_tileEditor.Palette.ToIVec3());
+                    },
+                    () =>
+                    {
+                        _tileEditor.Palette[capturedIndex] = capturedOld;
+                        PaletteShader.SetPalette(_tileEditor.Palette.ToIVec3());
+                    }
+                ));
+                _modifyingColor = false;
+            }
+
+            return;
+        }
+
+        if (!_modifyingColor)
+        {
+            _oldPaletteColor = color;
+            _modifyingColor = true;
+        }
+        
+        _tileEditor.Palette[_tileEditor.ActiveIndex.Value] = newColor;
+        PaletteShader.SetPalette(_tileEditor.Palette.ToIVec3());
+    }
+    public void ShowOptions()
+    {
+        ImGui.SeparatorText("Options");
+        ImGui.Checkbox("Show Grid?", ref _tileEditor.ShowGrid);
+
+        if (ImGui.Button("Import"))
+        {
+            var status = Nfd.OpenDialog(out var path, ImageFilter, "tiles.gif");
+            if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
+            {
+                var gif = GifDocument.Load(path);
+                gif.LoadGifToGBA(ref _tileEditor.Tileset, ref _tileEditor.Palette);
+                _tileEditor.ReloadTileset();
+            }
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Export"))
+        {
+            var status = Nfd.SaveDialog(out var path, ImageFilter, "tiles.gif");
+            if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
+            {
+                // TODO: ToGif Layout support
+                var gif = _tileEditor.Tileset.ToGif(_tileEditor.Palette, _tileEditor.TilesetWidth, _tileEditor.TilesetHeight, 0);
+                gif.Save(path);
+            }
+        }
     }
 
     public override void Dispose()
     {
-        _tilesetEditor.Dispose();
+        _tileEditor.Dispose();
     }
 }

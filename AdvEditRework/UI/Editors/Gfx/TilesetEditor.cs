@@ -15,30 +15,25 @@ namespace AdvEditRework.UI.Editors.Gfx;
 
 public class TilesetEditor : IDisposable, IToolEditable
 {
-    private static readonly Dictionary<string, string> ImageFilter = new() { { "GIF Image", "gif" }, { "All files", "*" } };
-    
-    private Tileset _tileset;
-    private Palette _palette;
+    public Tileset Tileset;
+    public Palette Palette;
     private Texture2D _texture;
     private Image _tilesetImage;
     private readonly RenderTexture2D _viewport;
-    private readonly UndoManager _undoManager;
+    public readonly UndoManager UndoManager;
     private readonly MapEditorTool[] _tools = [new DrawTool(), new SelectionTool(), new Eyedropper(), new RectangleTool(), new BucketTool(), new StampTool()];
     private MapEditorToolType _activeTool = MapEditorToolType.Draw;
 
     private Camera2D _viewCamera;
     private Vector2 _position;
 
-    private BgrColor _oldPaletteColor;
-    private bool _modifyingColor = false;
-
-    private readonly int _tilesetWidth;
-    private readonly int _tilesetHeight;
-    private readonly int _tilesetSkip;
-    private readonly bool _paletteLocked;
+    public readonly ushort[,] Layout;
+    
+    public readonly int TilesetWidth;
+    public readonly int TilesetHeight;
 
     public int CellSize => 1;
-    private bool _showGrid = false;
+    public bool ShowGrid = false;
 
     public byte? ActiveIndex { get; set; } = 0;
     public bool ViewportHovered => Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), new Rectangle(_position, _viewportSize, _viewportSize));
@@ -57,7 +52,7 @@ public class TilesetEditor : IDisposable, IToolEditable
         }
     }
 
-    public Vector2 GridSize => new(_texture.Width, _texture.Height);
+    public Vector2 GridSize => new Vector2(TilesetWidth, TilesetHeight) * 8;
     public CellEntry[]? Stamp { get; set; }
 
     private const int TargetSize = 512;
@@ -67,140 +62,86 @@ public class TilesetEditor : IDisposable, IToolEditable
 
     public Vector2 RenderSize => new(_viewportSize + 4 + IconSize * IconsPerColumn, _viewportSize);
 
-    public TilesetEditor(Tileset tileset, Palette palette, bool paletteLocked = false)
+    public TilesetEditor(Tileset tileset, Palette palette)
     {
-        _tileset = tileset;
-        _palette = palette;
-        _paletteLocked = paletteLocked;
-        Debug.Assert(Math.Sqrt(tileset.Length) % 1 == 0, "Tileset size is not square. This is unsupported.");
+        Tileset = tileset;
+        Palette = palette;
+        Debug.Assert(Math.Sqrt(tileset.Length) % 1 == 0, "Tileset size is not square. Use the other constructor.");
         var sqrtLen = (int)Math.Sqrt(tileset.Length);
-        _tilesetWidth = sqrtLen;
-        _tilesetHeight = sqrtLen;
-        _tilesetSkip = 0;
-        _texture = _tileset.TilePaletteTexture(_tilesetWidth, _tilesetHeight);
+        TilesetWidth = sqrtLen;
+        TilesetHeight = sqrtLen;
+        Layout = new ushort[TilesetWidth, TilesetHeight];
+        ushort i = 0;
+        for (int y = 0; y < TilesetHeight; y++)
+        for (int x = 0; x < TilesetWidth; x++)
+        {
+            Layout[x, y] = i++;
+        }
+        _texture = Tileset.TilePaletteTexture(1, Tileset.Length);
         _tilesetImage = Raylib.LoadImageFromTexture(_texture);
         PaletteShader.SetPalette(palette.ToIVec3());
         _viewport = Raylib.LoadRenderTexture(TargetSize, TargetSize);
         _viewCamera = new Camera2D(Vector2.Zero, Vector2.Zero, 0, 4);
-        _undoManager = new UndoManager();
+        UndoManager = new UndoManager();
     }
 
-    public TilesetEditor(Tileset tileset, Palette palette, int width, int height, int skip = 0, bool paletteLocked = false)
+    public TilesetEditor(Tileset tileset, Palette palette, int width, int height, int skip = 0)
     {
-        _tileset = tileset;
-        _palette = palette;
-        _paletteLocked = paletteLocked;
-        _tilesetWidth = width;
-        _tilesetHeight = height;
-        _tilesetSkip = skip;
-        var size = Math.Max(_tilesetWidth, _tilesetHeight);
-        _texture = _tileset.TilePaletteTexture(size, size, _tilesetSkip);
-        _tilesetImage = Raylib.LoadImageFromTexture(_texture);
-        PaletteShader.SetPalette(palette.ToIVec3());
+        Tileset = tileset;
+        Palette = palette;
+        TilesetWidth = width;
+        TilesetHeight = height;
+        Layout = new ushort[TilesetWidth, TilesetHeight];
+        ushort i = (ushort)skip;
+        for (int y = 0; y < TilesetHeight; y++)
+        for (int x = 0; x < TilesetWidth; x++)
+        {
+            Layout[x, y] = i++;
+        }
+        ReloadTileset();
         _viewport = Raylib.LoadRenderTexture(TargetSize, TargetSize);
         _viewCamera = new Camera2D(Vector2.Zero, Vector2.Zero, 0, 4);
-        _undoManager = new UndoManager();
+        UndoManager = new UndoManager();
+    }
+    public TilesetEditor(Tileset tileset, Palette palette, ushort[,] layout)
+    {
+        Tileset = tileset;
+        Palette = palette;
+        TilesetWidth = layout.GetLength(0);
+        TilesetHeight = layout.GetLength(1);
+        Layout = layout;
+        ReloadTileset();
+        _viewport = Raylib.LoadRenderTexture(TargetSize, TargetSize);
+        _viewCamera = new Camera2D(Vector2.Zero, Vector2.Zero, 0, 4);
+        UndoManager = new UndoManager();
     }
 
-    public void Update(Vector2 position, bool hasFocus)
+    public void ReloadTileset()
+    {
+        if (Raylib.IsTextureValid(_texture))
+        {
+            Raylib.UnloadTexture(_texture);
+        }
+        PaletteShader.SetPalette(Palette.ToIVec3());
+        Raylib.UnloadTexture(_texture);
+        _texture = Tileset.TilePaletteTexture(1, Tileset.Length);
+        Raylib.UnloadImage(_tilesetImage);
+        _tilesetImage = Raylib.LoadImageFromTexture(_texture);
+    }
+
+    public void Update(Rectangle area, bool hasFocus)
     {
         Focused = hasFocus;
-        _position = position;
+        _position = area.Position;
 
-        _viewportSize = (int)(Raylib.GetRenderHeight() - position.Y - 4);
-        UpdateViewport(position);
-        PaletteView(position + new Vector2(_viewportSize + 4, 0));
-        ToolPicker.Draw(position + new Vector2(_viewportSize + 4, 8 + _palette.Length / 8 * IconSize), IconSize * IconsPerColumn, ref _activeTool);
+        _viewportSize = (int)Math.Min(area.Width, area.Height);
+        UpdateViewport(_position);
     }
 
-    public void ShowOptions()
+    public void UpdatePaletteView(Vector2 position)
     {
-        ImGui.SeparatorText("Options");
-        ImGui.Checkbox("Show Grid?", ref _showGrid);
-
-        if (ImGui.Button("Import"))
-        {
-            var status = Nfd.OpenDialog(out var path, ImageFilter, "tiles.gif");
-            if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
-            {
-                var gif = GifDocument.Load(path);
-                gif.LoadGifToGBA(ref _tileset, ref _palette);
-                PaletteShader.SetPalette(_palette.ToIVec3());
-                Raylib.UnloadTexture(_texture);
-                _texture = _tileset.TilePaletteTexture(_tilesetWidth, _tilesetHeight, _tilesetSkip);
-                Raylib.UnloadImage(_tilesetImage);
-                _tilesetImage = Raylib.LoadImageFromTexture(_texture);
-            }
-        }
-        ImGui.SameLine();
-        if (ImGui.Button("Export"))
-        {
-            var status = Nfd.SaveDialog(out var path, ImageFilter, "tiles.gif");
-            if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
-            {
-                var gif = _tileset.ToGif(_palette, _tilesetWidth, _tilesetHeight, _tilesetSkip);
-                gif.Save(path);
-            }
-        }
-    }
-
-    public void ShowPaletteOptions()
-    {
-        ImGui.SeparatorText("Palette");
-        if (!ActiveIndex.HasValue || _paletteLocked)
-        {
-            ImGui.BeginDisabled();
-            float _ = 0;
-            ImGui.ColorPicker3("Edit Selected Color:", ref _);
-            ImGui.EndDisabled();
-            return;
-        }
-
-        var color = _palette[ActiveIndex.Value];
-        float[] colors = [color.R5 * 8 / 255f, color.G5 * 8 / 255f, color.B5 * 8 / 255f];
-        float[] colorsOld = [color.R5 * 8 / 255f, color.G5 * 8 / 255f, color.B5 * 8 / 255f];
-        unsafe
-        {
-            fixed (float* colorPtr = colors)
-            {
-                ImGui.ColorPicker3("Edit Selected Color:", colorPtr);
-            }
-        }
-
-        var newColor = new BgrColor(colors[0], colors[1], colors[2]);
-        if (colorsOld[0] == colors[0] && colorsOld[1] == colors[1] && colorsOld[2] == colors[2])
-        {
-            if (_modifyingColor)
-            {
-                var capturedOld = _oldPaletteColor; // capture the value now
-                var capturedNew = newColor;
-                var capturedIndex = ActiveIndex.Value;
-                _undoManager.Push(new UndoActions(
-                    () =>
-                    {
-                        _palette[capturedIndex] = capturedNew;
-                        PaletteShader.SetPalette(_palette.ToIVec3());
-                    },
-                    () =>
-                    {
-                        _palette[capturedIndex] = capturedOld;
-                        PaletteShader.SetPalette(_palette.ToIVec3());
-                    }
-                ));
-                _modifyingColor = false;
-            }
-
-            return;
-        }
-
-        if (!_modifyingColor)
-        {
-            _oldPaletteColor = color;
-            _modifyingColor = true;
-        }
-        
-        _palette[ActiveIndex.Value] = newColor;
-        PaletteShader.SetPalette(_palette.ToIVec3());
+        PaletteView(position);
+        ToolPicker.Draw(position + new Vector2(0, 8 + Palette.Length / 8 * IconSize), IconSize * IconsPerColumn, ref _activeTool);
     }
 
     private Vector2 WorldToViewport(Vector2 pos)
@@ -217,11 +158,17 @@ public class TilesetEditor : IDisposable, IToolEditable
         }
 
         Raylib.BeginTextureMode(_viewport);
-        Raylib.ClearBackground(Color.Black);
+        Raylib.ClearBackground(Color.Blank);
         Raylib.BeginMode2D(_viewCamera);
         {
             PaletteShader.Begin();
-            Raylib.DrawTexture(_texture, 0, 0, Color.White);
+            for (int y = 0; y < TilesetHeight; y++)
+            for (int x = 0; x < TilesetWidth; x++)
+            {
+                var index = Layout[x, y];
+                var rect = Extensions.GetTileRect(index, 1);
+                Raylib.DrawTextureRec(_texture, rect, 8*new Vector2(x, y), Color.White);
+            }
             PaletteShader.End();
             _tools[(int)_activeTool].Update(this);
         }
@@ -229,21 +176,21 @@ public class TilesetEditor : IDisposable, IToolEditable
         Raylib.EndTextureMode();
 
         Raylib.DrawTexturePro(_viewport.Texture, new Rectangle(Vector2.Zero, _viewport.Texture.Width, -_viewport.Texture.Height), new Rectangle(position, _viewportSize, _viewportSize), Vector2.Zero, 0f, Color.White);
-        if (_showGrid)
+        if (ShowGrid)
         {
             Raylib.BeginScissorMode((int)position.X, (int)position.Y, _viewportSize, _viewportSize);
             {
-                for (var y = 1; y < _texture.Height / 8; y++)
+                for (var y = 1; y < TilesetHeight; y++)
                 {
                     var p1 = WorldToViewport(new Vector2(0, y * 8));
-                    var p2 = WorldToViewport(new Vector2(_texture.Width, y * 8));
+                    var p2 = WorldToViewport(new Vector2(TilesetWidth*8, y * 8));
                     Raylib.DrawLineV(p1, p2, Color.Black);
                 }
 
-                for (var x = 1; x < _texture.Width / 8; x++)
+                for (var x = 1; x < TilesetWidth; x++)
                 {
                     var p1 = WorldToViewport(new Vector2(x * 8, 0));
-                    var p2 = WorldToViewport(new Vector2(x * 8, _texture.Height));
+                    var p2 = WorldToViewport(new Vector2(x * 8,TilesetHeight*8));
                     Raylib.DrawLineV(p1, p2, Color.Black);
                 }
             }
@@ -291,16 +238,15 @@ public class TilesetEditor : IDisposable, IToolEditable
 
         // Limit camera position to size of tileset
         // First, make sure it can all fit with current zoom level
-        Debug.Assert(_texture.Width == _texture.Height); // Assuming square texture
-        _viewCamera.Zoom = _viewCamera.Zoom.Clamp(TargetSize / (float)_texture.Width, float.MaxValue);
+        _viewCamera.Zoom = _viewCamera.Zoom.Clamp(TargetSize / (float)(TilesetWidth * 8), float.MaxValue);
         // Clamp view target to texture
         var viewportSizePx = new Vector2(TargetSize / _viewCamera.Zoom);
-        _viewCamera.Target = Vector2.Clamp(_viewCamera.Target, Vector2.Zero, new Vector2(_texture.Width, _texture.Height) - viewportSizePx);
+        _viewCamera.Target = Vector2.Clamp(_viewCamera.Target, Vector2.Zero, new Vector2(Math.Max(TilesetWidth, TilesetHeight)) * 8 - viewportSizePx);
     }
 
     private void PaletteView(Vector2 position)
     {
-        var len = _palette.Length;
+        var len = Palette.Length;
 
         for (var y = 0; y < (int)(len / IconsPerColumn); y++)
         for (var x = 0; x < IconsPerColumn; x++)
@@ -308,7 +254,7 @@ public class TilesetEditor : IDisposable, IToolEditable
             var index = x + y * IconsPerColumn;
             var colRect = new Rectangle(position.X + x * IconSize, position.Y + y * IconSize, IconSize, IconSize);
             var hovered = Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), colRect);
-            var color = _palette[index].ToColor();
+            var color = Palette[index].ToColor();
             Raylib.DrawRectangleRec(colRect, color);
             if (hovered || index == ActiveIndex) Raylib.DrawRectangleLinesEx(colRect, 2, Color.White);
             if (hovered && Raylib.IsMouseButtonPressed(MouseButton.Left) && Focused) ActiveIndex = (byte)index;
@@ -320,8 +266,8 @@ public class TilesetEditor : IDisposable, IToolEditable
         // TODO: Customizable keybinds
         var ctrl = Raylib.IsKeyDown(KeyboardKey.LeftControl) || Raylib.IsKeyDown(KeyboardKey.RightControl);
         var shift = Raylib.IsKeyDown(KeyboardKey.LeftShift) || Raylib.IsKeyDown(KeyboardKey.RightShift);
-        if (ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.Z)) _undoManager.Undo();
-        if (ctrl && shift && Raylib.IsKeyPressed(KeyboardKey.Z)) _undoManager.Redo();
+        if (ctrl && !shift && Raylib.IsKeyPressed(KeyboardKey.Z)) UndoManager.Undo();
+        if (ctrl && shift && Raylib.IsKeyPressed(KeyboardKey.Z)) UndoManager.Redo();
 
         var settings = Settings.Shared;
         if (!ctrl && !shift && Raylib.IsKeyPressed(settings.EyedropperBind)) SetTool(MapEditorToolType.Eyedropper);
@@ -340,7 +286,7 @@ public class TilesetEditor : IDisposable, IToolEditable
 
     public void DrawCell(Vector2 position, byte id, Color color)
     {
-        var col = _palette[id].ToColor();
+        var col = Palette[id].ToColor();
         Raylib.DrawPixelV(position, col);
     }
 
@@ -351,25 +297,27 @@ public class TilesetEditor : IDisposable, IToolEditable
 
     public bool ValidCell(Vector2 position)
     {
-        return position.X >= 0 && position.Y >= 0 && position.X <= _texture.Width && position.Y <= _texture.Height;
+        return position.X >= 0 && position.Y >= 0 && position.X <= TilesetWidth*8 && position.Y <= TilesetHeight*8;
     }
 
     public byte GetCell(Vector2 position)
     {
-        var tile = (int)((int)position.X / 8) + (int)(GridSize.X / 8) * (int)((int)position.Y / 8);
-        if (tile < _tilesetWidth * _tilesetHeight)
-            return _tileset[tile + _tilesetSkip][(int)position.X % 8, (int)position.Y % 8];
-        return 0;
+        var tileX = ((int)position.X / 8);
+        var tileY = ((int)position.Y / 8);
+        var tile = Layout[tileX, tileY];
+        return Tileset[tile][(int)position.X % 8, (int)position.Y % 8];
     }
 
     private void SetPixel(Vector2 position, byte id)
     {
-        var tile = (int)((int)position.X / 8) + (int)(GridSize.X / 8) * (int)((int)position.Y / 8);
-        if (!(tile < _tilesetWidth * _tilesetHeight)) return;
+        var tileX = ((int)position.X / 8);
+        var tileY = ((int)position.Y / 8);
+        var tile = Layout[tileX, tileY];
 
         var indexI32 = BitConverter.ToInt32([id, id, id, 0xFF]);
-        Raylib.UpdateTextureRec(_texture, new Rectangle(position, 1, 1), [indexI32]);
-        _tileset[tile + _tilesetSkip][(int)position.X % 8, (int)position.Y % 8] = id;
+        var texturePos = new Vector2((int)position.X % 8, tile * 8 + (int)position.Y % 8);
+        Raylib.UpdateTextureRec(_texture, new Rectangle(texturePos, 1, 1), [indexI32]);
+        Tileset[tile][(int)position.X % 8, (int)position.Y % 8] = id;
     }
 
     private void SetTiles(Rectangle area, byte id)
@@ -441,6 +389,6 @@ public class TilesetEditor : IDisposable, IToolEditable
 
     public void PushUndoable(UndoActions action)
     {
-        _undoManager.Push(action);
+        UndoManager.Push(action);
     }
 }
