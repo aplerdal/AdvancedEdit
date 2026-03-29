@@ -27,7 +27,7 @@ public class TilesetEditor : IDisposable, IToolEditable
     private Camera2D _viewCamera;
     private Vector2 _position;
 
-    public readonly ushort[,] Layout;
+    public readonly int[,] Layout;
     
     public readonly int TilesetWidth;
     public readonly int TilesetHeight;
@@ -57,10 +57,9 @@ public class TilesetEditor : IDisposable, IToolEditable
 
     private const int TargetSize = 512;
     private int _viewportSize = 512;
-    private const int IconSize = 32;
     private const int IconsPerColumn = 8;
 
-    public Vector2 RenderSize => new(_viewportSize + 4 + IconSize * IconsPerColumn, _viewportSize);
+    public Vector2 RenderSize => new(_viewportSize + 4 + _iconSize * IconsPerColumn, _viewportSize);
 
     public TilesetEditor(Tileset tileset, Palette palette)
     {
@@ -70,7 +69,7 @@ public class TilesetEditor : IDisposable, IToolEditable
         var sqrtLen = (int)Math.Sqrt(tileset.Length);
         TilesetWidth = sqrtLen;
         TilesetHeight = sqrtLen;
-        Layout = new ushort[TilesetWidth, TilesetHeight];
+        Layout = new int[TilesetWidth, TilesetHeight];
         ushort i = 0;
         for (int y = 0; y < TilesetHeight; y++)
         for (int x = 0; x < TilesetWidth; x++)
@@ -79,7 +78,7 @@ public class TilesetEditor : IDisposable, IToolEditable
         }
         _texture = Tileset.TilePaletteTexture(1, Tileset.Length);
         _tilesetImage = Raylib.LoadImageFromTexture(_texture);
-        PaletteShader.SetPalette(palette.ToIVec3());
+        _paletteIvec = palette.ToIVec3();
         _viewport = Raylib.LoadRenderTexture(TargetSize, TargetSize);
         _viewCamera = new Camera2D(Vector2.Zero, Vector2.Zero, 0, 4);
         UndoManager = new UndoManager();
@@ -91,7 +90,7 @@ public class TilesetEditor : IDisposable, IToolEditable
         Palette = palette;
         TilesetWidth = width;
         TilesetHeight = height;
-        Layout = new ushort[TilesetWidth, TilesetHeight];
+        Layout = new int[TilesetWidth, TilesetHeight];
         ushort i = (ushort)skip;
         for (int y = 0; y < TilesetHeight; y++)
         for (int x = 0; x < TilesetWidth; x++)
@@ -103,7 +102,7 @@ public class TilesetEditor : IDisposable, IToolEditable
         _viewCamera = new Camera2D(Vector2.Zero, Vector2.Zero, 0, 4);
         UndoManager = new UndoManager();
     }
-    public TilesetEditor(Tileset tileset, Palette palette, ushort[,] layout)
+    public TilesetEditor(Tileset tileset, Palette palette, int[,] layout)
     {
         Tileset = tileset;
         Palette = palette;
@@ -122,7 +121,8 @@ public class TilesetEditor : IDisposable, IToolEditable
         {
             Raylib.UnloadTexture(_texture);
         }
-        PaletteShader.SetPalette(Palette.ToIVec3());
+
+        _paletteIvec = Palette.ToIVec3();
         Raylib.UnloadTexture(_texture);
         _texture = Tileset.TilePaletteTexture(1, Tileset.Length);
         Raylib.UnloadImage(_tilesetImage);
@@ -138,10 +138,10 @@ public class TilesetEditor : IDisposable, IToolEditable
         UpdateViewport(_position);
     }
 
-    public void UpdatePaletteView(Vector2 position)
+    public void UpdatePaletteView(Rectangle area)
     {
-        PaletteView(position);
-        ToolPicker.Draw(position + new Vector2(0, 8 + Palette.Length / 8 * IconSize), IconSize * IconsPerColumn, ref _activeTool);
+        PaletteView(area);
+        ToolPicker.Draw(area.Position + new Vector2(0, 8 + Palette.Length / 8 * _iconSize), area.Width, ref _activeTool);
     }
 
     private Vector2 WorldToViewport(Vector2 pos)
@@ -161,11 +161,13 @@ public class TilesetEditor : IDisposable, IToolEditable
         Raylib.ClearBackground(Color.Blank);
         Raylib.BeginMode2D(_viewCamera);
         {
+            PaletteShader.SetPalette(_paletteIvec);
             PaletteShader.Begin();
             for (int y = 0; y < TilesetHeight; y++)
             for (int x = 0; x < TilesetWidth; x++)
             {
                 var index = Layout[x, y];
+                if (index == -1) continue;
                 var rect = Extensions.GetTileRect(index, 1);
                 Raylib.DrawTextureRec(_texture, rect, 8*new Vector2(x, y), Color.White);
             }
@@ -200,6 +202,8 @@ public class TilesetEditor : IDisposable, IToolEditable
 
     private bool _isPanning;
     private Vector2 _lastMousePosition = Vector2.Zero;
+    private int[] _paletteIvec;
+    private float _iconSize;
 
     private void UpdateCamera()
     {
@@ -238,21 +242,23 @@ public class TilesetEditor : IDisposable, IToolEditable
 
         // Limit camera position to size of tileset
         // First, make sure it can all fit with current zoom level
-        _viewCamera.Zoom = _viewCamera.Zoom.Clamp(TargetSize / (float)(TilesetWidth * 8), float.MaxValue);
+        _viewCamera.Zoom = _viewCamera.Zoom.Clamp(TargetSize / (float)(Math.Max(TilesetWidth, TilesetHeight) * 8), float.MaxValue);
         // Clamp view target to texture
         var viewportSizePx = new Vector2(TargetSize / _viewCamera.Zoom);
         _viewCamera.Target = Vector2.Clamp(_viewCamera.Target, Vector2.Zero, new Vector2(Math.Max(TilesetWidth, TilesetHeight)) * 8 - viewportSizePx);
     }
 
-    private void PaletteView(Vector2 position)
+    private void PaletteView(Rectangle area)
     {
         var len = Palette.Length;
+        var width = area.Width;
+        _iconSize = Math.Min(width / IconsPerColumn, 32f);
 
         for (var y = 0; y < (int)(len / IconsPerColumn); y++)
         for (var x = 0; x < IconsPerColumn; x++)
         {
             var index = x + y * IconsPerColumn;
-            var colRect = new Rectangle(position.X + x * IconSize, position.Y + y * IconSize, IconSize, IconSize);
+            var colRect = new Rectangle(area.X + x * _iconSize, area.Y + y * _iconSize, _iconSize, _iconSize);
             var hovered = Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), colRect);
             var color = Palette[index].ToColor();
             Raylib.DrawRectangleRec(colRect, color);
@@ -286,18 +292,26 @@ public class TilesetEditor : IDisposable, IToolEditable
 
     public void DrawCell(Vector2 position, byte id, Color color)
     {
+        if (!ValidCell(position)) return;
         var col = Palette[id].ToColor();
         Raylib.DrawPixelV(position, col);
     }
 
     public void OutlineCell(Vector2 position, Color color)
     {
+        if (!ValidCell(position)) return;
         Raylib.DrawRectangleLinesEx(new Rectangle(position - new Vector2(1 / 8f), new Vector2(5 / 4f)), 1 / 8f, color);
     }
 
     public bool ValidCell(Vector2 position)
     {
-        return position.X >= 0 && position.Y >= 0 && position.X <= TilesetWidth*8 && position.Y <= TilesetHeight*8;
+        var inBounds = position.X >= 0 && position.Y >= 0 && position.X < TilesetWidth * 8 &&
+                       position.Y < TilesetHeight * 8;
+        if (!inBounds) return false;
+        var tileX = ((int)position.X / 8);
+        var tileY = ((int)position.Y / 8);
+        var tile = Layout[tileX, tileY];
+        return tile != -1;
     }
 
     public byte GetCell(Vector2 position)
@@ -305,6 +319,7 @@ public class TilesetEditor : IDisposable, IToolEditable
         var tileX = ((int)position.X / 8);
         var tileY = ((int)position.Y / 8);
         var tile = Layout[tileX, tileY];
+        if (tile == -1) return 0;
         return Tileset[tile][(int)position.X % 8, (int)position.Y % 8];
     }
 
@@ -313,6 +328,8 @@ public class TilesetEditor : IDisposable, IToolEditable
         var tileX = ((int)position.X / 8);
         var tileY = ((int)position.Y / 8);
         var tile = Layout[tileX, tileY];
+
+        if (tile == -1) return;
 
         var indexI32 = BitConverter.ToInt32([id, id, id, 0xFF]);
         var texturePos = new Vector2((int)position.X % 8, tile * 8 + (int)position.Y % 8);

@@ -147,14 +147,14 @@ public class OAMCellEntry : ISerializable, IEquatable<OAMCellEntry>
             raw[row, col] = (ushort)(TileIndex + (row * w + col) * step);
 
         // Mirror columns for H-flip, rows for V-flip.
-        var screen = new ushort[h, w];
+        var screen = new ushort[w, h];
         for (int row = 0; row < h; row++)
         {
             int srcRow = VFlip ? (h - 1 - row) : row;
             for (int col = 0; col < w; col++)
             {
                 int srcCol = HFlip ? (w - 1 - col) : col;
-                screen[row, col] = raw[srcRow, srcCol];
+                screen[col, row] = raw[srcRow, srcCol];
             }
         }
 

@@ -38,6 +38,8 @@ public class Palette : IAsyncWritable
         set => _colors[index] = value;
     }
 
+    public BgrColor[] this[Range range] => _colors[range];
+
     public void Write(Stream stream)
     {
         foreach (var entry in _colors) stream.Write(entry);

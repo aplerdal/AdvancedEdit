@@ -48,7 +48,7 @@ public class AiEditor : Editor
 
     private const int TargetDrawSize = 12;
 
-    public Vector2 MouseAiBlockPos => (View.MouseTilePos / 2).ToVec2I().AsVector2();
+    private Vector2 MouseAiBlockPos => (View.MouseTilePos / 2).ToVec2I().AsVector2();
 
     public AiEditor(TrackView view)
     {
@@ -158,7 +158,7 @@ public class AiEditor : Editor
     private void UpdatePanel()
     {
         var mousePos = Raylib.GetMousePosition();
-        var windowSize = new Vector2(Raylib.GetRenderWidth(), Raylib.GetRenderHeight());
+        var windowSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
 
         var panelWidth = 290;
         var panelRect = new Rectangle(windowSize.X - panelWidth, ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2, panelWidth, windowSize.Y);

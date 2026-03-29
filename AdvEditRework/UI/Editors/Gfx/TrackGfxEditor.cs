@@ -22,7 +22,7 @@ public enum TrackGraphic
 
 public class TrackGfxEditor : Editor
 {
-    private static readonly Dictionary<string, string> ImageFilter = new() { { "GIF Image", "gif" }, { "All files", "*" } };
+    public static readonly Dictionary<string, string> ImageFilter = new() { { "GIF Image", "gif" }, { "All files", "*" } };
 
     private readonly Track _track;
     private TrackGraphic _activeGraphic;
@@ -30,7 +30,7 @@ public class TrackGfxEditor : Editor
     private bool _lockedPalette;
     
     private BgrColor _oldPaletteColor;
-    private bool _modifyingColor = false;
+    private bool _modifyingColor;
 
     private readonly Palette _uiPalette = new(
         [
@@ -56,18 +56,18 @@ public class TrackGfxEditor : Editor
 
     private void GfxSelectorPanel(bool hasFocus)
     {
-        var windowSize = new Vector2(Raylib.GetRenderWidth(), Raylib.GetRenderHeight());
+        var quarterScreen = Raylib.GetScreenWidth() / 4f;
+        var windowSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
         var menuBarHeight = ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2;
 
-        var position = new Vector2(4, menuBarHeight + 4);
-        var viewportArea = new Rectangle(position, new Vector2(Raylib.GetScreenHeight()-position.Y-4));
+        var position = new Vector2(0, menuBarHeight);
+        var viewportArea = new Rectangle(position, quarterScreen*2, windowSize.Y - position.Y);
 
         _tileEditor.Update(viewportArea, hasFocus);
-        _tileEditor.UpdatePaletteView(new Vector2(viewportArea.X + viewportArea.Width + 4, viewportArea.Y));
-        
+        _tileEditor.UpdatePaletteView(new Rectangle(quarterScreen*2+4, menuBarHeight, quarterScreen-8, windowSize.Y - menuBarHeight));
 
-        var optionsX = position.X + _tileEditor.RenderSize.X + 4;
-        var optionsRect = new Rectangle(optionsX, menuBarHeight, windowSize.X - optionsX, windowSize.Y - position.Y);
+        var optionsX = quarterScreen*3;
+        var optionsRect = new Rectangle(optionsX, menuBarHeight, quarterScreen, windowSize.Y - menuBarHeight);
 
         Raylib.DrawRectangleLinesEx(optionsRect, 2, Color.LightGray);
         ImHelper.BeginEmptyWindow("GfxOptionsWindow", optionsRect);
@@ -167,7 +167,7 @@ public class TrackGfxEditor : Editor
         _tileEditor.Palette[_tileEditor.ActiveIndex.Value] = newColor;
         PaletteShader.SetPalette(_tileEditor.Palette.ToIVec3());
     }
-    public void ShowOptions()
+    private void ShowOptions()
     {
         ImGui.SeparatorText("Options");
         ImGui.Checkbox("Show Grid?", ref _tileEditor.ShowGrid);
@@ -178,7 +178,7 @@ public class TrackGfxEditor : Editor
             if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
             {
                 var gif = GifDocument.Load(path);
-                gif.LoadGifToGBA(ref _tileEditor.Tileset, ref _tileEditor.Palette);
+                gif.LoadGifToGBA(ref _tileEditor.Tileset, ref _tileEditor.Palette, _tileEditor.Layout);
                 _tileEditor.ReloadTileset();
             }
         }
@@ -188,8 +188,7 @@ public class TrackGfxEditor : Editor
             var status = Nfd.SaveDialog(out var path, ImageFilter, "tiles.gif");
             if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
             {
-                // TODO: ToGif Layout support
-                var gif = _tileEditor.Tileset.ToGif(_tileEditor.Palette, _tileEditor.TilesetWidth, _tileEditor.TilesetHeight, 0);
+                var gif = _tileEditor.Tileset.ToGif(_tileEditor.Palette, _tileEditor.Layout);
                 gif.Save(path);
             }
         }

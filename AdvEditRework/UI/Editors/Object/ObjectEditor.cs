@@ -36,8 +36,9 @@ public class ObjectEditor : Editor
     private PlacementDrag? _placementDrag;
     private int _selectedIndex = -1;
     private ObjectPlacement? _selectedPlacement;
-    private const int PanelSize = 400;
-    private bool IsPanelHovered => Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), new Rectangle(Raylib.GetRenderWidth() - PanelSize, ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2, PanelSize, Raylib.GetRenderHeight() - (ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2) + 4));
+    
+    private ObjectGfxEditor? _gfxEditor;
+    private bool IsPanelHovered => Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), new Rectangle(Raylib.GetScreenWidth()* 0.75f, ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2, Raylib.GetScreenWidth()/4f, Raylib.GetScreenHeight() - (ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2) + 4));
 
     private const float CellSize = 64f;
 
@@ -57,9 +58,16 @@ public class ObjectEditor : Editor
     public override void Update(bool hasFocus)
     {
         CheckBinds();
-        if (!IsPanelHovered)
-            _view.Update();
-        _view.Draw();
+        if (_gfxEditor is null)
+        {
+            if (!IsPanelHovered)
+                _view.Update();
+            _view.Draw();
+        }
+        else
+        {
+            _gfxEditor.Update(hasFocus);
+        }
         OptionsWindow();
     }
 
@@ -76,8 +84,8 @@ public class ObjectEditor : Editor
         float scale = MathF.Min(size / pixW, size / pixH);
         scale = MathF.Min(scale, 1f);
 
-        float scaledW = pixH * scale;
-        float scaledH = pixW * scale;
+        float scaledW = pixW * scale;
+        float scaledH = pixH * scale;
 
         float offsetX = origin.X + (size - scaledW) * 0.5f;
         float offsetY = origin.Y + (size - scaledH) * 0.5f;
@@ -90,7 +98,7 @@ public class ObjectEditor : Editor
         for (int x = 0; x < width; x++)
         {
             var src = Extensions.GetTileRect(layout[x, y], 8);
-            var destPos = new Vector2(offsetX + y * 8 * scale, offsetY + x * 8 * scale);
+            var destPos = new Vector2(offsetX + x * 8 * scale, offsetY + y * 8 * scale);
 
             var dest = new Rectangle(destPos.X, destPos.Y, 8 * scale, 8 * scale);
             Raylib.DrawTexturePro(_obstacleGfx, src, dest, Vector2.Zero, 0f, Color.White);
@@ -104,9 +112,8 @@ public class ObjectEditor : Editor
         ImGui.PushID("ObstacleTableView");
         
         int frame = (int)Raylib.GetTime();
-        var tableRect = new Rectangle(ImGui.GetCursorScreenPos(), new Vector2(ImGui.GetContentRegionAvail().X - 8, PanelSize));
+        var tableRect = new Rectangle(ImGui.GetCursorScreenPos(), new Vector2(ImGui.GetContentRegionAvail().X - 8, Raylib.GetScreenHeight()/3f));
         var tableFlags = ImGuiTableFlags.Borders
-                       | ImGuiTableFlags.RowBg
                        | ImGuiTableFlags.ScrollY
                        | ImGuiTableFlags.SizingFixedFit;
         if (ImGui.BeginTable("ObstacleTable", 3, tableFlags, tableRect.Size))
@@ -168,15 +175,15 @@ public class ObjectEditor : Editor
             ImGui.EndTable();
         }
 
+        if (ImGui.Button("New"))
+        {
+            _track.Objects.ObstacleTable.Obstacles.Add(new Obstacle(1,0));
+        }
+        ImGui.SameLine();
         ImGui.BeginDisabled(_selectedIndex == -1);
         if (ImGui.Button("Duplicate"))
         {
             _track.Objects.ObstacleTable.Obstacles.Add(_track.Objects.ObstacleTable[_selectedIndex].Clone());
-        }
-        ImGui.SameLine();
-        if (ImGui.Button("New"))
-        {
-            _track.Objects.ObstacleTable.Obstacles.Add(new Obstacle(0,0));
         }
         ImGui.SameLine();
         if (ImGui.Button("Delete"))
@@ -184,6 +191,13 @@ public class ObjectEditor : Editor
             foreach (var placement in _track.Objects.ObstaclePlacements.Where(placement => placement.ID == _selectedIndex).ToList())
                 _track.Objects.ObstaclePlacements.Remove(placement);
             _track.Objects.ObstacleTable.Obstacles.RemoveAt(_selectedIndex);
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Edit"))
+        {
+            var obs = _track.Objects.ObstacleTable.Obstacles[_selectedIndex];
+            _gfxEditor?.Dispose();
+            _gfxEditor = new ObjectGfxEditor(_obstacleOam.GetObjectDistanceCells(obs.Type, obs.Parameter), _track.ObstacleGfx, _track.ObstaclePalette);
         }
         ImGui.EndDisabled();
         ImGui.PopID();
@@ -212,13 +226,12 @@ public class ObjectEditor : Editor
                 ImGui.SameLine();
         }
     }
-    
     private void OptionsWindow()
     {
-        var windowSize   = new Vector2(PanelSize, Raylib.GetRenderHeight());
+        var windowSize   = new Vector2(Raylib.GetScreenWidth()/4f, Raylib.GetScreenHeight());
         var menuBarHeight = ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2;
         var position     = new Vector2(4, menuBarHeight + 4);
-        var optionsRect  = new Rectangle(Raylib.GetRenderWidth()- windowSize.X, menuBarHeight, windowSize.X, windowSize.Y - position.Y);
+        var optionsRect  = new Rectangle(Raylib.GetScreenWidth()- windowSize.X, menuBarHeight, windowSize.X, windowSize.Y - position.Y);
 
         Raylib.DrawRectangleRec(optionsRect, Color.White);
         Raylib.DrawRectangleLinesEx(optionsRect, 2, Color.LightGray);
@@ -232,8 +245,19 @@ public class ObjectEditor : Editor
         
         ImGui.Separator();
         
+        ImGui.Text("Placement Selection:");
+        ImGui.BeginDisabled(_selectedIndex == -1);
+        if (ImGui.Button("Create placement"))
+        {
+            var newPlacement = new ObjectPlacement((byte)_selectedIndex, 0,0, 0);
+            newPlacement.X += 1;
+            newPlacement.Y += 1;
+            _track.Objects.ObstaclePlacements.Add(newPlacement);
+            _selectedPlacement = newPlacement;
+        }
+        ImGui.EndDisabled();
+        ImGui.SameLine();
         ImGui.BeginDisabled(_selectedPlacement is null);
-        // TODO: Keybinds
         var bindPressed = (Raylib.IsKeyDown(KeyboardKey.LeftControl) || Raylib.IsKeyDown(KeyboardKey.RightControl)) && Raylib.IsKeyPressed(KeyboardKey.D);
         if (ImGui.Button("Duplicate") || bindPressed)
         {
@@ -340,5 +364,6 @@ public class ObjectEditor : Editor
     public override void Dispose()
     {
         Raylib.UnloadTexture(_obstacleGfx);
+        _gfxEditor?.Dispose();
     }
 }

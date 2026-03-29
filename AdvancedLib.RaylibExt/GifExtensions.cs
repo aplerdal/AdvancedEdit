@@ -21,13 +21,17 @@ public static class GifExtensions
         };
     }
 
-    private static byte[] GetImageData(this Tileset tileset, int width, int height, int skip)
+    private static byte[] GetImageData(this Tileset tileset, int[,] layout)
     {
+        var width = layout.GetLength(0);
+        var height = layout.GetLength(1);
         var data = new byte[width * Tile.Size * height * Tile.Size];
-        for (var i = 0; i < tileset.Length - skip; i++)
+        for (int tileY = 0; tileY < height; tileY++)
+        for (int tileX = 0; tileX < width; tileX++)
         {
-            var tile = tileset[i + skip];
-            var tilePos = new Vector2(i % width, (int)(i / width)) * Tile.Size;
+            var index = layout[tileX, tileY];
+            var tile = (index==-1)? Tile8Bpp.Empty : tileset[index];
+            var tilePos = new Vector2(tileX, tileY) * Tile.Size;
             for (var y = 0; y < Tile.Size; y++)
             for (var x = 0; x < Tile.Size; x++)
             {
@@ -37,8 +41,10 @@ public static class GifExtensions
         return data;
     }
 
-    private static void OverwriteFromImageData(ref Tileset tileset, byte[] data, int tileWidth, int tileHeight)
+    private static void OverwriteFromImageData(ref Tileset tileset, byte[] data, int[,] layout)
     {
+        int tileWidth = layout.GetLength(0);
+        int tileHeight = layout.GetLength(1);
         int w = tileWidth * 8;
 
         for (int tileY = 0; tileY < tileHeight; tileY++)
@@ -48,7 +54,9 @@ public static class GifExtensions
         {
             int srcX = tileX * 8 + px;
             int srcY = tileY * 8 + py;
-            tileset[tileX + tileWidth * tileY][px, py] = data[srcY * w + srcX];
+            var tile = layout[tileX, tileY];
+            if (tile == -1) continue;
+            tileset[tile][px, py] = data[srcY * w + srcX];
         }
     }
     
@@ -73,14 +81,16 @@ public static class GifExtensions
             gba[i] = new BgrColor(col.R, col.G, col.B);
         }
     }
-    public static GifDocument ToGif(this Tileset tileset, Palette palette, int width, int height, int skip = 0)
+    public static GifDocument ToGif(this Tileset tileset, Palette palette, int[,] layout)
     {
+        var width = layout.GetLength(0);
+        var height = layout.GetLength(1);
         var gif = new GifDocument(width * 8, height * 8)
         {
             GlobalPalette = palette.ToGifPalette(),
             LoopCount = null,
         };
-        var frame = new GifFrame(width * 8, height * 8, tileset.GetImageData(width, height, skip))
+        var frame = new GifFrame(width * 8, height * 8, tileset.GetImageData(layout))
         {
             TransparentIndex = 0,
         };
@@ -88,7 +98,7 @@ public static class GifExtensions
         return gif;
     }
 
-    public static void LoadGifToGBA(this GifDocument gif, ref Tileset tileset, ref Palette palette)
+    public static void LoadGifToGBA(this GifDocument gif, ref Tileset tileset, ref Palette palette, int[,] layout)
     {
         if (gif.Frames.Count == 0)
             throw new InvalidOperationException("GIF has no frames.");
@@ -104,7 +114,7 @@ public static class GifExtensions
         int widthInTiles = gif.Width / 8;
         int heightInTiles = gif.Height / 8;
 
-        OverwriteFromImageData(ref tileset, frame.Indices, widthInTiles, heightInTiles);
+        OverwriteFromImageData(ref tileset, frame.Indices, layout);
         OverwriteGbaPalette(gifPalette, ref palette);
     }
 }
