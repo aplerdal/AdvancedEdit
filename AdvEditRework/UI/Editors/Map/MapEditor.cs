@@ -79,7 +79,7 @@ public class MapEditor : Editor, IToolEditable
     public CellEntry[]? Stamp { get; set; }
 
     public bool ViewportHovered => !(Raylib.GetMousePosition().Y <= ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2 ||
-                                     Raylib.GetMousePosition().X >= Raylib.GetScreenWidth() - 262);
+                                     Raylib.GetMousePosition().X >= Raylib.GetScreenWidth()*(3/4f));
 
     public MapEditor(TrackView view)
     {
@@ -94,18 +94,13 @@ public class MapEditor : Editor, IToolEditable
         Focused = hasFocus;
         View.Update();
         View.Draw();
-        UpdateUI();
+        UpdatePanel();
     }
 
     private void TrackSpaceUpdate()
     {
         _tools[(int)_activeToolType].Update(this);
         CheckKeybinds();
-    }
-
-    private void UpdateUI()
-    {
-        UpdatePanel();
     }
 
     private void UpdatePanel()
@@ -115,18 +110,35 @@ public class MapEditor : Editor, IToolEditable
 
         var panelWidth = Raylib.GetScreenWidth() / 4;
         var panelRect = new Rectangle(windowSize.X - panelWidth, ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2, panelWidth, windowSize.Y);
-        var tabRect = new Rectangle(panelRect.X - 25, (32 + windowSize.Y) / 2.0f - 25, 25, 50);
-        tabRect.X += 25;
-
-        Raylib.DrawRectangleRec(tabRect, ImHelper.Color(ImGuiCol.WindowBg));
-        Raylib.DrawRectangleLinesEx(tabRect, 1, ImHelper.Color(ImGuiCol.Border));
-        Raylib.DrawRectangleRec(panelRect, ImHelper.Color(ImGuiCol.WindowBg));
-        Raylib.DrawRectangleLinesEx(panelRect, 1, ImHelper.Color(ImGuiCol.Border));
+        Focused = Raylib.CheckCollisionPointRec(mousePos, panelRect);
+        
+        Raylib.DrawRectangleRec(panelRect, Color.White);
         var scale = (panelWidth-6) / 128f;
         UpdateTilePicker(panelRect.Position + new Vector2(3), scale);
-        var optionsPos = panelRect.Position + new Vector2(3, scale * 128 + 3);
-        ToolPicker.Draw(optionsPos, panelWidth - 6, ref _activeToolType);
-        Focused = Raylib.CheckCollisionPointRec(mousePos, panelRect);
+        var toolPickerPos = panelRect.Position + new Vector2(3, scale * 128 + 3);
+        ToolPicker.Draw(toolPickerPos, panelWidth - 6, ref _activeToolType);
+        var optionsPos = toolPickerPos + new Vector2(0, (panelWidth - 6)/8f);
+        var optionsRec = new Rectangle(optionsPos, panelWidth-6, windowSize.Y - optionsPos.Y);
+        ShowTilesetOptions(optionsRec);
+    }
+
+    private void ShowTilesetOptions(Rectangle area)
+    {
+        ImHelper.BeginEmptyWindow("optionsTileset", area);
+        if (!ActiveIndex.HasValue)
+        {
+            ImGui.BeginDisabled();
+            var _ = 0;
+            ImGui.InputInt("Behavior", ref _);
+            ImGui.EndDisabled();
+        }
+        else
+        {
+            int value = View.Track.Behaviors[ActiveIndex.Value];
+            ImGui.InputInt("Behavior", ref value);
+            View.Track.Behaviors[ActiveIndex.Value] = (byte)value;
+        }
+        ImHelper.EndEmptyWindow();
     }
 
     private void UpdateTilePicker(Vector2 position, float scale)

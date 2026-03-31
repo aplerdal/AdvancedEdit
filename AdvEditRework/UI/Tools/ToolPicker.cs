@@ -12,7 +12,7 @@ public static class ToolPicker
     public static void Draw(Vector2 position, float width, ref MapEditorToolType activeTool)
     {
         var iconScale = width / 8;
-        var pixelScale = iconScale/16f;
+        var pixelScale = iconScale / 16;
         var dest = new Rectangle(position, new Vector2(iconScale));
         var fillColor = new Color(0.75f, 0.75f, 0.75f);
         var outlineColor = new Color(0.65f, 0.65f, 0.65f);

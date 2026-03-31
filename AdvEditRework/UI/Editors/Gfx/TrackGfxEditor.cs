@@ -144,12 +144,12 @@ public class TrackGfxEditor : Editor
                     () =>
                     {
                         _tileEditor.Palette[capturedIndex] = capturedNew;
-                        PaletteShader.SetPalette(_tileEditor.Palette.ToIVec3());
+                        _tileEditor.RefreshPalette();
                     },
                     () =>
                     {
                         _tileEditor.Palette[capturedIndex] = capturedOld;
-                        PaletteShader.SetPalette(_tileEditor.Palette.ToIVec3());
+                        _tileEditor.RefreshPalette();
                     }
                 ));
                 _modifyingColor = false;
@@ -165,7 +165,7 @@ public class TrackGfxEditor : Editor
         }
         
         _tileEditor.Palette[_tileEditor.ActiveIndex.Value] = newColor;
-        PaletteShader.SetPalette(_tileEditor.Palette.ToIVec3());
+        _tileEditor.RefreshPalette();
     }
     private void ShowOptions()
     {

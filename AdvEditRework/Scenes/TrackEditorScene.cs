@@ -3,12 +3,14 @@ using System.Formats.Tar;
 using System.Numerics;
 using AdvancedLib.Game;
 using AdvancedLib.Project;
+using AdvEditRework.DearImGui;
 using AdvEditRework.UI;
 using AdvEditRework.UI.Editors;
 using AdvEditRework.UI.Editors.AI;
 using AdvEditRework.UI.Editors.Object;
 using Hexa.NET.ImGui;
 using NativeFileDialogs.Net;
+using Raylib_cs;
 
 namespace AdvEditRework.Scenes;
 
@@ -297,34 +299,82 @@ public class TrackEditorScene : Scene
 
                 ImGui.EndMenu();
             }
-
-            ImGui.BeginDisabled(_editor is not MapEditor && _editor is not AiEditor);
-            // if (ImGui.MenuItem("Screenshot"))
-            // {
-            //     var openStatus = Nfd.SaveDialog(out var imgPath, ImageFilter, $"{_projectTrack?.Name}.bmp");
-            //     if (openStatus == NfdStatus.Ok && !string.IsNullOrEmpty(imgPath))
-            //         switch (_editor)
-            //         {
-            //             case MapEditor mapEditor:
-            //                 mapEditor.View.TrackScreenshot(imgPath);
-            //                 break;
-            //             case AiEditor aiEditor:
-            //                 aiEditor.View.TrackScreenshot(imgPath);
-            //                 break;
-            //         }
-            // }
-
-            ImGui.EndDisabled();
+            if (ImGui.MenuItem("Close"))
+            {
+                _editor?.Dispose();
+                _view?.Dispose();
+                _editor = null;
+                _view = null;
+            }
             ImGui.EndMenu();
         }
 
         return isActive;
     }
 
+    private void ProjectMenu(Project project)
+    {
+        var screenSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
+        var menuBarHeight = ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2;
+        var area = new Rectangle(0, menuBarHeight, screenSize.X, screenSize.Y-menuBarHeight);
+        ImHelper.BeginEmptyWindow("projectMenu", area);
+        if (ImGui.BeginTable("trackSelTable", 3, ImGuiTableFlags.BordersInnerV, ImGui.GetContentRegionAvail()))
+        {
+            ImGui.TableSetupColumn("Track");
+            ImGui.TableSetupColumn("Something else");
+            ImGui.TableSetupColumn("Info");
+            ImGui.TableNextRow();
+
+            ImGui.TableSetColumnIndex(0);
+            {
+                ImGui.Text("Track Select");
+                ImGui.Separator();
+                foreach (var cup in project.Config.Cups)
+                {
+                    if (string.IsNullOrEmpty(cup.Name)) continue;
+                    if (ImGui.CollapsingHeader(cup.Name))
+                    {
+                        foreach (var track in cup.Tracks)
+                        {
+                            if (string.IsNullOrEmpty(track.Name)) continue;
+                            if (ImGui.Selectable(track.Name))
+                            {
+                                if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
+                                _projectTrack = track;
+                                track.ResolveFolder(Path.Combine(project.Folder, cup.Name));
+                                _currentTrack = track.LoadTrackData();
+                                _mode = EditMode.Map;
+                                SetView(new TrackView(_currentTrack));
+                            }
+                        }
+                    }
+                }
+            }
+            ImGui.TableSetColumnIndex(1);
+            ImGui.Text("Test");
+            ImGui.Separator();
+            
+            ImGui.TableSetColumnIndex(2);
+            ImGui.Text("Info");
+            ImGui.Separator();
+            
+            ImGui.EndTable();
+        }
+        ImHelper.EndEmptyWindow();
+    }
+
     public override void Update(ref Project? project)
     {
         var hasFocus = MainMenuBar(ref project);
-        _editor?.Update(!hasFocus);
+        if (_editor is null)
+        {
+            Debug.Assert(project is not null);
+            ProjectMenu(project);
+        }
+        else
+        {
+            _editor?.Update(!hasFocus);
+        }
     }
 
     public override void Dispose()

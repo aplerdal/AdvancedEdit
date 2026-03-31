@@ -122,11 +122,16 @@ public class TilesetEditor : IDisposable, IToolEditable
             Raylib.UnloadTexture(_texture);
         }
 
-        _paletteIvec = Palette.ToIVec3();
+        RefreshPalette();
         Raylib.UnloadTexture(_texture);
         _texture = Tileset.TilePaletteTexture(1, Tileset.Length);
         Raylib.UnloadImage(_tilesetImage);
         _tilesetImage = Raylib.LoadImageFromTexture(_texture);
+    }
+
+    public void RefreshPalette()
+    {
+        _paletteIvec = Palette.ToIVec3();
     }
 
     public void Update(Rectangle area, bool hasFocus)

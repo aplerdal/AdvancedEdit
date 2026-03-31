@@ -274,7 +274,7 @@ public class Track
             while (stream.PeekByte() != 0)
             {
                 var placement = stream.Read<ObjectPlacement>();
-                trackObjects.ItemBoxes.Add(new Vec2I(placement.X, placement.Y));
+                trackObjects.ItemBoxes.Add(placement);
             }
         }
 
@@ -283,8 +283,7 @@ public class Track
         while (stream.PeekByte() != 0)
         {
             var placement = stream.Read<ObjectPlacement>();
-            var startPos = new StartPosition(new Vec2I(placement.X, placement.Y), (StartingPlace)(placement.ID & ~0x80));
-            trackObjects.StartPositions.Add(startPos);
+            trackObjects.StartPositions.Add(placement);
         }
 
         return trackObjects;
@@ -596,14 +595,7 @@ public class Track
         header.StartPositionOffset = (uint)trackStream.Position;
         foreach (var startPosition in trackObjects.StartPositions)
         {
-            var objPlacement = new ObjectPlacement
-            {
-                ID = (byte)((int)startPosition.Place | 0x80),
-                X = (byte)startPosition.Position.X,
-                Y = (byte)startPosition.Position.Y,
-                Checkpoint = aiMap[startPosition.Position.X / 2 + startPosition.Position.X / 2 * header.TrackWidth * 64]
-            };
-            objPlacement.Serialize(trackStream);
+            startPosition.Serialize(trackStream);
         }
 
         trackStream.Write((uint)0);

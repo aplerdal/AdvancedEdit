@@ -53,19 +53,39 @@ public class Project(string name)
 
         var headerIdx = 0;
         stream.Seek(new Pointer(0x08400000));
-        foreach (var cup in Config.Cups)
-        foreach (var projectTrack in cup.Tracks)
+        for (var cupIdx = 0; cupIdx < Config.Cups.Count; cupIdx++)
         {
+            var cup = Config.Cups[cupIdx];
+            foreach (var projectTrack in cup.Tracks)
+            {
+                var track = projectTrack.LoadTrackData();
+                var trackAddress = stream.Position;
+                track.WriteTrack(stream, headerIdx);
+                var trackEnd = stream.Position;
+                var addr = RomData.Cups.Address + headerIdx * 4;
+                if (cupIdx > 4) addr += 16;
+                stream.Seek(addr, SeekOrigin.Begin);
+                stream.Write(headerIdx);
+                stream.Seek(RomData.TrackOffsets.Address + headerIdx * 4, SeekOrigin.Begin);
+                stream.Write((uint)trackAddress - RomData.TrackOffsets.Address);
+                stream.Seek(trackEnd, SeekOrigin.Begin);
+                headerIdx++;
+            }
+        }
+        // Podium
+        {
+            var projectTrack = new ProjectTrack("Podium");
+            projectTrack.ResolveFolder(Folder);
             var track = projectTrack.LoadTrackData();
             var trackAddress = stream.Position;
             track.WriteTrack(stream, headerIdx);
             var trackEnd = stream.Position;
-            stream.Seek(RomData.Cups.Address + headerIdx * 4, SeekOrigin.Begin);
-            stream.Write(headerIdx);
+            var addr = RomData.Cups.Address + 5 * 16;
+            stream.Seek(addr, SeekOrigin.Begin);
+            stream.Write(headerIdx); stream.Write(headerIdx); stream.Write(headerIdx); stream.Write(headerIdx);
             stream.Seek(RomData.TrackOffsets.Address + headerIdx * 4, SeekOrigin.Begin);
             stream.Write((uint)trackAddress - RomData.TrackOffsets.Address);
             stream.Seek(trackEnd, SeekOrigin.Begin);
-            headerIdx++;
         }
     }
 
@@ -79,7 +99,15 @@ public class Project(string name)
         for (int i = 0; i < TrackNames.Cups.Length; i++)
         {
             var cupName = TrackNames.Cups[i];
-            if (cupName == "Victory") continue; // TODO: Editable Podium Track
+            if (cupName == "Podium")
+            {
+                romStream.Seek(RomData.Cups.Address + 16 * i, SeekOrigin.Begin);
+                var headerIdx = romStream.Read<int>();
+                var podiumTrack = new ProjectTrack("Podium");
+                podiumTrack.ResolveFolder(Path.Combine(project.Folder));
+                await podiumTrack.SaveTrackDataAsync(Track.FromRom(romStream, headerIdx));
+                continue;
+            }
             var cupTracks = new ProjectTrack[4];
             for (var j = 0; j < 4; j++)
             {

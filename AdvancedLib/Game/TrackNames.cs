@@ -15,7 +15,8 @@ public static class TrackNames
         8, 20, 13, 6, //         Lightning
         16, 14, 10, 15, //         Star
         23, 21, 22, 19, //         Special
-        24, 25, 26, 27 //         Battle
+        24, 25, 26, 27, //         Battle
+        28,
     ];
 
     public static readonly string[] Cups =
@@ -26,7 +27,7 @@ public static class TrackNames
         "Lightning Cup",
         "Star Cup",
         "Special Cup",
-        "Victory",
+        "Podium",
         // SNES
         "Retro Mushroom Cup",
         "Retro Flower Cup",
@@ -98,7 +99,9 @@ public static class TrackNames
         "Battle Course 1",
         "Battle Course 2",
         "Battle Course 3",
-        "Battle Course 4"
+        "Battle Course 4",
+        // Podium
+        "Podium"
     ];
 
     private static int GetHeaderCupIndex(int headerIdx)
