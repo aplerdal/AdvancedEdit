@@ -32,7 +32,7 @@ internal static class Program
 #endif
         // Setup Raylib
         Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
-        Raylib.InitWindow(1920, 1080, "AdvEditRework");
+        Raylib.InitWindow(1920, 1080, "AdvancedEdit");
         Raylib.SetTargetFPS(144);
         Raylib.SetExitKey(KeyboardKey.Null);
 
@@ -55,7 +55,7 @@ internal static class Program
         _scene.Init(ref _project);
         while (!(Raylib.WindowShouldClose() || ShouldClose))
         {
-            Raylib.SetWindowTitle($"AdvEditRework - {Raylib.GetFPS():0000}FPS");
+            Raylib.SetWindowTitle($"AdvancedEdit - {Raylib.GetFPS():0000}FPS");
             Update();
         }
 
