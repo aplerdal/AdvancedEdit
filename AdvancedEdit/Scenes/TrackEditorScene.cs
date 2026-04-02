@@ -269,6 +269,7 @@ public class TrackEditorScene : Scene
         }
 
         var isActive = false;
+        var openSettings = false;
         if (ImGui.BeginMenu("Track"))
         {
             isActive = true;
@@ -299,6 +300,13 @@ public class TrackEditorScene : Scene
 
                 ImGui.EndMenu();
             }
+
+            ImGui.BeginDisabled(_currentTrack is null);
+            if (ImGui.MenuItem("Settings"))
+            {
+                openSettings = true;
+            }
+            ImGui.EndDisabled();
             if (ImGui.MenuItem("Close"))
             {
                 _editor?.Dispose();
@@ -307,6 +315,98 @@ public class TrackEditorScene : Scene
                 _view = null;
             }
             ImGui.EndMenu();
+        }
+        if (openSettings)
+            ImGui.OpenPopup("Track Settings");
+        isActive |= ProjectSettingsPopup(_currentTrack!);
+        
+        return isActive;
+    }
+
+    private bool ProjectSettingsPopup(Track track)
+    {
+        bool isActive = false;
+        var screenSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
+        var size = new Vector2(screenSize.X / 3f, screenSize.Y * (3 / 4f));
+        ImGui.SetNextWindowSize(size, ImGuiCond.Appearing);
+        var pos = (screenSize / 2) - (size/2);
+        ImGui.SetNextWindowPos(pos);
+        if (ImGui.BeginPopupModal("Track Settings"))
+        {
+            isActive = true;
+
+            int value;
+
+            ImGui.SeparatorText("Track Config");
+            
+            value = (int)track.Config.Laps;
+            ImGui.InputInt("Laps", ref value);
+            value = Math.Clamp(value, 3, 5);
+            track.Config.Laps = (uint)value;
+            
+            value = (int)track.Config.Theme;
+            ImGui.InputInt("Theme", ref value);
+            track.Config.Theme = (uint)value;
+            
+            value = (int)track.Config.SongID;
+            ImGui.InputInt("Song ID", ref value);
+            track.Config.SongID = (uint)value;
+            
+            value = (int)track.Config.BackgroundIndex;
+            ImGui.InputInt("Background Art", ref value);
+            track.Config.BackgroundIndex = (uint)value;
+            
+            value = (int)track.Config.BackgroundBehavior;
+            ImGui.InputInt("Background Behavior", ref value);
+            track.Config.BackgroundBehavior = (uint)value;
+            
+            value = (int)track.Config.PaletteBehavior;
+            ImGui.InputInt("Palette Animation Type", ref value);
+            track.Config.PaletteBehavior = (uint)value;
+            
+            ImGui.SeparatorText("Target Times");
+            for (var i = 0; i < track.TargetTimes.Length; i++)
+            {
+                ImGui.PushID($"time{i}");
+                var modified = false;
+                var time = track.TargetTimes[i];
+                var mins = (time.Hundredths / 100) / 60;
+                var secs = (time.Hundredths / 100) % 60;
+                var hundredths = time.Hundredths % 100;
+                int character = time.Character;
+                var name = i switch
+                {
+                    0 => "Lap Time",
+                    _ => $"3 Lap Time {i}"
+                };
+                ImGui.SetNextItemWidth(ImGui.GetFontSize() * 20);
+                ImGui.Text(name);
+                ImGui.SetNextItemWidth(ImGui.GetFontSize() * 6);
+                ImGui.Combo("##Character", ref character, "Mario\0Luigi\0Peach\0Toad\0Yoshi\0DK\0Wario\0Bowser\0");
+                ImGui.SameLine();
+                time.Character = (ushort)character;
+                ImGui.SetNextItemWidth(ImGui.GetFontSize() * 2);
+                modified |= ImGui.InputInt("##Mins", ref mins, 0);
+                ImGui.SameLine();
+                ImGui.Text("\'");
+                ImGui.SameLine();
+                ImGui.SetNextItemWidth(ImGui.GetFontSize() * 2);
+                modified |= ImGui.InputInt("##Seconds", ref secs, 0);
+                ImGui.SameLine();
+                ImGui.Text("\"");
+                ImGui.SameLine();
+                ImGui.SetNextItemWidth(ImGui.GetFontSize() * 2);
+                modified |= ImGui.InputInt("##Hundredths", ref hundredths, 0);
+                if (modified)
+                    time.Hundredths = (ushort)(mins * 100 * 60 + secs * 100 + hundredths);
+                ImGui.PopID();
+            }
+
+            ImGui.Separator();
+            if (ImGui.Button("Close"))
+                ImGui.CloseCurrentPopup();
+
+            ImGui.EndPopup();
         }
 
         return isActive;

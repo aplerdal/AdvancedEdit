@@ -10,7 +10,7 @@ public class TargetTime : ISerializable, IEquatable<TargetTime>
     public ushort Character { get; set; }
 
     [Key(1)]
-    public ushort Centiseconds { get; set; }
+    public ushort Hundredths { get; set; }
 
     public static TargetTime[] Defaults => [new(0, 0), new(0, 0), new(0, 0), new(0, 0), new(0, 0), new(0, 0), new(0, 0)];
 
@@ -18,27 +18,27 @@ public class TargetTime : ISerializable, IEquatable<TargetTime>
     {
     }
 
-    public TargetTime(ushort character, ushort centiseconds)
+    public TargetTime(ushort character, ushort hundredths)
     {
         Character = character;
-        Centiseconds = centiseconds;
+        Hundredths = hundredths;
     }
 
     public void Serialize(Stream stream)
     {
         stream.Write(Character);
-        stream.Write(Centiseconds);
+        stream.Write(Hundredths);
     }
 
     public void Deserialize(Stream stream)
     {
         Character = stream.Read<ushort>();
-        Centiseconds = stream.Read<ushort>();
+        Hundredths = stream.Read<ushort>();
     }
 
     public bool Equals(TargetTime? other)
     {
         if (other is null) return false;
-        return other.Character == Character && other.Centiseconds == Centiseconds;
+        return other.Character == Character && other.Hundredths == Hundredths;
     }
 }
