@@ -38,19 +38,15 @@ internal static class Program
 
         PaletteShader.Load();
 
-        ImGuiRenderer.Setup();
+        RlImGui.Setup();
 
         // Load Settings
         // var settings = Settings.Shared;
         Settings.Load();
 
         // Calculate UI scale based on DPI
-        var dpiScale = Raylib.GetWindowScaleDPI();
-        var scale = (int)Math.Round((dpiScale.X + dpiScale.Y) / 2);
         TextureManager = new TextureManager();
-        var imFont = ImGui.GetIO().Fonts.AddFontFromFileTTF("Resources/OpenSans.ttf", 16 * scale);
-        ImGuiRenderer.ReloadFonts();
-        ImGui.GetIO().FontDefault = imFont;
+        FontLoader.LoadOpenSansImGui();
 
         _scene.Init(ref _project);
         while (!(Raylib.WindowShouldClose() || ShouldClose))
@@ -66,16 +62,16 @@ internal static class Program
     {
         Raylib.BeginDrawing();
         Raylib.ClearBackground(Color.White);
-        ImGuiRenderer.Begin();
+        RlImGui.Begin();
         _scene.Update(ref _project);
-        ImGuiRenderer.End();
+        RlImGui.End();
         Raylib.EndDrawing();
     }
 
     private static void Close()
     {
         TextureManager.Dispose();
-        ImGuiRenderer.Shutdown();
+        RlImGui.Shutdown();
         Raylib.CloseWindow();
     }
 }

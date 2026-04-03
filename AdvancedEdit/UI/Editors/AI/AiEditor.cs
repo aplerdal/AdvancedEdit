@@ -45,6 +45,7 @@ public class AiEditor : Editor
     private bool _panelFocused;
     private bool _resetConfirmationShown = false;
     private AiEditorTab _tab = AiEditorTab.Checkpoint;
+    private bool _focused;
 
     private const int TargetDrawSize = 12;
 
@@ -60,6 +61,7 @@ public class AiEditor : Editor
 
     public override void Update(bool hasFocus)
     {
+        _focused = hasFocus;
         View.Update();
         View.Draw();
         UpdatePanel();
@@ -251,7 +253,9 @@ public class AiEditor : Editor
 
     private void CheckpointTrackDraw()
     {
-        var hoveredCheckpoint = _checkpointDrag is not null ? _checkpointDrag.Checkpoint : _panelFocused || _resetConfirmationShown ? null : GetHoveredCheckpoint();
+        Checkpoint? hoveredCheckpoint = null;
+        if (_focused)
+            hoveredCheckpoint = _checkpointDrag is not null ? _checkpointDrag.Checkpoint : _panelFocused || _resetConfirmationShown ? null : GetHoveredCheckpoint();
         var handle = hoveredCheckpoint?.GetResizeHandle(View.MouseTilePos) ?? DragHandle.None;
         DrawCheckpoints(hoveredCheckpoint);
         if (Raylib.IsMouseButtonPressed(MouseButton.Left) && hoveredCheckpoint is null && !(_panelFocused || _resetConfirmationShown) && _selectedCheckpoint is not null) _selectedCheckpoint = null;

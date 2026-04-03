@@ -1,3 +1,5 @@
+using Hexa.NET.ImGui;
+
 namespace AdvEditRework.UI.Editors;
 
 public abstract class Editor : IDisposable

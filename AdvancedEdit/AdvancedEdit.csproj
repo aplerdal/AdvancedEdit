@@ -10,7 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Hexa.NET.ImGui" Version="2.2.7"/>
+        <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" />
         <PackageReference Include="MessagePack" Version="3.1.4"/>
         <PackageReference Include="NativeFileDialogs.Net" Version="1.2.1"/>
         <PackageReference Include="Raylib-cs" Version="7.0.1"/>
@@ -47,6 +47,12 @@
         </None>
         <None Update="Resources\Patches\objRework.ips">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Resources\Patches\headerLaps.ips">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Resources\Patches\fixFinalTrackCheck.ips">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 

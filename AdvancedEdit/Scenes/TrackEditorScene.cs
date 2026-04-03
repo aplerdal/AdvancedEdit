@@ -44,7 +44,7 @@ public class TrackEditorScene : Scene
 
     private bool MainMenuBar(ref Project? project)
     {
-        var isActive = false;
+        var isActive = Raylib.GetMousePosition().Y < (ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2);
         if (project is null) return false;
 
         if (ImGui.BeginMainMenuBar())

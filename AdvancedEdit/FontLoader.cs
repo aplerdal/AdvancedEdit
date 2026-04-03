@@ -1,4 +1,5 @@
 using System.Numerics;
+using Hexa.NET.ImGui;
 using Raylib_cs;
 
 namespace AdvEditRework;
@@ -59,5 +60,17 @@ public static class FontLoader
     public static Font LoadOpenSans()
     {
         return Raylib.LoadFontEx("Resources/OpenSans.ttf", 16, null, 0);
+    }
+
+    public static unsafe void LoadOpenSansImGui()
+    {
+        ImFontAtlasPtr fontAtlas;
+        var dpiScale = Raylib.GetWindowScaleDPI();
+        var scale = (int)Math.Round((dpiScale.X + dpiScale.Y) / 2);
+        var config = ImGui.ImFontConfig();
+        config.FontDataOwnedByAtlas = false;
+        var font = new ImFontPtr(ImGui.GetIO().Fonts.AddFontFromFileTTF("Resources/OpenSans.ttf", config));
+        ImGui.GetIO().FontDefault = font;
+        ImGui.GetStyle().FontSizeBase = scale * 18;
     }
 }

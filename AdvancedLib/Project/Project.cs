@@ -50,6 +50,8 @@ public class Project(string name)
     {
         // Apply Patches
         Patcher.Apply("Resources/Patches/objRework.ips", stream);
+        Patcher.Apply("Resources/Patches/headerLaps.ips", stream);
+        Patcher.Apply("Resources/Patches/fixFinalTrackCheck.ips", stream);
 
         var headerIdx = 0;
         stream.Seek(new Pointer(0x08400000));
@@ -83,6 +85,8 @@ public class Project(string name)
             var addr = RomData.Cups.Address + 5 * 16;
             stream.Seek(addr, SeekOrigin.Begin);
             stream.Write(headerIdx); stream.Write(headerIdx); stream.Write(headerIdx); stream.Write(headerIdx);
+            stream.Seek(RomData.PodiumHeaderIdx);
+            stream.Write((byte)headerIdx);
             stream.Seek(RomData.TrackOffsets.Address + headerIdx * 4, SeekOrigin.Begin);
             stream.Write((uint)trackAddress - RomData.TrackOffsets.Address);
             stream.Seek(trackEnd, SeekOrigin.Begin);
