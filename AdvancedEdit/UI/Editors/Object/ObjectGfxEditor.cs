@@ -17,13 +17,13 @@ public class ObjectGfxEditor : Editor
     private TilesetEditor _editor;
     private Palette _basePalette;
     private byte _palette;
-    
+
     public ObjectGfxEditor(DistanceCellData obstacle, Tileset tileset, Palette palette)
     {
         int width = 0, height = 0;
         _basePalette = palette;
         _palette = obstacle.Distances[0].Entries[0].Palette;
-        var tilePalette = new Palette(palette[(_palette * 16)..((_palette + 1)*16)]);
+        var tilePalette = new Palette(palette[(_palette * 16)..((_palette + 1) * 16)]);
         int[] widths = new int[obstacle.Distances.Length];
         for (var i = 0; i < obstacle.Distances.Length; i++)
         {
@@ -37,14 +37,16 @@ public class ObjectGfxEditor : Editor
                 var gw = grid.GetLength(0);
                 if (gw > maxDistWidth) maxDistWidth = gw;
             }
+
             widths[i] = maxDistWidth;
             width += maxDistWidth;
             if (colHeight > height) height = colHeight;
         }
+
         var layout = new int[width, height];
         for (int i = 0; i < width; i++)
-            for (int j = 0; j < height; j++)
-                layout[i, j] = -1;
+        for (int j = 0; j < height; j++)
+            layout[i, j] = -1;
         var xPos = 0;
         for (var i = 0; i < obstacle.Distances.Length; i++)
         {
@@ -56,30 +58,33 @@ public class ObjectGfxEditor : Editor
                 for (int y = 0; y < grid.GetLength(1); y++)
                 for (int x = 0; x < grid.GetLength(0); x++)
                 {
-                    layout[xPos+x, yPos+y] = grid[x, y];
+                    layout[xPos + x, yPos + y] = grid[x, y];
                 }
+
                 yPos += grid.GetLength(1);
             }
+
             xPos += widths[i];
         }
-        
+
         _editor = new TilesetEditor(tileset, tilePalette, layout);
     }
 
     public override void Update(bool hasFocus)
     {
-        var quarterScreen = Raylib.GetScreenWidth()/4f;
+        var quarterScreen = Raylib.GetScreenWidth() / 4f;
         var menuBarHeight = ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2;
         var height = Raylib.GetScreenHeight() - menuBarHeight;
-        var area = new Rectangle(0, menuBarHeight, 2*quarterScreen, height);
+        var area = new Rectangle(0, menuBarHeight, 2 * quarterScreen, height);
         _editor.Update(area, true);
-        var paletteArea = new Rectangle(2*quarterScreen+4, menuBarHeight, quarterScreen-8, height/2);
+        var paletteArea = new Rectangle(2 * quarterScreen + 4, menuBarHeight, quarterScreen - 8, height / 2);
         _editor.UpdatePaletteView(paletteArea);
-        var optionsArea = new Rectangle(2*quarterScreen+4, menuBarHeight+height/2, quarterScreen-8, height/2);
+        var optionsArea = new Rectangle(2 * quarterScreen + 4, menuBarHeight + height / 2, quarterScreen - 8, height / 2);
         if (ImHelper.BeginEmptyWindow("gfxEditorOptions", optionsArea))
         {
             ShowOptions();
         }
+
         ImHelper.EndEmptyWindow();
     }
 
@@ -99,6 +104,7 @@ public class ObjectGfxEditor : Editor
                 _editor.ReloadTileset();
             }
         }
+
         ImGui.SameLine();
         if (ImGui.Button("Export"))
         {

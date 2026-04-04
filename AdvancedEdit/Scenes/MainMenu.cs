@@ -12,10 +12,10 @@ namespace AdvEditRework.Scenes;
 public class MainMenu : Scene
 {
     private Texture2D _iconTexture;
-    
+
     public override void Init(ref Project? project)
     {
-        _iconTexture = Program.TextureManager.GetTexture("font.png");;
+        _iconTexture = Program.TextureManager.GetTexture("font.png");
     }
 
     private bool QuickOption(MapEditIcon icon, string tooltip)
@@ -25,13 +25,14 @@ public class MainMenu : Scene
         var src = new Rectangle(iconIdx * 16, 8 * 16, 16, 16);
         var dest = new Rectangle(ImGui.GetCursorScreenPos(), size);
         var hovered = Raylib.CheckCollisionPointRec(ImGui.GetMousePos(), dest);
-        if (hovered) Raylib.DrawRectangleRec(dest, new Color(225,225,225));
-        Raylib.DrawRectangleLinesEx(dest, 4, new Color(200,200,200));
-        Raylib.DrawTexturePro(_iconTexture, src,dest,Vector2.Zero, 0.0f, Color.White);
+        if (hovered) Raylib.DrawRectangleRec(dest, new Color(225, 225, 225));
+        Raylib.DrawRectangleLinesEx(dest, 4, new Color(200, 200, 200));
+        Raylib.DrawTexturePro(_iconTexture, src, dest, Vector2.Zero, 0.0f, Color.White);
         ImGui.Dummy(dest.Size);
         ImGui.SetItemTooltip(tooltip);
         return hovered && Raylib.IsMouseButtonPressed(MouseButton.Left);
     }
+
     private void DrawQuickOptions(ref Project? project)
     {
         const float height = 128f;
@@ -50,16 +51,19 @@ public class MainMenu : Scene
                 Program.SetScene(new TrackEditorScene());
             }
         }
+
         ImGui.SameLine();
         if (QuickOption(MapEditIcon.FileNew, "Create new project"))
         {
             Program.SetScene(new CreateProject());
         }
+
         ImGui.SameLine();
         if (QuickOption(MapEditIcon.Settings, "Settings"))
         {
             Program.SetScene(new SettingsMenu());
         }
+
         ImGui.SameLine();
         if (QuickOption(MapEditIcon.Discord, "Discord"))
         {
@@ -70,7 +74,7 @@ public class MainMenu : Scene
     public override void Update(ref Project? project)
     {
         Raylib.ClearBackground(Color.White);
-        
+
         ImHelper.BeginEmptyWindow("MainMenuWindow", new Rectangle(Vector2.Zero, Raylib.GetScreenWidth(), Raylib.GetScreenHeight()));
         ImGui.NewLine();
         DrawQuickOptions(ref project);
@@ -99,6 +103,7 @@ public class MainMenu : Scene
                         Program.SetScene(new TrackEditorScene());
                     }
                 }
+
                 if (ImGui.TextLink("Settings"))
                     Program.SetScene(new SettingsMenu());
                 if (ImGui.TextLink("Discord"))
@@ -120,7 +125,7 @@ public class MainMenu : Scene
                     foreach (var recentPath in recents.ToList())
                     {
                         if (!ImGui.Selectable(recentPath)) continue;
-                        
+
                         if (File.Exists(recentPath))
                         {
                             project = Project.Unpack(recentPath);
@@ -130,7 +135,6 @@ public class MainMenu : Scene
                         {
                             recents.Remove(recentPath);
                         }
-
                     }
                 }
             }
@@ -140,12 +144,13 @@ public class MainMenu : Scene
                 ImGui.Separator();
                 // TODO
             }
-            
+
             ImGui.EndTable();
         }
-        
+
         ImHelper.EndEmptyWindow();
     }
+
     public override void Dispose()
     {
         // 

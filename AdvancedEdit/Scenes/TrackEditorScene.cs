@@ -95,7 +95,7 @@ public class TrackEditorScene : Scene
                             project = Project.Unpack(path);
                         }
                     }
-                    
+
                     ImGui.EndMenu();
                 }
 
@@ -109,7 +109,7 @@ public class TrackEditorScene : Scene
                 }
 
                 ImGui.Separator();
-                
+
                 ImGui.BeginDisabled(_currentTrack is null || _projectTrack is null);
                 if (ImGui.BeginMenu("Import"))
                 {
@@ -150,12 +150,13 @@ public class TrackEditorScene : Scene
                         Debug.Assert(_projectTrack is not null && _currentTrack is not null);
                         _projectTrack.SaveTrackDataAsync(_currentTrack).Wait();
                         var trackFolder = _projectTrack.Folder;
-                        var status = Nfd.SaveDialog(out var path, TrackFilter,$"{_projectTrack.Name}.amkt");
+                        var status = Nfd.SaveDialog(out var path, TrackFilter, $"{_projectTrack.Name}.amkt");
                         if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
                         {
                             TarFile.CreateFromDirectory(trackFolder, path, false);
                         }
                     }
+
                     ImGui.EndDisabled();
 
                     if (ImGui.MenuItem("Rom (.gba)"))
@@ -178,11 +179,12 @@ public class TrackEditorScene : Scene
                             }
                         }
                     }
+
                     ImGui.EndMenu();
                 }
-                
+
                 ImGui.EndDisabled();
-                
+
                 ImGui.Separator();
 
                 if (ImGui.MenuItem("Quit")) Program.ShouldClose = true;
@@ -243,6 +245,7 @@ public class TrackEditorScene : Scene
             SetEditor(new TrackGfxEditor(_view.Track));
             _mode = EditMode.Graphics;
         }
+
         ImGui.BeginDisabled(_view?.Track.ObstacleGfx is null);
         buttonPos += new Vector2(ButtonSize("Graphics") + 16, 0);
         ImGui.SetCursorScreenPos(buttonPos);
@@ -252,6 +255,7 @@ public class TrackEditorScene : Scene
             SetEditor(new ObjectEditor(_view, project.Config.ObstacleOam));
             _mode = EditMode.Objects;
         }
+
         ImGui.EndDisabled();
 
         ImGui.EndDisabled();
@@ -306,6 +310,7 @@ public class TrackEditorScene : Scene
             {
                 openSettings = true;
             }
+
             ImGui.EndDisabled();
             if (ImGui.MenuItem("Close"))
             {
@@ -314,12 +319,14 @@ public class TrackEditorScene : Scene
                 _editor = null;
                 _view = null;
             }
+
             ImGui.EndMenu();
         }
+
         if (openSettings)
             ImGui.OpenPopup("Track Settings");
         isActive |= ProjectSettingsPopup(_currentTrack!);
-        
+
         return isActive;
     }
 
@@ -329,7 +336,7 @@ public class TrackEditorScene : Scene
         var screenSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
         var size = new Vector2(screenSize.X / 3f, screenSize.Y * (3 / 4f));
         ImGui.SetNextWindowSize(size, ImGuiCond.Appearing);
-        var pos = (screenSize / 2) - (size/2);
+        var pos = (screenSize / 2) - (size / 2);
         ImGui.SetNextWindowPos(pos);
         if (ImGui.BeginPopupModal("Track Settings"))
         {
@@ -338,32 +345,32 @@ public class TrackEditorScene : Scene
             int value;
 
             ImGui.SeparatorText("Track Config");
-            
+
             value = (int)track.Config.Laps;
             ImGui.InputInt("Laps", ref value);
             value = Math.Clamp(value, 3, 5);
             track.Config.Laps = (uint)value;
-            
+
             value = (int)track.Config.Theme;
             ImGui.InputInt("Theme", ref value);
             track.Config.Theme = (uint)value;
-            
+
             value = (int)track.Config.SongID;
             ImGui.InputInt("Song ID", ref value);
             track.Config.SongID = (uint)value;
-            
+
             value = (int)track.Config.BackgroundIndex;
             ImGui.InputInt("Background Art", ref value);
             track.Config.BackgroundIndex = (uint)value;
-            
+
             value = (int)track.Config.BackgroundBehavior;
             ImGui.InputInt("Background Behavior", ref value);
             track.Config.BackgroundBehavior = (uint)value;
-            
+
             value = (int)track.Config.PaletteBehavior;
             ImGui.InputInt("Palette Animation Type", ref value);
             track.Config.PaletteBehavior = (uint)value;
-            
+
             ImGui.SeparatorText("Target Times");
             for (var i = 0; i < track.TargetTimes.Length; i++)
             {
@@ -416,7 +423,7 @@ public class TrackEditorScene : Scene
     {
         var screenSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
         var menuBarHeight = ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2;
-        var area = new Rectangle(0, menuBarHeight, screenSize.X, screenSize.Y-menuBarHeight);
+        var area = new Rectangle(0, menuBarHeight, screenSize.X, screenSize.Y - menuBarHeight);
         ImHelper.BeginEmptyWindow("projectMenu", area);
         if (ImGui.BeginTable("trackSelTable", 3, ImGuiTableFlags.BordersInnerV, ImGui.GetContentRegionAvail()))
         {
@@ -453,13 +460,14 @@ public class TrackEditorScene : Scene
             ImGui.TableSetColumnIndex(1);
             ImGui.Text("Test");
             ImGui.Separator();
-            
+
             ImGui.TableSetColumnIndex(2);
             ImGui.Text("Info");
             ImGui.Separator();
-            
+
             ImGui.EndTable();
         }
+
         ImHelper.EndEmptyWindow();
     }
 

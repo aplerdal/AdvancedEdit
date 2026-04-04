@@ -155,7 +155,6 @@ public class Project(string name)
             Debug.Assert(project.Config.ObstacleOam != null);
         }
         
-        
         return project;
     }
 }

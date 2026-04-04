@@ -12,7 +12,7 @@ public class CreateProject : Scene
     public static readonly Dictionary<string, string> RomFilter = new() { { "MKSC Rom", "gba" }, { "All files", "*" } };
     private string _path = string.Empty;
     private string _name = string.Empty;
-    
+
     private Task<Project>? _loadTask;
     private float _progress;
     private string _progressLabel = string.Empty;
@@ -32,7 +32,7 @@ public class CreateProject : Scene
             Program.SetScene(new TrackEditorScene());
             return;
         }
-        
+
         var viewport = ImGui.GetMainViewport();
 
         var bounds = new Rectangle(0, 0, Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
@@ -78,7 +78,7 @@ public class CreateProject : Scene
         {
             var center = viewport.Size / 2;
             ImGui.SetNextWindowPos(center, ImGuiCond.Always, new(0.5f, 0.5f));
-            ImGui.SetNextWindowSize(new (360, 100));
+            ImGui.SetNextWindowSize(new(360, 100));
             ImGui.OpenPopup("##loading");
             if (ImGui.BeginPopupModal("##loading",
                     ImGuiWindowFlags.NoTitleBar |
@@ -86,7 +86,7 @@ public class CreateProject : Scene
                     ImGuiWindowFlags.NoMove))
             {
                 ImGui.Text("Loading ROM...");
-                ImGui.ProgressBar(-(float)(Raylib.GetTime()/2), new (-1, 0), _progressLabel);
+                ImGui.ProgressBar(-(float)(Raylib.GetTime() / 2), new(-1, 0), _progressLabel);
                 ImGui.EndPopup();
             }
         }

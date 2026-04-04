@@ -11,4 +11,6 @@ public class ProjectConfig
 {
     [Key(0)] public List<Cup> Cups { get; set; } = new();
     [Key(1)] public ObstacleOam ObstacleOam { get; set; }
+    
+    [Key(-1)] public readonly int Revision = 1;
 }

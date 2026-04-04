@@ -231,6 +231,7 @@ public class AiEditor : Editor
                         ImGui.Checkbox("Intersection", ref intersection);
                         ImGui.EndDisabled();
                     }
+
                     ImGui.EndTabItem();
                 }
             }
@@ -339,8 +340,8 @@ public class AiEditor : Editor
 
         DrawCheckpointsForTargets(set, hoveredTarget);
         DrawTargets(set, hoveredTarget);
-        
-        if (Raylib.IsMouseButtonPressed(MouseButton.Left) && hoveredTarget is null && !(_panelFocused || _resetConfirmationShown) && _selectedTarget is not null) 
+
+        if (Raylib.IsMouseButtonPressed(MouseButton.Left) && hoveredTarget is null && !(_panelFocused || _resetConfirmationShown) && _selectedTarget is not null)
             _selectedTarget = null;
 
         if (Raylib.IsMouseButtonDown(MouseButton.Left))
@@ -502,7 +503,7 @@ public class AiEditor : Editor
         void TopRight() => Raylib.DrawLineEx(new Vector2(checkpointMax.X, checkpointMin.Y), pos, 1, Color.White);
         void BottomLeft() => Raylib.DrawLineEx(new Vector2(checkpointMin.X, checkpointMax.Y), pos, 1, Color.White);
         void BottomRight() => Raylib.DrawLineEx(new Vector2(checkpointMax.X, checkpointMax.Y), pos, 1, Color.White);
-        
+
         var overlapX = pos.X > checkpointMin.X && pos.X < checkpointMax.X;
         var overlapY = pos.Y > checkpointMin.Y && pos.Y < checkpointMax.Y;
         var leftOf = pos.X <= checkpointMin.X;

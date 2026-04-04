@@ -28,7 +28,7 @@ public class TrackGfxEditor : Editor
     private TrackGraphic _activeGraphic;
     private TilesetEditor _tileEditor;
     private bool _lockedPalette;
-    
+
     private BgrColor _oldPaletteColor;
     private bool _modifyingColor;
 
@@ -61,12 +61,12 @@ public class TrackGfxEditor : Editor
         var menuBarHeight = ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2;
 
         var position = new Vector2(0, menuBarHeight);
-        var viewportArea = new Rectangle(position, quarterScreen*2, windowSize.Y - position.Y);
+        var viewportArea = new Rectangle(position, quarterScreen * 2, windowSize.Y - position.Y);
 
         _tileEditor.Update(viewportArea, hasFocus);
-        _tileEditor.UpdatePaletteView(new Rectangle(quarterScreen*2+4, menuBarHeight, quarterScreen-8, windowSize.Y - menuBarHeight));
+        _tileEditor.UpdatePaletteView(new Rectangle(quarterScreen * 2 + 4, menuBarHeight, quarterScreen - 8, windowSize.Y - menuBarHeight));
 
-        var optionsX = quarterScreen*3;
+        var optionsX = quarterScreen * 3;
         var optionsRect = new Rectangle(optionsX, menuBarHeight, quarterScreen, windowSize.Y - menuBarHeight);
 
         Raylib.DrawRectangleLinesEx(optionsRect, 2, Color.LightGray);
@@ -109,6 +109,7 @@ public class TrackGfxEditor : Editor
 
         ImHelper.EndEmptyWindow();
     }
+
     private void ShowPaletteOptions()
     {
         ImGui.SeparatorText("Palette");
@@ -163,10 +164,11 @@ public class TrackGfxEditor : Editor
             _oldPaletteColor = color;
             _modifyingColor = true;
         }
-        
+
         _tileEditor.Palette[_tileEditor.ActiveIndex.Value] = newColor;
         _tileEditor.RefreshPalette();
     }
+
     private void ShowOptions()
     {
         ImGui.SeparatorText("Options");
@@ -182,6 +184,7 @@ public class TrackGfxEditor : Editor
                 _tileEditor.ReloadTileset();
             }
         }
+
         ImGui.SameLine();
         if (ImGui.Button("Export"))
         {

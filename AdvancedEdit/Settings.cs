@@ -9,23 +9,17 @@ public class Settings
 {
     public static Settings Shared { get; private set; } = new();
 
-    [Key(0)]
-    public KeyboardKey EyedropperBind = KeyboardKey.V;
+    [Key(0)] public KeyboardKey EyedropperBind = KeyboardKey.V;
 
-    [Key(1)]
-    public KeyboardKey SelectBind = KeyboardKey.S;
+    [Key(1)] public KeyboardKey SelectBind = KeyboardKey.S;
 
-    [Key(2)]
-    public KeyboardKey DrawBind = KeyboardKey.P;
+    [Key(2)] public KeyboardKey DrawBind = KeyboardKey.P;
 
-    [Key(3)]
-    public KeyboardKey RectangleBind = KeyboardKey.R;
+    [Key(3)] public KeyboardKey RectangleBind = KeyboardKey.R;
 
-    [Key(4)]
-    public KeyboardKey BucketBind = KeyboardKey.B;
+    [Key(4)] public KeyboardKey BucketBind = KeyboardKey.B;
 
-    [Key(5)]
-    public List<string> RecentProjectFiles = new();
+    [Key(5)] public List<string> RecentProjectFiles = new();
 
     private static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AdvancedEdit");
     private static string SettingsFile => Path.Combine(SettingsDirectory, "config.msp");
@@ -65,6 +59,7 @@ public class Settings
         {
             RecentProjectFiles.Insert(0, path);
         }
+
         if (RecentProjectFiles.Count > 16) RecentProjectFiles.RemoveAt(16);
         Save();
     }

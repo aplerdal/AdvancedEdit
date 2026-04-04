@@ -79,7 +79,7 @@ public class MapEditor : Editor, IToolEditable
     public CellEntry[]? Stamp { get; set; }
 
     public bool ViewportHovered => !(Raylib.GetMousePosition().Y <= ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2 ||
-                                     Raylib.GetMousePosition().X >= Raylib.GetScreenWidth()*(3/4f));
+                                     Raylib.GetMousePosition().X >= Raylib.GetScreenWidth() * (3 / 4f));
 
     public MapEditor(TrackView view)
     {
@@ -111,14 +111,14 @@ public class MapEditor : Editor, IToolEditable
         var panelWidth = Raylib.GetScreenWidth() / 4;
         var panelRect = new Rectangle(windowSize.X - panelWidth, ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2, panelWidth, windowSize.Y);
         Focused = Raylib.CheckCollisionPointRec(mousePos, panelRect);
-        
+
         Raylib.DrawRectangleRec(panelRect, Color.White);
-        var scale = (panelWidth-6) / 128f;
+        var scale = (panelWidth - 6) / 128f;
         UpdateTilePicker(panelRect.Position + new Vector2(3), scale);
         var toolPickerPos = panelRect.Position + new Vector2(3, scale * 128 + 3);
         ToolPicker.Draw(toolPickerPos, panelWidth - 6, ref _activeToolType);
-        var optionsPos = toolPickerPos + new Vector2(0, (panelWidth - 6)/8f);
-        var optionsRec = new Rectangle(optionsPos, panelWidth-6, windowSize.Y - optionsPos.Y);
+        var optionsPos = toolPickerPos + new Vector2(0, (panelWidth - 6) / 8f);
+        var optionsRec = new Rectangle(optionsPos, panelWidth - 6, windowSize.Y - optionsPos.Y);
         ShowTilesetOptions(optionsRec);
     }
 
@@ -138,6 +138,7 @@ public class MapEditor : Editor, IToolEditable
             ImGui.InputInt("Behavior", ref value);
             View.Track.Behaviors[ActiveIndex.Value] = (byte)value;
         }
+
         ImHelper.EndEmptyWindow();
     }
 
@@ -146,7 +147,7 @@ public class MapEditor : Editor, IToolEditable
         PaletteShader.Begin();
         var tileSize = 8 * scale;
         var tilesetRect = new Rectangle(position, new Vector2(16 * tileSize));
-        
+
         Raylib.DrawTextureEx(View.Tileset, position, 0.0f, scale, Color.White);
         PaletteShader.End();
         if (ActiveIndex.HasValue)

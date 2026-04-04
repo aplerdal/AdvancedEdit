@@ -28,7 +28,7 @@ public class TilesetEditor : IDisposable, IToolEditable
     private Vector2 _position;
 
     public readonly int[,] Layout;
-    
+
     public readonly int TilesetWidth;
     public readonly int TilesetHeight;
 
@@ -76,6 +76,7 @@ public class TilesetEditor : IDisposable, IToolEditable
         {
             Layout[x, y] = i++;
         }
+
         _texture = Tileset.TilePaletteTexture(1, Tileset.Length);
         _tilesetImage = Raylib.LoadImageFromTexture(_texture);
         _paletteIvec = palette.ToIVec3();
@@ -97,11 +98,13 @@ public class TilesetEditor : IDisposable, IToolEditable
         {
             Layout[x, y] = i++;
         }
+
         ReloadTileset();
         _viewport = Raylib.LoadRenderTexture(TargetSize, TargetSize);
         _viewCamera = new Camera2D(Vector2.Zero, Vector2.Zero, 0, 4);
         UndoManager = new UndoManager();
     }
+
     public TilesetEditor(Tileset tileset, Palette palette, int[,] layout)
     {
         Tileset = tileset;
@@ -174,8 +177,9 @@ public class TilesetEditor : IDisposable, IToolEditable
                 var index = Layout[x, y];
                 if (index == -1) continue;
                 var rect = Extensions.GetTileRect(index, 1);
-                Raylib.DrawTextureRec(_texture, rect, 8*new Vector2(x, y), Color.White);
+                Raylib.DrawTextureRec(_texture, rect, 8 * new Vector2(x, y), Color.White);
             }
+
             PaletteShader.End();
             _tools[(int)_activeTool].Update(this);
         }
@@ -190,14 +194,14 @@ public class TilesetEditor : IDisposable, IToolEditable
                 for (var y = 1; y < TilesetHeight; y++)
                 {
                     var p1 = WorldToViewport(new Vector2(0, y * 8));
-                    var p2 = WorldToViewport(new Vector2(TilesetWidth*8, y * 8));
+                    var p2 = WorldToViewport(new Vector2(TilesetWidth * 8, y * 8));
                     Raylib.DrawLineV(p1, p2, Color.Black);
                 }
 
                 for (var x = 1; x < TilesetWidth; x++)
                 {
                     var p1 = WorldToViewport(new Vector2(x * 8, 0));
-                    var p2 = WorldToViewport(new Vector2(x * 8,TilesetHeight*8));
+                    var p2 = WorldToViewport(new Vector2(x * 8, TilesetHeight * 8));
                     Raylib.DrawLineV(p1, p2, Color.Black);
                 }
             }

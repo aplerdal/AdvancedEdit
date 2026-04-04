@@ -47,7 +47,7 @@ public class TrackView : IDisposable
     public void RegenTextureBuffers()
     {
         var tilemap = Track.Tilemap;
-        if (Raylib.IsTextureValid(Tileset)) Raylib.UnloadTexture(Tileset); 
+        if (Raylib.IsTextureValid(Tileset)) Raylib.UnloadTexture(Tileset);
         Tileset = Track.Tileset.TilePaletteTexture(16, 16);
         if (!Raylib.IsRenderTextureValid(_trackTexture) || _trackTexture.Texture.Width != tilemap.Width * 8 || _trackTexture.Texture.Height != tilemap.Height * 8)
         {
