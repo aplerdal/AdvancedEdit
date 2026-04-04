@@ -52,6 +52,7 @@ public class Project(string name)
         Patcher.Apply("Resources/Patches/objRework.ips", stream);
         Patcher.Apply("Resources/Patches/headerLaps.ips", stream);
         Patcher.Apply("Resources/Patches/fixFinalTrackCheck.ips", stream);
+        Patcher.Apply("Resources/Patches/fixMinimapScale.ips", stream);
 
         var headerIdx = 0;
         stream.Seek(new Pointer(0x08400000));
