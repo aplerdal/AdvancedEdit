@@ -142,7 +142,7 @@ public class MainMenu : Scene
             {
                 ImGui.Text("Patch Notes");
                 ImGui.Separator();
-                // TODO
+                PatchNotes();
             }
 
             ImGui.EndTable();
@@ -154,5 +154,12 @@ public class MainMenu : Scene
     public override void Dispose()
     {
         // 
+    }
+
+    private static void PatchNotes()
+    {
+        // This is a dumb system, but it will do.
+        ImGui.SeparatorText("1.0.0 Release Candidate 1");
+        ImGui.TextWrapped("Wow, a real release! If you are reading this, thank you for helping test the editor! I look forward to seeing what everyone is able to make.\nHappy racing!\n - Antimattur"u8);
     }
 }

@@ -474,10 +474,10 @@ public class TrackEditorScene : Scene
     public override void Update(ref Project? project)
     {
         var hasFocus = MainMenuBar(ref project);
-        if (_editor is null)
+        if (_editor is null )
         {
-            Debug.Assert(project is not null);
-            ProjectMenu(project);
+            if (project is not null)
+                ProjectMenu(project);
         }
         else
         {
