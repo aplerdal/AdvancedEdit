@@ -23,10 +23,10 @@ public class ProjectTrack
     public static string ObstacleGfx => "obstacles.chr";
     public static string ObstaclePal => "obstacles.pal";
     public static string Objects => "objects.msp";
-    public static string Coins => "coins.msp";
     public static string Behaviors => "behaviors.msp";
     public static string Ai => "ai.msp";
     public static string CoverArt => "cover.chr";
+    public static string TrackNameGfx => "name.chr";
     public static string CoverPal => "cover.pal";
     public static string LockedCoverPal => "cover_locked.pal";
     public static string TargetTimes => "times.msp";
@@ -95,7 +95,7 @@ public class ProjectTrack
             SerializeAsync(TilesetPal, track.TilesetPalette),
             SerializeAsync(Tilemap, track.Tilemap),
             SerializeAsync(Minimap, track.Minimap),
-            SerializeMspAsync(Coins, track.Coins),
+            SerializeAsync(TrackNameGfx, track.TrackNameGfx),
             SerializeMspAsync(Objects, track.Objects),
             SerializeMspAsync(Ai, track.Ai),
             SerializeMspAsync(TargetTimes, track.TargetTimes),
@@ -148,8 +148,8 @@ public class ProjectTrack
             CoverArt = DeserializeIfExists(CoverArt, s => new Tileset(s, 81, PixelFormat.Bpp8)),
             CoverPalette = DeserializeIfExists(CoverPal, s => new Palette(s, 80)),
             LockedCoverPalette = DeserializeIfExists(CoverPal, s => new Palette(s, 80)),
+            TrackNameGfx = Deserialize(TrackNameGfx, s => new Tileset(s, 24, PixelFormat.Bpp4)),
             Behaviors = DeserializeMsp<byte[]>(Behaviors),
-            Coins = DeserializeMsp<List<Vec2I>>(Coins),
             Objects = DeserializeMsp<TrackObjects>(Objects),
             Ai = DeserializeMsp<TrackAi>(Ai),
             TargetTimes = DeserializeMsp<TargetTime[]>(TargetTimes),

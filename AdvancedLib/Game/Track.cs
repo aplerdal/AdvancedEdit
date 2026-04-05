@@ -1,3 +1,4 @@
+using System.Numerics;
 using AdvancedLib.Graphics;
 using AdvancedLib.Serialization;
 using AdvancedLib.Serialization.AI;
@@ -20,9 +21,9 @@ public class Track
     public required Tileset ObstacleGfx { get; set; }
     public required Palette ObstaclePalette { get; set; }
     public required TrackObjects Objects { get; set; }
-    public required List<Vec2I> Coins { get; set; }
     public required TrackAi Ai { get; set; }
     public required Tileset? CoverArt { get; set; }
+    public required Tileset TrackNameGfx { get; set; }
     public required Palette? CoverPalette { get; set; }
     public required Palette? LockedCoverPalette { get; set; }
     public required byte[] Behaviors { get; set; }
@@ -46,7 +47,7 @@ public class Track
     {
         var definition = LoadDefinition(stream, headerIndex);
         var header = LoadHeader(stream, definition.HeaderIndex);
-        return new Track
+        var track = new Track
         {
             Config = LoadConfig(header, definition),
             TilesetPalette = LoadTilesetPalette(stream, header),
@@ -57,15 +58,16 @@ public class Track
             ObstacleGfx = LoadObstacleGraphics(stream, header, headerIndex),
             ObstaclePalette = LoadObstaclePalette(stream, header),
             Objects = LoadObjects(stream, header, headerIndex),
-            Coins = LoadCoins(stream, header),
             Ai = LoadAi(stream, header, definition),
             CoverArt = LoadCoverArt(stream, definition),
             CoverPalette = LoadCoverPalette(stream, definition),
             LockedCoverPalette = LoadLockedCoverPalette(stream, definition),
+            TrackNameGfx = LoadTrackNameGfx(stream, definition),
             TargetTimes = LoadTargetTimes(stream, definition),
             TurnSigns = LoadTurnSigns(stream, definition),
             RivalTargets = LoadRivalTargets(stream, definition),
         };
+        return track;
     }
 
     /// <summary>
@@ -82,11 +84,11 @@ public class Track
         ObstaclePalette = new Palette(48),
         Objects = new TrackObjects(),
         Behaviors = new byte[256],
-        Coins = new List<Vec2I>(),
         Ai = new TrackAi(),
         CoverArt = null,
         CoverPalette = null,
         LockedCoverPalette = null,
+        TrackNameGfx = new Tileset(24, PixelFormat.Bpp4),
         RivalTargets = new(),
         TargetTimes = TargetTime.Defaults,
         TurnSigns = null,
@@ -184,7 +186,9 @@ public class Track
         else
             Compressor.Decompress(stream, tilemapStream);
         tilemapStream.Seek(0, SeekOrigin.Begin);
-        return new AffineTilemap(tilemapStream, trackWidth, trackHeight);
+        var tilemap = new AffineTilemap(tilemapStream, trackWidth, trackHeight);
+        LoadCoins(stream, header, tilemap);
+        return tilemap;
     }
 
     private static Tileset LoadMinimap(Stream stream, TrackHeader header)
@@ -289,9 +293,8 @@ public class Track
         return trackObjects;
     }
 
-    private static List<Vec2I> LoadCoins(Stream stream, TrackHeader header)
+    private static void LoadCoins(Stream stream, TrackHeader header, AffineTilemap tilemap)
     {
-        var coins = new List<Vec2I>();
         if (header.CoinsOffset != 0)
         {
             var coinsAddress = header.Address + header.CoinsOffset;
@@ -299,11 +302,9 @@ public class Track
             while (stream.PeekByte() != 0)
             {
                 var coin = stream.Read<ObjectPlacement>();
-                coins.Add(new Vec2I(coin.X, coin.Y));
+                tilemap[new Vector2(coin.X, coin.Y)] = 0xC0; // Coin tile
             }
         }
-
-        return coins;
     }
 
     private static TrackAi LoadAi(Stream stream, TrackHeader header, TrackDefinition definition)
@@ -373,6 +374,23 @@ public class Track
         return new Palette(palStream, 80);
     }
 
+    private static Tileset LoadTrackNameGfx(Stream stream, TrackDefinition definition)
+    {
+        const int tilesetSize = 24;
+        using var tilesetStream = new MemoryPoolStream(tilesetSize * (Tile.Size * Tile.Size / 2), true);
+
+        if (definition.TrackNameGfx.IsNull)
+        {
+            return new Tileset(tilesetSize, PixelFormat.Bpp4);
+        }
+        
+        stream.Seek(definition.TrackNameGfx);
+        Compressor.Decompress(stream, tilesetStream);
+
+        tilesetStream.Seek(0, SeekOrigin.Begin);
+        return new Tileset(tilesetStream, tilesetSize, PixelFormat.Bpp4);
+    }
+
     private static TargetTime[] LoadTargetTimes(Stream stream, TrackDefinition definition)
     {
         if (definition.TargetTimes.IsNull)
@@ -417,6 +435,8 @@ public class Track
         var trackHeader = new TrackHeader();
         trackStream.Skip(0x100);
 
+        var coins = GetCoins();
+
         WriteConfig(Config, ref trackDefinition, ref trackHeader);
         WriteTileset(trackStream, ref trackHeader);
         AlignStream(trackStream);
@@ -436,7 +456,7 @@ public class Track
         AlignStream(trackStream);
         WriteObjects(trackStream, ref trackHeader, Objects);
         AlignStream(trackStream);
-        WriteCoins(trackStream, ref trackHeader);
+        WriteCoins(trackStream, ref trackHeader, coins);
         AlignStream(trackStream);
         WriteAi(trackStream, ref trackHeader);
         AlignStream(trackStream);
@@ -445,6 +465,8 @@ public class Track
         WriteCoverPalette(trackAddress, trackStream, ref trackDefinition);
         AlignStream(trackStream);
         WriteLockedCoverPalette(trackAddress, trackStream, ref trackDefinition);
+        AlignStream(trackStream);
+        WriteTrackNameGfx(trackAddress, trackStream, ref trackDefinition);
         AlignStream(trackStream);
         WriteTargetTimes(trackAddress, trackStream, ref trackDefinition);
         AlignStream(trackStream);
@@ -500,6 +522,21 @@ public class Track
         trackStream.Write(definition);
     }
 
+    private List<Vector2> GetCoins()
+    {
+        var coins = new List<Vector2>();
+        for (int y = 0; y < Tilemap.Height; y++)
+        for (int x = 0; x < Tilemap.Width; x++)
+        {
+            if (Tilemap[x, y] == 0xC0)
+            {
+                coins.Add(new Vector2(x, y));
+                Tilemap[x, y] = 0xC1; // Replacement tile for coin
+            }
+        }
+        return coins;
+    }
+
     private void WriteTileset(Stream trackStream, ref TrackHeader header)
     {
         header.Flags |= TrackFlags.SplitTileset;
@@ -513,7 +550,6 @@ public class Track
         header.TilesetPaletteOffset = (uint)trackStream.Position;
         TilesetPalette.Write(trackStream);
     }
-
     private void WriteTilemap(Stream trackStream, ref TrackHeader header)
     {
         header.Flags |= TrackFlags.SplitTilemap;
@@ -535,29 +571,15 @@ public class Track
 
     private void WriteObstaclePal(Stream trackStream, ref TrackHeader header)
     {
-        if (ObstaclePalette is null)
-        {
-            header.ObstaclePaletteOffset = 0;
-        }
-        else
-        {
-            header.ObstaclePaletteOffset = (uint)trackStream.Position;
-            ObstaclePalette.Write(trackStream);
-        }
+        header.ObstaclePaletteOffset = (uint)trackStream.Position;
+        ObstaclePalette.Write(trackStream);
     }
 
     private void WriteObstacleGfx(Stream trackStream, ref TrackHeader header)
     {
-        if (ObstacleGfx is null)
-        {
-            header.ObstacleGfxOffset = 0;
-        }
-        else
-        {
-            header.Flags |= TrackFlags.SplitObjects;
-            header.ObstacleGfxOffset = (uint)trackStream.Position;
-            Compressor.SplitCompress(ObstacleGfx.GetData(), trackStream);
-        }
+        header.Flags |= TrackFlags.SplitObjects;
+        header.ObstacleGfxOffset = (uint)trackStream.Position;
+        Compressor.SplitCompress(ObstacleGfx.GetData(), trackStream);
     }
 
     private static void WriteObstacleTable(Stream romStream, long trackAddress, Stream trackStream, int headerIndex, TrackObjects trackObjects)
@@ -601,10 +623,10 @@ public class Track
         trackStream.Write((uint)0);
     }
 
-    private void WriteCoins(Stream trackStream, ref TrackHeader header)
+    private void WriteCoins(Stream trackStream, ref TrackHeader header, List<Vector2> coins)
     {
         header.CoinsOffset = (uint)trackStream.Position;
-        foreach (var coinPos in Coins)
+        foreach (var coinPos in coins)
         {
             var coin = new ObjectPlacement
             {
@@ -675,6 +697,13 @@ public class Track
         Compressor.Compress(LockedCoverPalette.GetData(), trackStream);
     }
 
+    private void WriteTrackNameGfx(long trackAddress, Stream trackStream, ref TrackDefinition definition)
+    {
+        var ptr = new Pointer((uint)(trackAddress + trackStream.Position));
+        Compressor.Compress(TrackNameGfx.GetData(), trackStream);
+        definition.TrackNameGfx = ptr;
+    }
+    
     private void WriteTargetTimes(long trackAddress, Stream trackStream, ref TrackDefinition definition)
     {
         definition.TargetTimes = new Pointer((uint)(trackAddress + trackStream.Position));

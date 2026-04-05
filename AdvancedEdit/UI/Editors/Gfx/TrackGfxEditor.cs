@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Numerics;
 using AdvancedLib.Game;
 using AdvancedLib.Graphics;
@@ -18,6 +19,7 @@ public enum TrackGraphic
     Tileset,
     Minimap,
     Cover,
+    TrackName,
 }
 
 public class TrackGfxEditor : Editor
@@ -38,6 +40,15 @@ public class TrackGfxEditor : Editor
             new BgrColor(0xDE69), new BgrColor(0x3D82), new BgrColor(0x83FF), new BgrColor(0x83CC),
             new BgrColor(0x8256), new BgrColor(0x82BF), new BgrColor(0x01FF), new BgrColor(0xC210),
             new BgrColor(0xD6B5), new BgrColor(0xE318), new BgrColor(0xFFFF), new BgrColor(0x0000)
+        ]
+    );
+
+    private readonly Palette _nameGfxPalette = new(
+        [
+            new BgrColor(0xCBF3), new BgrColor(0x825F), new BgrColor(0x00FD), new BgrColor(0x0000),
+            new BgrColor(0x480D), new BgrColor(0xABFF), new BgrColor(0x8ED6), new BgrColor(0x0000),
+            new BgrColor(0x010A), new BgrColor(0x0000), new BgrColor(0x0000), new BgrColor(0x0000),
+            new BgrColor(0x0000), new BgrColor(0x0000), new BgrColor(0xFA4D), new BgrColor(0xFA4D)
         ]
     );
 
@@ -95,9 +106,10 @@ public class TrackGfxEditor : Editor
                             TrackGraphic.Minimap => new TilesetEditor(_track.Minimap, _uiPalette),
                             TrackGraphic.Tileset => new TilesetEditor(_track.Tileset, _track.TilesetPalette),
                             TrackGraphic.Cover => new TilesetEditor(_track.CoverArt!, _track.CoverPalette!, 10, 8, 1),
+                            TrackGraphic.TrackName => new TilesetEditor(_track.TrackNameGfx, _nameGfxPalette, 12, 2),
                             _ => throw new ArgumentOutOfRangeException(nameof(graphic))
                         };
-                        _lockedPalette = graphic == TrackGraphic.Minimap;
+                        _lockedPalette = graphic == TrackGraphic.Minimap || graphic == TrackGraphic.TrackName;
                     }
                 }
 
@@ -180,8 +192,16 @@ public class TrackGfxEditor : Editor
             if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
             {
                 var gif = GifDocument.Load(path);
-                gif.LoadGifToGBA(ref _tileEditor.Tileset, ref _tileEditor.Palette, _tileEditor.Layout);
-                _tileEditor.ReloadTileset();
+                try
+                {
+                    gif.LoadGifToGBA(ref _tileEditor.Tileset, ref _tileEditor.Palette, _tileEditor.Layout, _lockedPalette);
+                    _tileEditor.ReloadTileset();
+                }
+                catch (InvalidOperationException e)
+                {
+                    // TODO: Error Message
+                    Debug.WriteLine(e.Message);
+                }
             }
         }
 

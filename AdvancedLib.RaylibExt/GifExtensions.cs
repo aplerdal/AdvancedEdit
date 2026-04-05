@@ -98,7 +98,7 @@ public static class GifExtensions
         return gif;
     }
 
-    public static void LoadGifToGBA(this GifDocument gif, ref Tileset tileset, ref Palette palette, int[,] layout)
+    public static void LoadGifToGBA(this GifDocument gif, ref Tileset tileset, ref Palette palette, int[,] layout, bool paletteLocked = false)
     {
         if (gif.Frames.Count == 0)
             throw new InvalidOperationException("GIF has no frames.");
@@ -115,6 +115,7 @@ public static class GifExtensions
         int heightInTiles = gif.Height / 8;
 
         OverwriteFromImageData(ref tileset, frame.Indices, layout);
-        OverwriteGbaPalette(gifPalette, ref palette);
+        if (!paletteLocked)
+            OverwriteGbaPalette(gifPalette, ref palette);
     }
 }
