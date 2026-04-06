@@ -32,7 +32,7 @@ internal static class Program
 #endif
         // Setup Raylib
         Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
-        Raylib.InitWindow(1920, 1080, "AdvancedEdit");
+        Raylib.InitWindow(800, 600, "AdvancedEdit");
         Raylib.SetWindowIcon(Raylib.LoadImage("Resources/icon.png"));
         Raylib.SetTargetFPS(144);
         Raylib.SetExitKey(KeyboardKey.Null);
@@ -40,11 +40,8 @@ internal static class Program
 
         RlImGui.Setup();
 
-        // Load Settings
-        // var settings = Settings.Shared;
         Settings.Load();
-
-        // Calculate UI scale based on DPI
+        
         TextureManager = new TextureManager();
         FontLoader.LoadOpenSansImGui();
 

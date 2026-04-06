@@ -66,11 +66,11 @@ public static class FontLoader
     {
         ImFontAtlasPtr fontAtlas;
         var dpiScale = Raylib.GetWindowScaleDPI();
-        var scale = (int)Math.Round((dpiScale.X + dpiScale.Y) / 2);
+        var scale = (dpiScale.X + dpiScale.Y) / 2;
         var config = ImGui.ImFontConfig();
         config.FontDataOwnedByAtlas = false;
         var font = new ImFontPtr(ImGui.GetIO().Fonts.AddFontFromFileTTF("Resources/OpenSans.ttf", config));
         ImGui.GetIO().FontDefault = font;
-        ImGui.GetStyle().FontSizeBase = scale * 18;
+        ImGui.GetStyle().FontSizeBase = MathF.Round(18 * scale);
     }
 }

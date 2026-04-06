@@ -53,7 +53,7 @@ public static unsafe class RlImGui
 
     private static Vector2 GetDisplayScale()
     {
-        return Raylib.GetWindowScaleDPI();
+        return new Vector2(1); // Hardcode this. ImGui doesn't work well with nonstandard DPIs
     }
 
     // -------------------------------------------------------------------------
@@ -352,7 +352,6 @@ public static unsafe class RlImGui
         io.DisplaySize.X = Raylib.GetScreenWidth();
         io.DisplaySize.Y = Raylib.GetScreenHeight();
 
-        io.DisplayFramebufferScale = new Vector2(resolutionScale.X, resolutionScale.Y);
         io.DeltaTime = deltaTime <= 0f ? 0.001f : deltaTime;
 
         // Update mouse cursor shape
