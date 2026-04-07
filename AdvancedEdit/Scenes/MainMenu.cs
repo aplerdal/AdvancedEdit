@@ -1,6 +1,7 @@
 using System.Numerics;
 using AdvancedLib.Project;
 using AdvEditRework.DearImGui;
+using AdvEditRework.UI;
 using AdvEditRework.UI.Editors;
 using Hexa.NET.ImGui;
 using NativeFileDialogs.Net;
@@ -11,6 +12,7 @@ namespace AdvEditRework.Scenes;
 public class MainMenu : Scene
 {
     private Texture2D _iconTexture;
+    private ExceptionPopup? _exceptionPopup;
 
     public override void Init(ref Project? project)
     {
@@ -45,9 +47,16 @@ public class MainMenu : Scene
             var status = Nfd.OpenDialog(out var path, TrackEditorScene.ProjectFilter);
             if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
             {
-                Settings.Shared.UpdateProjectList(path);
-                project = Project.Unpack(path);
-                Program.SetScene(new TrackEditorScene());
+                try
+                {
+                    Settings.Shared.UpdateProjectList(path);
+                    project = Project.Unpack(path);
+                    Program.SetScene(new TrackEditorScene());
+                }
+                catch (Exception e)
+                {
+                    _exceptionPopup = new ExceptionPopup("Error loading project", e);
+                }
             }
         }
 
@@ -74,6 +83,8 @@ public class MainMenu : Scene
     {
         Raylib.ClearBackground(Color.White);
 
+        _exceptionPopup?.Update();
+        
         ImHelper.BeginEmptyWindow("MainMenuWindow", new Rectangle(Vector2.Zero, Raylib.GetScreenWidth(), Raylib.GetScreenHeight()));
         ImGui.NewLine();
         DrawQuickOptions(ref project);
@@ -97,9 +108,16 @@ public class MainMenu : Scene
                     var status = Nfd.OpenDialog(out var path, TrackEditorScene.ProjectFilter);
                     if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
                     {
-                        Settings.Shared.UpdateProjectList(path);
-                        project = Project.Unpack(path);
-                        Program.SetScene(new TrackEditorScene());
+                        try
+                        {
+                            Settings.Shared.UpdateProjectList(path);
+                            project = Project.Unpack(path);
+                            Program.SetScene(new TrackEditorScene());
+                        }
+                        catch (Exception e)
+                        {
+                            _exceptionPopup = new ExceptionPopup("Error loading project",e);
+                        }
                     }
                 }
 
@@ -127,8 +145,16 @@ public class MainMenu : Scene
 
                         if (File.Exists(recentPath))
                         {
-                            project = Project.Unpack(recentPath);
-                            Program.SetScene(new TrackEditorScene());
+                            Settings.Shared.UpdateProjectList(recentPath);
+                            try
+                            {
+                                project = Project.Unpack(recentPath);
+                                Program.SetScene(new TrackEditorScene());
+                            }
+                            catch (Exception e)
+                            {
+                                _exceptionPopup = new ExceptionPopup("Error loading project", e);
+                            }
                         }
                         else
                         {
@@ -158,6 +184,14 @@ public class MainMenu : Scene
     private static void PatchNotes()
     {
         // This is a dumb system, but it will do.
+        ImGui.SeparatorText("1.0.0 Release Candidate 3");
+        ImGui.TextWrapped("- Fixed themes for imported SMKC files"u8);
+        ImGui.TextWrapped("- Fixed crash when deleting objects"u8);
+        ImGui.TextWrapped("- Added error checking when loading projects"u8);
+        ImGui.NewLine();
+        ImGui.SeparatorText("1.0.0 Release Candidate 2");
+        ImGui.TextWrapped("- Fixed DPI scaling issues"u8);
+        ImGui.NewLine();
         ImGui.SeparatorText("1.0.0 Release Candidate 1");
         ImGui.TextWrapped("Wow, a real release! If you are reading this, thank you for helping test the editor! I look forward to seeing what everyone is able to make.\nHappy racing!\n - Antimattur"u8);
     }

@@ -3,6 +3,7 @@ using AdvEditRework.DearImGui;
 using AdvEditRework.Resources;
 using AdvEditRework.Scenes;
 using AdvEditRework.Shaders;
+using AdvEditRework.UI;
 using Raylib_cs;
 
 namespace AdvEditRework;
@@ -36,6 +37,8 @@ internal static class Program
         Raylib.SetTargetFPS(144);
         Raylib.SetExitKey(KeyboardKey.Null);
         PaletteShader.Load();
+        
+        
 
         RlImGui.Setup();
 
@@ -47,8 +50,14 @@ internal static class Program
         _scene.Init(ref _project);
         while (!(Raylib.WindowShouldClose() || ShouldClose))
         {
-            Raylib.SetWindowTitle($"AdvancedEdit - {Raylib.GetFPS():0000}FPS");
-            Update();
+            try
+            {
+                Update();
+            }
+            catch (Exception e)
+            {
+                ExceptionPopup.CreateLogFile(e, "Crash");
+            }
         }
 
         Close();

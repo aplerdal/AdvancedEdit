@@ -39,11 +39,11 @@ public class ExceptionPopup
         ImGui.PopID();
     }
 
-    private static void CreateLogFile(Exception ex)
+    public static void CreateLogFile(Exception ex , string prefix = "Error")
     {
         string logDirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AdvancedEdit", "Logs");
         Directory.CreateDirectory(logDirPath);
-        var file = Path.Combine(logDirPath, $"Log-{DateTime.Now:yyyy-MM-dd-HH:mm:ss}.txt");
+        var file = Path.Combine(logDirPath, $"${prefix}-{DateTime.Now:yyyy-MM-dd-HH:mm:ss}.txt");
         File.WriteAllText(file, ex.ToString());
     }
 }
