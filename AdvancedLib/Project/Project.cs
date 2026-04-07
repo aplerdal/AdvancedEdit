@@ -117,12 +117,14 @@ public class Project(string name)
                 await podiumTrack.SaveTrackDataAsync(Track.FromRom(romStream, headerIdx));
                 continue;
             }
-
+            if (cupName == "Retro Battle") continue;
+            
             var cupTracks = new ProjectTrack[4];
             for (var j = 0; j < 4; j++)
             {
                 romStream.Seek(RomData.Cups.Address + 16 * i + j * 4, SeekOrigin.Begin);
                 var headerIdx = romStream.Read<int>();
+                
                 var name = TrackNames.GetTrackNameFromHeaderIndex(headerIdx);
                 cupTracks[j] = new ProjectTrack(name);
                 cupTracks[j].ResolveFolder(Path.Combine(project.Folder, cupName));

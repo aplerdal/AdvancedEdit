@@ -194,9 +194,9 @@ public class TrackGfxEditor : Editor
             var status = Nfd.OpenDialog(out var path, ImageFilter, "tiles.gif");
             if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
             {
-                var gif = GifDocument.Load(path);
                 try
                 {
+                    var gif = GifDocument.Load(path);
                     gif.LoadGifToGba(ref _tileEditor.Tileset, ref _tileEditor.Palette, _tileEditor.Layout, _lockedPalette);
                     _tileEditor.ReloadTileset();
                 }
