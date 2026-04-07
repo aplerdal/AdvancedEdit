@@ -4,7 +4,6 @@ using AdvancedLib.Game;
 using AdvancedLib.Graphics;
 using AdvancedLib.RaylibExt;
 using AdvEditRework.DearImGui;
-using AdvEditRework.Shaders;
 using AdvEditRework.UI.Editors.Gfx;
 using AdvEditRework.UI.Undo;
 using GifLib;
@@ -30,6 +29,8 @@ public class TrackGfxEditor : Editor
     private TrackGraphic _activeGraphic;
     private TilesetEditor _tileEditor;
     private bool _lockedPalette;
+
+    private ExceptionPopup? _exceptionPopup;
 
     private BgrColor _oldPaletteColor;
     private bool _modifyingColor;
@@ -61,6 +62,8 @@ public class TrackGfxEditor : Editor
 
     public override void Update(bool hasFocus)
     {
+        hasFocus = hasFocus && (!(_exceptionPopup?.Open ?? false));
+        _exceptionPopup?.Update();
         Raylib.ClearBackground(Color.White);
         GfxSelectorPanel(hasFocus);
     }
@@ -194,13 +197,12 @@ public class TrackGfxEditor : Editor
                 var gif = GifDocument.Load(path);
                 try
                 {
-                    gif.LoadGifToGBA(ref _tileEditor.Tileset, ref _tileEditor.Palette, _tileEditor.Layout, _lockedPalette);
+                    gif.LoadGifToGba(ref _tileEditor.Tileset, ref _tileEditor.Palette, _tileEditor.Layout, _lockedPalette);
                     _tileEditor.ReloadTileset();
                 }
                 catch (InvalidOperationException e)
                 {
-                    // TODO: Error Message
-                    Debug.WriteLine(e.Message);
+                    _exceptionPopup = new ExceptionPopup("Import Error", e);
                 }
             }
         }

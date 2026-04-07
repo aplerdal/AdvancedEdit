@@ -6,7 +6,7 @@ namespace AdvancedLib.Serialization.Objects;
 public class ObstacleOam
 {
     [Key(0)]
-    public DistanceCellData[] DistanceCellDataTable;
+    public DistanceCellData[] DistanceCellDataTable = [];
 
     public ObstacleOam(){}
     public ObstacleOam(Stream stream)

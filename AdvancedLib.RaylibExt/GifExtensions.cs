@@ -98,7 +98,7 @@ public static class GifExtensions
         return gif;
     }
 
-    public static void LoadGifToGBA(this GifDocument gif, ref Tileset tileset, ref Palette palette, int[,] layout, bool paletteLocked = false)
+    public static void LoadGifToGba(this GifDocument gif, ref Tileset tileset, ref Palette palette, int[,] layout, bool paletteLocked = false)
     {
         if (gif.Frames.Count == 0)
             throw new InvalidOperationException("GIF has no frames.");
@@ -107,12 +107,9 @@ public static class GifExtensions
         var gifPalette = frame.GetEffectivePalette(gif)
                          ?? throw new InvalidOperationException("GIF frame has no accessible palette.");
 
-        if (gif.Width % 8 != 0 || gif.Height % 8 != 0)
+        if (gif.Width != layout.GetLength(0)*8 || gif.Height != layout.GetLength(1)*8)
             throw new InvalidOperationException(
-                $"GIF dimensions {gif.Width}x{gif.Height} are not multiples of 8 (required for GBA tilesets).");
-
-        int widthInTiles = gif.Width / 8;
-        int heightInTiles = gif.Height / 8;
+                $"GIF dimensions ({gif.Width}x{gif.Height}) does not match the expected tileset size ({layout.GetLength(0) * 8}x{layout.GetLength(1) * 8}).");
 
         OverwriteFromImageData(ref tileset, frame.Indices, layout);
         if (!paletteLocked)

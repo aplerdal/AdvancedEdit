@@ -3,7 +3,6 @@ using AdvEditRework.DearImGui;
 using AdvEditRework.Resources;
 using AdvEditRework.Scenes;
 using AdvEditRework.Shaders;
-using Hexa.NET.ImGui;
 using Raylib_cs;
 
 namespace AdvEditRework;

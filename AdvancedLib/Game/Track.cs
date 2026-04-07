@@ -219,7 +219,7 @@ public class Track
         return new Palette(reader, 48);
     }
 
-    private static Tileset? LoadObstacleGraphics(Stream stream, TrackHeader header, int headerIndex)
+    private static Tileset LoadObstacleGraphics(Stream stream, TrackHeader header, int headerIndex)
     {
         if (header.ObstacleGfxOffset == 0 && header.SharedObstacleGfx == 0)
         {

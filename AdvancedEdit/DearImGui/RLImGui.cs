@@ -48,15 +48,6 @@ public static unsafe class RlImGui
         Raylib.IsKeyDown(KeyboardKey.RightSuper) || Raylib.IsKeyDown(KeyboardKey.LeftSuper);
 
     // -------------------------------------------------------------------------
-    // Display scale
-    // -------------------------------------------------------------------------
-
-    private static Vector2 GetDisplayScale()
-    {
-        return new Vector2(1); // Hardcode this. ImGui doesn't work well with nonstandard DPIs
-    }
-
-    // -------------------------------------------------------------------------
     // Clipboard callbacks
     // -------------------------------------------------------------------------
 
@@ -346,8 +337,6 @@ public static unsafe class RlImGui
     private static void NewFrame(float deltaTime)
     {
         var io = ImGui.GetIO();
-
-        var resolutionScale = GetDisplayScale();
 
         io.DisplaySize.X = Raylib.GetScreenWidth();
         io.DisplaySize.Y = Raylib.GetScreenHeight();

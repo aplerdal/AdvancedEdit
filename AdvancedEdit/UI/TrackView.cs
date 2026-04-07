@@ -19,7 +19,7 @@ public enum EditMode
 public class TrackView : IDisposable
 {
     public Texture2D Tileset;
-    private int[] _shaderPalette;
+    private int[] _shaderPalette = [];
     public Camera2D Camera;
     public readonly Track Track;
     private RenderTexture2D _trackTexture;

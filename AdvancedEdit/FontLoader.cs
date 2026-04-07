@@ -64,7 +64,6 @@ public static class FontLoader
 
     public static unsafe void LoadOpenSansImGui()
     {
-        ImFontAtlasPtr fontAtlas;
         var dpiScale = Raylib.GetWindowScaleDPI();
         var scale = (dpiScale.X + dpiScale.Y) / 2;
         var config = ImGui.ImFontConfig();

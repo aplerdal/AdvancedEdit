@@ -24,6 +24,7 @@ public class TrackEditorScene : Scene
     private TrackView? _view;
     private Editor? _editor;
     private Track? _currentTrack;
+    private ExceptionPopup? _exceptionPopup;
 
     public override void Init(ref Project? project)
     {
@@ -45,6 +46,9 @@ public class TrackEditorScene : Scene
     private bool MainMenuBar(ref Project? project)
     {
         var isActive = Raylib.GetMousePosition().Y < (ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2);
+        isActive = isActive && !(_exceptionPopup?.Open ?? false);
+        _exceptionPopup?.Update();
+        
         if (project is null) return false;
 
         if (ImGui.BeginMainMenuBar())
@@ -54,14 +58,21 @@ public class TrackEditorScene : Scene
                 isActive = true;
                 if (ImGui.MenuItem("Save Project"))
                 {
-                    var name = new string(project.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray());
-                    if (string.IsNullOrWhiteSpace(name)) name = "mksc";
-                    var status = Nfd.SaveDialog(out var path, ProjectFilter, name + ".amkp");
-                    if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
+                    try
                     {
-                        if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
-                        project.Save(path);
-                        Settings.Shared.UpdateProjectList(path);
+                        var name = new string(project.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray());
+                        if (string.IsNullOrWhiteSpace(name)) name = "mksc";
+                        var status = Nfd.SaveDialog(out var path, ProjectFilter, name + ".amkp");
+                        if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
+                        {
+                            if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
+                            project.Save(path);
+                            Settings.Shared.UpdateProjectList(path);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _exceptionPopup = new ExceptionPopup("Error saving project", e);
                     }
                 }
 
@@ -72,8 +83,15 @@ public class TrackEditorScene : Scene
                         var status = Nfd.OpenDialog(out var path, ProjectFilter);
                         if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
                         {
-                            Settings.Shared.UpdateProjectList(path);
-                            project = Project.Unpack(path);
+                            try
+                            {
+                                project = Project.Unpack(path);
+                                Settings.Shared.UpdateProjectList(path);
+                            }
+                            catch (Exception e)
+                            {
+                                _exceptionPopup = new ExceptionPopup("Error opening project", e);
+                            }
                         }
                     }
 
@@ -91,8 +109,15 @@ public class TrackEditorScene : Scene
 
                         if (ImGui.MenuItem(display))
                         {
-                            Settings.Shared.UpdateProjectList(path);
-                            project = Project.Unpack(path);
+                            try
+                            {
+                                project = Project.Unpack(path);
+                                Settings.Shared.UpdateProjectList(path);
+                            }
+                            catch (Exception e)
+                            {
+                                _exceptionPopup = new ExceptionPopup("Error opening project", e);
+                            }
                         }
                     }
 
@@ -118,10 +143,17 @@ public class TrackEditorScene : Scene
                         var status = Nfd.OpenDialog(out var path, MAKEFilter);
                         if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
                         {
-                            var track = MakeTrack.ModifyFromStream(File.OpenRead(path), project!);
-                            _projectTrack!.SaveTrackDataAsync(track).Wait();
-                            _currentTrack = _projectTrack.LoadTrackData();
-                            SetView(new TrackView(_currentTrack));
+                            try {
+                                using var file = File.OpenRead(path);
+                                var track = MakeTrack.ModifyFromStream(file, project!);
+                                _projectTrack!.SaveTrackDataAsync(track).Wait();
+                                _currentTrack = _projectTrack.LoadTrackData();
+                                SetView(new TrackView(_currentTrack));
+                            }
+                            catch (Exception e)
+                            {
+                                _exceptionPopup = new ExceptionPopup("Error opening track", e);
+                            }
                         }
                     }
 
@@ -132,9 +164,15 @@ public class TrackEditorScene : Scene
                         var status = Nfd.OpenDialog(out var path, TrackFilter);
                         if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
                         {
-                            TarFile.ExtractToDirectory(path, _projectTrack.Folder, true);
-                            _currentTrack = _projectTrack.LoadTrackData();
-                            SetView(new TrackView(_currentTrack));
+                            try {
+                                TarFile.ExtractToDirectory(path, _projectTrack.Folder, true);
+                                _currentTrack = _projectTrack.LoadTrackData();
+                                SetView(new TrackView(_currentTrack));
+                            }
+                            catch (Exception e)
+                            {
+                                _exceptionPopup = new ExceptionPopup("Error opening track", e);
+                            }
                         }
                     }
 
@@ -161,22 +199,28 @@ public class TrackEditorScene : Scene
 
                     if (ImGui.MenuItem("Rom (.gba)"))
                     {
-                        Debug.Assert(project is not null);
-                        // Save active track
-                        if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
-
-                        var openStatus = Nfd.OpenDialog(out var romPath, CreateProject.RomFilter);
-                        if (openStatus == NfdStatus.Ok && !string.IsNullOrEmpty(romPath))
+                        try
                         {
-                            var name = new string(project.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray());
-                            if (string.IsNullOrWhiteSpace(name)) name = "mksc_hack";
-                            var status = Nfd.SaveDialog(out var savePath, CreateProject.RomFilter, name + ".gba");
-                            if (status == NfdStatus.Ok && !string.IsNullOrEmpty(savePath))
+                            Debug.Assert(project is not null);
+                            if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
+
+                            var openStatus = Nfd.OpenDialog(out var romPath, CreateProject.RomFilter);
+                            if (openStatus == NfdStatus.Ok && !string.IsNullOrEmpty(romPath))
                             {
-                                File.Copy(romPath, savePath, true);
-                                using var fileStream = File.Open(savePath, FileMode.Open);
-                                project.ToRom(fileStream);
+                                var name = new string(project.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray());
+                                if (string.IsNullOrWhiteSpace(name)) name = "mksc_hack";
+                                var status = Nfd.SaveDialog(out var savePath, CreateProject.RomFilter, name + ".gba");
+                                if (status == NfdStatus.Ok && !string.IsNullOrEmpty(savePath))
+                                {
+                                    File.Copy(romPath, savePath, true);
+                                    using var fileStream = File.Open(savePath, FileMode.Open);
+                                    project.ToRom(fileStream);
+                                }
                             }
+                        }
+                        catch (Exception e)
+                        {
+                            _exceptionPopup = new ExceptionPopup("Error exporting ROM", e);
                         }
                     }
 
@@ -289,12 +333,19 @@ public class TrackEditorScene : Scene
                             if (string.IsNullOrEmpty(track.Name)) continue;
                             if (ImGui.MenuItem(track.Name))
                             {
-                                if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
-                                _projectTrack = track;
-                                track.ResolveFolder(Path.Combine(project.Folder, cup.Name));
-                                _currentTrack = track.LoadTrackData();
-                                _mode = EditMode.Map;
-                                SetView(new TrackView(_currentTrack));
+                                try
+                                {
+                                    if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
+                                    _projectTrack = track;
+                                    track.ResolveFolder(Path.Combine(project.Folder, cup.Name));
+                                    _currentTrack = track.LoadTrackData();
+                                    _mode = EditMode.Map;
+                                    SetView(new TrackView(_currentTrack));
+                                }
+                                catch (Exception e)
+                                {
+                                    _exceptionPopup = new ExceptionPopup("Error loading track", e);
+                                }
                             }
                         }
 
@@ -441,19 +492,29 @@ public class TrackEditorScene : Scene
                     if (string.IsNullOrEmpty(cup.Name)) continue;
                     if (ImGui.CollapsingHeader(cup.Name))
                     {
+                        ImGui.PushID(cup.Name);
                         foreach (var track in cup.Tracks)
                         {
                             if (string.IsNullOrEmpty(track.Name)) continue;
                             if (ImGui.Selectable(track.Name))
                             {
-                                if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
-                                _projectTrack = track;
-                                track.ResolveFolder(Path.Combine(project.Folder, cup.Name));
-                                _currentTrack = track.LoadTrackData();
-                                _mode = EditMode.Map;
-                                SetView(new TrackView(_currentTrack));
+                                try
+                                {
+                                    if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
+                                    _projectTrack = track;
+                                    track.ResolveFolder(Path.Combine(project.Folder, cup.Name));
+                                    _currentTrack = track.LoadTrackData();
+                                    _mode = EditMode.Map;
+                                    SetView(new TrackView(_currentTrack));
+                                }
+                                catch (Exception e)
+                                {
+                                    _exceptionPopup = new ExceptionPopup("Error loading track", e);
+                                }
                             }
                         }
+
+                        ImGui.PopID();
                     }
                 }
             }
@@ -469,6 +530,11 @@ public class TrackEditorScene : Scene
         }
 
         ImHelper.EndEmptyWindow();
+    }
+
+    private void ShowErrorMessage()
+    {
+        
     }
 
     public override void Update(ref Project? project)

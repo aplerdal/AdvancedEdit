@@ -1,9 +1,7 @@
 using System.Diagnostics;
 using AdvancedLib.Graphics;
 using AdvancedLib.RaylibExt;
-using AdvancedLib.Serialization.OAM;
 using AdvancedLib.Serialization.Objects;
-using AdvancedLib.Serialization.Tracks;
 using AdvEditRework.DearImGui;
 using AdvEditRework.UI.Editors.Gfx;
 using GifLib;
@@ -18,6 +16,8 @@ public class ObjectGfxEditor : Editor
     private TilesetEditor _editor;
     private Palette _basePalette;
     private byte _palette;
+
+    private ExceptionPopup? _exceptionPopup;
 
     public ObjectGfxEditor(DistanceCellData obstacle, Tileset tileset, Palette palette)
     {
@@ -73,11 +73,13 @@ public class ObjectGfxEditor : Editor
 
     public override void Update(bool hasFocus)
     {
+        hasFocus = hasFocus && (!(_exceptionPopup?.Open ?? false));
+        _exceptionPopup?.Update();
         var quarterScreen = Raylib.GetScreenWidth() / 4f;
         var menuBarHeight = ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2;
         var height = Raylib.GetScreenHeight() - menuBarHeight;
         var area = new Rectangle(0, menuBarHeight, 2 * quarterScreen, height);
-        _editor.Update(area, true);
+        _editor.Update(area, hasFocus);
         var paletteArea = new Rectangle(2 * quarterScreen + 4, menuBarHeight, quarterScreen - 8, height / 2);
         _editor.UpdatePaletteView(paletteArea);
         var optionsArea = new Rectangle(2 * quarterScreen + 4, menuBarHeight + height / 2, quarterScreen - 8, height / 2);
@@ -102,14 +104,13 @@ public class ObjectGfxEditor : Editor
                 var gif = GifDocument.Load(path);
                 try
                 {
-                    gif.LoadGifToGBA(ref _editor.Tileset, ref _editor.Palette, _editor.Layout);
+                    gif.LoadGifToGba(ref _editor.Tileset, ref _editor.Palette, _editor.Layout);
                     UpdatePalette();
                     _editor.ReloadTileset();
                 }
                 catch (InvalidOperationException e)
                 {
-                    // TODO: Error Message
-                    Debug.WriteLine(e.Message);
+                    _exceptionPopup = new ExceptionPopup("Import Error", e);
                 }
             }
         }

@@ -6,9 +6,6 @@ using AdvEditRework.Shaders;
 using AdvEditRework.UI.Tools;
 using AdvEditRework.UI.Undo;
 using AuroraLib.Core;
-using GifLib;
-using Hexa.NET.ImGui;
-using NativeFileDialogs.Net;
 using Raylib_cs;
 
 namespace AdvEditRework.UI.Editors.Gfx;

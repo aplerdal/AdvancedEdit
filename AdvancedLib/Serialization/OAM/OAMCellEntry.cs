@@ -22,7 +22,7 @@ public class OAMCellEntry : ISerializable, IEquatable<OAMCellEntry>
     }
 
     [IgnoreMember]
-    public bool ColorMode8bpp
+    public bool ColorMode8Bpp
     {
         get => ((Attr0 >> 13) & 0x1) != 0;
         set => Attr0 = (ushort)((Attr0 & ~0x2000) | ((value ? 1 : 0) << 13));
@@ -138,7 +138,7 @@ public class OAMCellEntry : ISerializable, IEquatable<OAMCellEntry>
     {
         int w = TileWidths[Shape, Size];
         int h = TileHeights[Shape, Size];
-        int step = ColorMode8bpp ? 2 : 1;
+        int step = ColorMode8Bpp ? 2 : 1;
 
         // Build the unflipped VRAM-order grid first.
         var raw = new ushort[h, w];

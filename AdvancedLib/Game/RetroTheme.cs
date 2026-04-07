@@ -4,9 +4,9 @@ public enum RetroTheme
 {
     GhostValley,
     MarioCircuit,
-    VanillaLake,
     DonutPlains,
     ChocoIsland,
+    VanillaLake,
     KoopaBeach,
     BowserCastle,
     RainbowRoad,
