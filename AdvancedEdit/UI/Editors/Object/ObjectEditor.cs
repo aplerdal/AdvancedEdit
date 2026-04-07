@@ -218,6 +218,7 @@ public class ObjectEditor : Editor
             foreach (var placement in _track.Objects.ObstaclePlacements.Where(placement => placement.ID == _selectedIndex).ToList())
                 _track.Objects.ObstaclePlacements.Remove(placement);
             _track.Objects.ObstacleTable.Obstacles.RemoveAt(_selectedIndex);
+            _selectedIndex = -1;
         }
 
         ImGui.SameLine();
@@ -310,6 +311,7 @@ public class ObjectEditor : Editor
             Debug.Assert(_selectedPlacement is not null);
             if (!_track.Objects.ObstaclePlacements.Remove(_selectedPlacement))
                 _track.Objects.ItemBoxes.Remove(_selectedPlacement);
+            _selectedPlacement = null;
         }
 
         ImGui.EndDisabled();
