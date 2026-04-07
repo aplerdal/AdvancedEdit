@@ -6,12 +6,9 @@ namespace AdvancedLib.Serialization.OAM;
 [MessagePackObject]
 public class OAMCellEntry : ISerializable, IEquatable<OAMCellEntry>
 {
-    [Key(0)]
-    public ushort Attr0 { get; set; }
-    [Key(1)]
-    public ushort Attr1 { get; set; }
-    [Key(2)]
-    public ushort Attr2 { get; set; }
+    [Key(0)] public ushort Attr0 { get; set; }
+    [Key(1)] public ushort Attr1 { get; set; }
+    [Key(2)] public ushort Attr2 { get; set; }
 
 
     [IgnoreMember]

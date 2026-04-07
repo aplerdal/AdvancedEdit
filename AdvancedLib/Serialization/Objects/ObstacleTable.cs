@@ -8,11 +8,9 @@ public class ObstacleTable
 {
     private const uint CaseTableAddress = 0x53de8;
 
-    [Key(0)]
-    public List<Obstacle> Obstacles { get; set; } = new();
+    [Key(0)] public List<Obstacle> Obstacles { get; set; } = new();
 
-    [IgnoreMember]
-    public uint Size => (uint)(Obstacles.Count * 4 + 8);
+    [IgnoreMember] public uint Size => (uint)(Obstacles.Count * 4 + 8);
 
     public Obstacle this[int i]
     {

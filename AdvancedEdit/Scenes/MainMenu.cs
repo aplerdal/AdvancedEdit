@@ -84,7 +84,7 @@ public class MainMenu : Scene
         Raylib.ClearBackground(Color.White);
 
         _exceptionPopup?.Update();
-        
+
         ImHelper.BeginEmptyWindow("MainMenuWindow", new Rectangle(Vector2.Zero, Raylib.GetScreenWidth(), Raylib.GetScreenHeight()));
         ImGui.NewLine();
         DrawQuickOptions(ref project);
@@ -116,7 +116,7 @@ public class MainMenu : Scene
                         }
                         catch (Exception e)
                         {
-                            _exceptionPopup = new ExceptionPopup("Error loading project",e);
+                            _exceptionPopup = new ExceptionPopup("Error loading project", e);
                         }
                     }
                 }

@@ -6,10 +6,8 @@ namespace AdvancedLib.Serialization.AI;
 public class TrackAi : ISerializable
 {
     private const int DefaultSets = 3;
-    [Key(0)]
-    public List<Checkpoint> Checkpoints { get; set; } = new();
-    [Key(1)]
-    public List<List<AiTarget>> TargetSets { get; set; } = new();
+    [Key(0)] public List<Checkpoint> Checkpoints { get; set; } = new();
+    [Key(1)] public List<List<AiTarget>> TargetSets { get; set; } = new();
 
     public void Serialize(Stream stream)
     {

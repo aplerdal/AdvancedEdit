@@ -30,7 +30,7 @@ public static class GifExtensions
         for (int tileX = 0; tileX < width; tileX++)
         {
             var index = layout[tileX, tileY];
-            var tile = (index==-1)? Tile8Bpp.Empty : tileset[index];
+            var tile = (index == -1) ? Tile8Bpp.Empty : tileset[index];
             var tilePos = new Vector2(tileX, tileY) * Tile.Size;
             for (var y = 0; y < Tile.Size; y++)
             for (var x = 0; x < Tile.Size; x++)
@@ -38,6 +38,7 @@ public static class GifExtensions
                 data[(int)tilePos.X + x + (width * Tile.Size) * ((int)tilePos.Y + y)] = tile[x, y];
             }
         }
+
         return data;
     }
 
@@ -59,7 +60,7 @@ public static class GifExtensions
             tileset[tile][px, py] = data[srcY * w + srcX];
         }
     }
-    
+
     private static GifPalette ToGifPalette(this Palette palette)
     {
         var entries = new GifColor[256];
@@ -81,6 +82,7 @@ public static class GifExtensions
             gba[i] = new BgrColor(col.R, col.G, col.B);
         }
     }
+
     public static GifDocument ToGif(this Tileset tileset, Palette palette, int[,] layout)
     {
         var width = layout.GetLength(0);
@@ -107,7 +109,7 @@ public static class GifExtensions
         var gifPalette = frame.GetEffectivePalette(gif)
                          ?? throw new InvalidOperationException("GIF frame has no accessible palette.");
 
-        if (gif.Width != layout.GetLength(0)*8 || gif.Height != layout.GetLength(1)*8)
+        if (gif.Width != layout.GetLength(0) * 8 || gif.Height != layout.GetLength(1) * 8)
             throw new InvalidOperationException(
                 $"GIF dimensions ({gif.Width}x{gif.Height}) does not match the expected tileset size ({layout.GetLength(0) * 8}x{layout.GetLength(1) * 8}).");
 

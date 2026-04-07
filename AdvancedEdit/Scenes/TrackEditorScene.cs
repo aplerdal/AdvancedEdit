@@ -48,7 +48,7 @@ public class TrackEditorScene : Scene
         var isActive = Raylib.GetMousePosition().Y < (ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2);
         isActive = isActive && !(_exceptionPopup?.Open ?? false);
         _exceptionPopup?.Update();
-        
+
         if (project is null) return false;
 
         if (ImGui.BeginMainMenuBar())
@@ -143,7 +143,8 @@ public class TrackEditorScene : Scene
                         var status = Nfd.OpenDialog(out var path, MAKEFilter);
                         if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
                         {
-                            try {
+                            try
+                            {
                                 using var file = File.OpenRead(path);
                                 var track = MakeTrack.ModifyFromStream(file, project!);
                                 _projectTrack!.SaveTrackDataAsync(track).Wait();
@@ -164,7 +165,8 @@ public class TrackEditorScene : Scene
                         var status = Nfd.OpenDialog(out var path, TrackFilter);
                         if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
                         {
-                            try {
+                            try
+                            {
                                 TarFile.ExtractToDirectory(path, _projectTrack.Folder, true);
                                 _currentTrack = _projectTrack.LoadTrackData();
                                 SetView(new TrackView(_currentTrack));
@@ -534,13 +536,12 @@ public class TrackEditorScene : Scene
 
     private void ShowErrorMessage()
     {
-        
     }
 
     public override void Update(ref Project? project)
     {
         var hasFocus = MainMenuBar(ref project);
-        if (_editor is null )
+        if (_editor is null)
         {
             if (project is not null)
                 ProjectMenu(project);

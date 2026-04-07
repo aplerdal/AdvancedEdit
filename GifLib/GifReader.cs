@@ -27,14 +27,14 @@ public static class GifReader
         ReadHeader(r);
 
         // Logical Screen Descriptor
-        int screenWidth  = r.ReadUInt16();
+        int screenWidth = r.ReadUInt16();
         int screenHeight = r.ReadUInt16();
-        byte packed      = r.ReadByte();
+        byte packed = r.ReadByte();
         r.ReadByte(); // background color index (ignored — meaningless without rendering)
         r.ReadByte(); // pixel aspect ratio (ignored)
 
         bool hasGlobalPalette = (packed & 0x80) != 0;
-        int  globalPaletteSize = hasGlobalPalette ? 2 << (packed & 0x07) : 0;
+        int globalPaletteSize = hasGlobalPalette ? 2 << (packed & 0x07) : 0;
 
         var doc = new GifDocument(screenWidth, screenHeight);
 
@@ -49,7 +49,7 @@ public static class GifReader
 
     private static void ReadHeader(BinaryReader r)
     {
-        var sig     = new string(r.ReadChars(3));
+        var sig = new string(r.ReadChars(3));
         var version = new string(r.ReadChars(3));
         if (sig != "GIF")
             throw new InvalidDataException($"Not a GIF file (got signature '{sig}').");
@@ -64,8 +64,8 @@ public static class GifReader
     private static void ParseBlocks(BinaryReader r, GifDocument doc)
     {
         // State carried from Graphic Control Extension to the next Image Descriptor
-        byte?  pendingTransparentIndex = null;
-        int    pendingDelayMs          = 0;
+        byte? pendingTransparentIndex = null;
+        int pendingDelayMs = 0;
 
         while (true)
         {
@@ -93,6 +93,7 @@ public static class GifReader
                             SkipSubBlocks(r); // unknown extension — skip safely
                             break;
                     }
+
                     break;
 
                 case 0x3B: // Trailer — end of file
@@ -114,15 +115,15 @@ public static class GifReader
         byte? transparentIndex,
         int delayMs)
     {
-        int left   = r.ReadUInt16();
-        int top    = r.ReadUInt16();
-        int width  = r.ReadUInt16();
+        int left = r.ReadUInt16();
+        int top = r.ReadUInt16();
+        int width = r.ReadUInt16();
         int height = r.ReadUInt16();
         byte packed = r.ReadByte();
 
         bool hasLocalPalette = (packed & 0x80) != 0;
-        bool isInterlaced    = (packed & 0x40) != 0;
-        int  localPaletteSize = hasLocalPalette ? 2 << (packed & 0x07) : 0;
+        bool isInterlaced = (packed & 0x40) != 0;
+        int localPaletteSize = hasLocalPalette ? 2 << (packed & 0x07) : 0;
 
         GifPalette? localPalette = null;
         if (hasLocalPalette)
@@ -140,10 +141,10 @@ public static class GifReader
 
         var frame = new GifFrame(width, height, indices)
         {
-            Left             = left,
-            Top              = top,
-            DelayMs          = delayMs,
-            LocalPalette     = localPalette,
+            Left = left,
+            Top = top,
+            DelayMs = delayMs,
+            LocalPalette = localPalette,
             TransparentIndex = transparentIndex,
         };
 
@@ -158,7 +159,7 @@ public static class GifReader
     {
         r.ReadByte(); // block size (always 4)
         byte packed = r.ReadByte();
-        int  delayCentiseconds = r.ReadUInt16();
+        int delayCentiseconds = r.ReadUInt16();
         byte transparentColorIndex = r.ReadByte();
         r.ReadByte(); // block terminator
 
@@ -179,7 +180,7 @@ public static class GifReader
             return;
         }
 
-        string appId   = new string(r.ReadChars(8));
+        string appId = new string(r.ReadChars(8));
         string authCode = new string(r.ReadChars(3));
 
         if (appId == "NETSCAPE" && authCode == "2.0")
@@ -194,6 +195,7 @@ public static class GifReader
                 // consume remainder of sub-block if any
                 for (int i = 3; i < subBlockSize; i++) r.ReadByte();
             }
+
             r.ReadByte(); // block terminator
         }
         else
@@ -223,8 +225,8 @@ public static class GifReader
     private static byte[] DeinterlaceIndices(byte[] interlaced, int width, int height)
     {
         var output = new byte[width * height];
-        int[] passStartRows  = { 0, 4, 2, 1 };
-        int[] passRowSteps   = { 8, 8, 4, 2 };
+        int[] passStartRows = { 0, 4, 2, 1 };
+        int[] passRowSteps = { 8, 8, 4, 2 };
 
         int srcRow = 0;
         for (int pass = 0; pass < 4; pass++)
@@ -235,6 +237,7 @@ public static class GifReader
                 srcRow++;
             }
         }
+
         return output;
     }
 }

@@ -6,11 +6,9 @@ namespace AdvancedLib.Serialization.Tracks;
 [MessagePackObject]
 public class TargetTime : ISerializable, IEquatable<TargetTime>
 {
-    [Key(0)]
-    public ushort Character { get; set; }
+    [Key(0)] public ushort Character { get; set; }
 
-    [Key(1)]
-    public ushort Hundredths { get; set; }
+    [Key(1)] public ushort Hundredths { get; set; }
 
     public static TargetTime[] Defaults => [new(0, 0), new(0, 0), new(0, 0), new(0, 0), new(0, 0), new(0, 0), new(0, 0)];
 

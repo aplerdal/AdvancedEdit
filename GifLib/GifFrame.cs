@@ -75,7 +75,7 @@ public sealed class GifFrame
     {
         if (width < 1 || height < 1)
             throw new ArgumentException("Frame dimensions must be at least 1x1.");
-        Width  = width;
+        Width = width;
         Height = height;
         Indices = new byte[width * height];
     }
@@ -86,9 +86,9 @@ public sealed class GifFrame
     public GifFrame(int width, int height, byte[] indices)
     {
         if (indices.Length != width * height)
-            throw new ArgumentException($"Indices length {indices.Length} does not match {width}x{height}={width*height}.");
-        Width   = width;
-        Height  = height;
+            throw new ArgumentException($"Indices length {indices.Length} does not match {width}x{height}={width * height}.");
+        Width = width;
+        Height = height;
         Indices = indices;
     }
 }

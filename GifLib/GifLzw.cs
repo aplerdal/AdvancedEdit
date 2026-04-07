@@ -32,15 +32,16 @@ internal static class GifLzw
             var block = reader.ReadBytes(blockSize);
             result.AddRange(block);
         }
+
         return result.ToArray();
     }
 
     private static byte[] DecompressBytes(byte[] data, int minimumCodeSize)
     {
         int clearCode = 1 << minimumCodeSize;
-        int eoiCode   = clearCode + 1;
-        int codeSize  = minimumCodeSize + 1;
-        int nextCode  = eoiCode + 1;
+        int eoiCode = clearCode + 1;
+        int codeSize = minimumCodeSize + 1;
+        int nextCode = eoiCode + 1;
 
         // Code table: each entry is a sequence of indices
         var table = new List<byte[]>(4096);
@@ -59,8 +60,8 @@ internal static class GifLzw
             if (code == clearCode)
             {
                 InitTable(table, clearCode);
-                codeSize  = minimumCodeSize + 1;
-                nextCode  = eoiCode + 1;
+                codeSize = minimumCodeSize + 1;
+                nextCode = eoiCode + 1;
                 prevEntry = null;
                 continue;
             }
@@ -123,11 +124,11 @@ internal static class GifLzw
     public static void Compress(BinaryWriter writer, byte[] indices, int minimumCodeSize)
     {
         int clearCode = 1 << minimumCodeSize;
-        int eoiCode   = clearCode + 1;
+        int eoiCode = clearCode + 1;
 
         writer.Write((byte)minimumCodeSize);
 
-        var bits    = new BitWriter();
+        var bits = new BitWriter();
         var codeMap = new Dictionary<(int prev, byte next), int>(4096);
         int codeSize = minimumCodeSize + 1;
         int nextCode = eoiCode + 1;
@@ -192,6 +193,7 @@ internal static class GifLzw
             writer.Write(data, offset, blockLen);
             offset += blockLen;
         }
+
         writer.Write((byte)0); // block terminator
     }
 
@@ -207,7 +209,10 @@ internal static class GifLzw
         private int _bitBuf;
         private int _bitCount;
 
-        public BitReader(byte[] data) { _data = data; }
+        public BitReader(byte[] data)
+        {
+            _data = data;
+        }
 
         public int ReadBits(int count)
         {
@@ -216,9 +221,10 @@ internal static class GifLzw
                 _bitBuf |= _data[_bytePos++] << _bitCount;
                 _bitCount += 8;
             }
+
             int value = _bitBuf & ((1 << count) - 1);
-            _bitBuf   >>= count;
-            _bitCount  -= count;
+            _bitBuf >>= count;
+            _bitCount -= count;
             return value;
         }
     }
@@ -232,13 +238,13 @@ internal static class GifLzw
 
         public void WriteBits(int value, int count)
         {
-            _bitBuf   |= value << _bitCount;
+            _bitBuf |= value << _bitCount;
             _bitCount += count;
             while (_bitCount >= 8)
             {
                 _bytes.Add((byte)(_bitBuf & 0xFF));
-                _bitBuf   >>= 8;
-                _bitCount  -= 8;
+                _bitBuf >>= 8;
+                _bitCount -= 8;
             }
         }
 

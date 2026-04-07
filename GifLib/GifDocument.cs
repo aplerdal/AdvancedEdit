@@ -33,7 +33,7 @@ public sealed class GifDocument
     {
         if (width < 1 || height < 1)
             throw new ArgumentException("Document dimensions must be at least 1x1.");
-        Width  = width;
+        Width = width;
         Height = height;
     }
 

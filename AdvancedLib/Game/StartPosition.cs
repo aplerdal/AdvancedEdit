@@ -23,8 +23,6 @@ public class StartPosition(Vec2I position, StartingPlace startingPlace)
     {
     }
 
-    [Key(0)]
-    public StartingPlace Place { get; set; } = startingPlace;
-    [Key(1)]
-    public Vec2I Position { get; set; } = position;
+    [Key(0)] public StartingPlace Place { get; set; } = startingPlace;
+    [Key(1)] public Vec2I Position { get; set; } = position;
 }

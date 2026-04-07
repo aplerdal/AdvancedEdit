@@ -4,20 +4,20 @@ namespace AdvancedLib.Serialization.Tracks;
 
 public class TrackDefinition : ISerializable, IEquatable<TrackDefinition>
 {
-     public int HeaderIndex { get; set; }
-     public uint BackgroundIndex { get; set; }
-     public uint BackgroundBehavior { get; set; }
-     public uint PaletteBehavior { get; set; }
-     public uint Theme { get; set; }
-     public Pointer TurnSigns { get; set; }
-     public uint SongID { get; set; }
-     public Pointer TargetTimes { get; set; }
-     public Pointer RivalTargets { get; set; }
-     public Pointer CoverGfx { get; set; }
-     public Pointer CoverPalette { get; set; }
-     public Pointer LockedCoverPal { get; set; }
-     public Pointer TrackNameGfx { get; set; }
-     public uint LapsCount { get; set; }
+    public int HeaderIndex { get; set; }
+    public uint BackgroundIndex { get; set; }
+    public uint BackgroundBehavior { get; set; }
+    public uint PaletteBehavior { get; set; }
+    public uint Theme { get; set; }
+    public Pointer TurnSigns { get; set; }
+    public uint SongID { get; set; }
+    public Pointer TargetTimes { get; set; }
+    public Pointer RivalTargets { get; set; }
+    public Pointer CoverGfx { get; set; }
+    public Pointer CoverPalette { get; set; }
+    public Pointer LockedCoverPal { get; set; }
+    public Pointer TrackNameGfx { get; set; }
+    public uint LapsCount { get; set; }
 
     public void Deserialize(Stream stream)
     {

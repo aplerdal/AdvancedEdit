@@ -9,8 +9,7 @@ namespace AdvancedLib.Project;
 [MessagePackObject]
 public class ProjectTrack
 {
-    [Key(0)]
-    public string Name { get; set; }
+    [Key(0)] public string Name { get; set; }
 
     // Folder is derived at runtime, never serialized
     [IgnoreMember] public string Folder { get; private set; }

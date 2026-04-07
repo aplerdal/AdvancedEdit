@@ -75,6 +75,7 @@ public sealed class GifPalette
             byte b = reader.ReadByte();
             entries[i] = new GifColor(r, g, b);
         }
+
         return new GifPalette(entries);
     }
 

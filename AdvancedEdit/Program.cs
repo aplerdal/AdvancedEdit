@@ -37,13 +37,12 @@ internal static class Program
         Raylib.SetTargetFPS(144);
         Raylib.SetExitKey(KeyboardKey.Null);
         PaletteShader.Load();
-        
-        
+
 
         RlImGui.Setup();
 
         Settings.Load();
-        
+
         TextureManager = new TextureManager();
         FontLoader.LoadOpenSansImGui();
 

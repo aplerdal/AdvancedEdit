@@ -34,27 +34,31 @@ public static class MakeTrack
                         if (data.Length != 2) throw new InvalidDataException("Invalid Parameter \"SP_REGION\"");
                         (data[0], data[1]) = (data[1], data[0]); // Reverse endianess
                         theme = BitConverter.ToUInt16(data);
-                    } break;
+                    }
+                        break;
                 }
-            } else {
+            }
+            else
+            {
                 var name = line;
                 switch (name)
                 {
                     case "MAP":
-                        map = ReadDataLines(reader, 16384); 
+                        map = ReadDataLines(reader, 16384);
                         break;
                     case "AREA":
-                        aiData = ReadDataLines(reader, 4064); 
+                        aiData = ReadDataLines(reader, 4064);
                         break;
                 }
             }
         }
+
         if (map is null || aiData is null || !theme.HasValue) throw new InvalidDataException("Missing Parameter(s)");
 
         var baseProjectTrack = new ProjectTrack(Enum.GetNames(typeof(RetroTheme))[theme.Value >> 1]);
         baseProjectTrack.ResolveFolder(Path.Combine(project.Folder, "themeBase"));
         var baseTrack = baseProjectTrack.LoadTrackData();
-        
+
         // Parse data
         baseTrack.Ai.TargetSets.Clear();
         baseTrack.Ai.Checkpoints.Clear();

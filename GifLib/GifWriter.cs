@@ -77,13 +77,13 @@ public static class GifWriter
     {
         w.Write((byte)0x21); // Extension introducer
         w.Write((byte)0xFF); // Application extension label
-        w.Write((byte)11);   // Block size
+        w.Write((byte)11); // Block size
         w.Write("NETSCAPE".ToCharArray());
         w.Write("2.0".ToCharArray());
-        w.Write((byte)3);    // Sub-block size
-        w.Write((byte)1);    // Sub-block ID
+        w.Write((byte)3); // Sub-block size
+        w.Write((byte)1); // Sub-block ID
         w.Write(loopCount);
-        w.Write((byte)0);    // Block terminator
+        w.Write((byte)0); // Block terminator
     }
 
     // -------------------------------------------------------------------------
@@ -113,7 +113,7 @@ public static class GifWriter
     {
         w.Write((byte)0x21); // Extension introducer
         w.Write((byte)0xF9); // Graphic Control label
-        w.Write((byte)4);    // Block size (always 4)
+        w.Write((byte)4); // Block size (always 4)
 
         byte packed = 0;
         if (frame.TransparentIndex.HasValue)

@@ -6,11 +6,9 @@ namespace AdvancedLib.Serialization.Objects;
 [MessagePackObject]
 public class Obstacle(short type, short parameter) : IEquatable<Obstacle>, ICloneable<Obstacle>
 {
-    [Key(0)]
-    public short Type { get; set; } = type;
+    [Key(0)] public short Type { get; set; } = type;
 
-    [Key(1)]
-    public short Parameter { get; set; } = parameter;
+    [Key(1)] public short Parameter { get; set; } = parameter;
     public static Obstacle ItemBox => new(0, -1);
 
     public bool Equals(Obstacle? other)

@@ -6,17 +6,13 @@ namespace AdvancedLib.Serialization.AI;
 [MessagePackObject]
 public class AiTarget : ISerializable, IEquatable<AiTarget>
 {
-    [Key(0)]
-    public ushort X { get; set; }
+    [Key(0)] public ushort X { get; set; }
 
-    [Key(1)]
-    public ushort Y { get; set; }
+    [Key(1)] public ushort Y { get; set; }
 
-    [Key(2)]
-    public byte Speed { get; set; }
+    [Key(2)] public byte Speed { get; set; }
 
-    [Key(3)]
-    public bool Intersection { get; set; }
+    [Key(3)] public bool Intersection { get; set; }
     public static AiTarget Default => new() { X = 0, Y = 0, Speed = 1, Intersection = false };
 
     public void Serialize(Stream stream)

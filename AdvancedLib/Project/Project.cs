@@ -75,6 +75,7 @@ public class Project(string name)
                 headerIdx++;
             }
         }
+
         // Podium
         {
             var projectTrack = new ProjectTrack("Podium");
@@ -85,7 +86,10 @@ public class Project(string name)
             var trackEnd = stream.Position;
             var addr = RomData.Cups.Address + 5 * 16;
             stream.Seek(addr, SeekOrigin.Begin);
-            stream.Write(headerIdx); stream.Write(headerIdx); stream.Write(headerIdx); stream.Write(headerIdx);
+            stream.Write(headerIdx);
+            stream.Write(headerIdx);
+            stream.Write(headerIdx);
+            stream.Write(headerIdx);
             stream.Seek(RomData.PodiumHeaderIdx);
             stream.Write((byte)headerIdx);
             stream.Seek(RomData.TrackOffsets.Address + headerIdx * 4, SeekOrigin.Begin);
@@ -113,6 +117,7 @@ public class Project(string name)
                 await podiumTrack.SaveTrackDataAsync(Track.FromRom(romStream, headerIdx));
                 continue;
             }
+
             var cupTracks = new ProjectTrack[4];
             for (var j = 0; j < 4; j++)
             {
@@ -154,7 +159,7 @@ public class Project(string name)
             project.Config.ObstacleOam = oamData;
             Debug.Assert(project.Config.ObstacleOam != null);
         }
-        
+
         return project;
     }
 }

@@ -5,10 +5,12 @@ namespace AdvancedLib.Serialization.Objects;
 [MessagePackObject]
 public class ObstacleOam
 {
-    [Key(0)]
-    public DistanceCellData[] DistanceCellDataTable = [];
+    [Key(0)] public DistanceCellData[] DistanceCellDataTable = [];
 
-    public ObstacleOam(){}
+    public ObstacleOam()
+    {
+    }
+
     public ObstacleOam(Stream stream)
     {
         DistanceCellDataTable = LoadCellDataTable(stream);
@@ -16,9 +18,8 @@ public class ObstacleOam
 
     public DistanceCellData GetObjectDistanceCells(short type, short param)
         => DistanceCellDataTable[(int)GetObjectCellDataIndex((ushort)type, (ushort)param)];
-    
-    [IgnoreMember]
-    private static readonly Pointer[] PointerTable =
+
+    [IgnoreMember] private static readonly Pointer[] PointerTable =
     [
         new(0x080efe88), // Fallback
         new(0x080f06a8), // Type01_0
@@ -99,6 +100,7 @@ public class ObstacleOam
             stream.Seek(PointerTable[i]);
             table[i] = stream.Read<DistanceCellData>();
         }
+
         return table;
     }
 
@@ -108,7 +110,7 @@ public class ObstacleOam
         0x1 => param switch
         {
             0x1 => DistanceCellDataIndex.Type01_1,
-            _   => DistanceCellDataIndex.Type01_0,
+            _ => DistanceCellDataIndex.Type01_0,
         },
 
         // 0x02 — Unknown
@@ -123,7 +125,7 @@ public class ObstacleOam
             0x0 => DistanceCellDataIndex.Type05_0,
             0x1 => DistanceCellDataIndex.Type05_1,
             0x2 => DistanceCellDataIndex.Type05_2,
-            _   => DistanceCellDataIndex.LargeFallback,
+            _ => DistanceCellDataIndex.LargeFallback,
         },
 
         // 0x06 — Unknown
@@ -131,7 +133,7 @@ public class ObstacleOam
         {
             0x0 => DistanceCellDataIndex.Type06_0,
             0x1 => DistanceCellDataIndex.Type06_1,
-            _   => DistanceCellDataIndex.LargeFallback,
+            _ => DistanceCellDataIndex.LargeFallback,
         },
 
         // 0x07 — Unknown
@@ -154,14 +156,14 @@ public class ObstacleOam
             0x5 => DistanceCellDataIndex.Type0a_5,
             0x6 => DistanceCellDataIndex.Type0a_6,
             0x7 => DistanceCellDataIndex.Type0a_7,
-            _   => DistanceCellDataIndex.LargeFallback,
+            _ => DistanceCellDataIndex.LargeFallback,
         },
 
         // 0x0b — Ghost
         0xb => param switch
         {
             0x0 => DistanceCellDataIndex.Type0b_0,
-            _   => DistanceCellDataIndex.Type0b_1,
+            _ => DistanceCellDataIndex.Type0b_1,
         },
 
         // 0x0c — Tree variants
@@ -179,7 +181,7 @@ public class ObstacleOam
             0x9 => DistanceCellDataIndex.Type0c_9,
             0xa => DistanceCellDataIndex.Type0c_a,
             0xb => DistanceCellDataIndex.Type0c_b,
-            _   => DistanceCellDataIndex.LargeFallback,
+            _ => DistanceCellDataIndex.LargeFallback,
         },
 
         // 0x0e — Unknown
@@ -237,7 +239,7 @@ public class ObstacleOam
         0x8f => param switch
         {
             0 or 1 => DistanceCellDataIndex.Type8f_0,
-            _      => DistanceCellDataIndex.Type8f_X,
+            _ => DistanceCellDataIndex.Type8f_X,
         },
 
         // 0x90 — Unknown (shares OAM with 0x85, 0x8c)
@@ -265,7 +267,7 @@ public class ObstacleOam
         0x98 => param switch
         {
             0x1 => DistanceCellDataIndex.Type98_1,
-            _   => DistanceCellDataIndex.Type98_0,
+            _ => DistanceCellDataIndex.Type98_0,
         },
 
         // 0x99 — Unknown

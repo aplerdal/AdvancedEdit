@@ -8,7 +8,7 @@ public class ExceptionPopup
     private bool _logFileCreated = false;
     private readonly string _windowName;
     private readonly Exception _ex;
-    
+
     const uint IDMagic = 0x6ade348f;
 
     public ExceptionPopup(string windowName, Exception ex)
@@ -33,13 +33,14 @@ public class ExceptionPopup
                 CreateLogFile(_ex);
                 _logFileCreated = true;
             }
+
             ImGui.EndPopup();
         }
 
         ImGui.PopID();
     }
 
-    public static void CreateLogFile(Exception ex , string prefix = "Error")
+    public static void CreateLogFile(Exception ex, string prefix = "Error")
     {
         string logDirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AdvancedEdit", "Logs");
         Directory.CreateDirectory(logDirPath);

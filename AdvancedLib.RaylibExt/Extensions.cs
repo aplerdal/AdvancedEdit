@@ -32,7 +32,7 @@ public static class Extensions
     public static Texture2D TileTexture(this Tileset tileset, int width, int height, int skip = 0)
     {
         Debug.Assert(width * height + skip >= tileset.Length, "width * height >= tileset.Length");
-        var image = Raylib.GenImageColor(width * 8, height * 8, new Color(0,0,0,0));
+        var image = Raylib.GenImageColor(width * 8, height * 8, new Color(0, 0, 0, 0));
         for (var i = 0; i < tileset.Length - skip; i++)
         {
             var tile = tileset[i + skip];

@@ -18,20 +18,15 @@ public class Checkpoint : ISerializable, IEquatable<Checkpoint>
     public static readonly int Precision = 2;
     public static readonly int Size = 12;
 
-    [Key(0)]
-    public CheckpointShape Shape { get; set; }
+    [Key(0)] public CheckpointShape Shape { get; set; }
 
-    [Key(1)]
-    public ushort X { get; set; }
+    [Key(1)] public ushort X { get; set; }
 
-    [Key(2)]
-    public ushort Y { get; set; }
+    [Key(2)] public ushort Y { get; set; }
 
-    [Key(3)]
-    public ushort Width { get; set; }
+    [Key(3)] public ushort Width { get; set; }
 
-    [Key(4)]
-    public ushort Height { get; set; }
+    [Key(4)] public ushort Height { get; set; }
 
     public Checkpoint()
     {

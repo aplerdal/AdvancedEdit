@@ -55,13 +55,14 @@ public class TrackView : IDisposable
             _trackTexture = Raylib.LoadRenderTexture(tilemap.Width * 8, tilemap.Height * 8);
             if (!Raylib.IsRenderTextureValid(_trackTexture)) throw new InvalidOperationException("Failed to create track texture");
         }
-        
+
         Raylib.BeginTextureMode(_trackTexture);
         for (var y = 0; y < tilemap.Height; y++)
         for (var x = 0; x < tilemap.Width; x++)
         {
             Raylib.DrawTextureRec(Tileset, Extensions.GetTileRect(tilemap[x, y], 16), new Vector2(x, y) * 8, Color.White);
         }
+
         Raylib.EndTextureMode();
         _shaderPalette = Track.TilesetPalette.ToIVec3();
     }

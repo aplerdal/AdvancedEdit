@@ -225,7 +225,7 @@ public class Track
         {
             return new Tileset(256, PixelFormat.Bpp4); // Create empty tileset for tracks without graphics
         }
-        
+
         using var obstacleGraphicsStream = new MemoryPoolStream(256 * Tile4Bpp.DataSize, true);
         if (header.SharedObstacleGfx != 0)
         {
@@ -237,8 +237,8 @@ public class Track
                 Compressor.SplitDecompress(stream, obstacleGraphicsStream);
             else
                 Compressor.Decompress(stream, obstacleGraphicsStream);
-        } 
-        else if (header.ObstacleGfxOffset != 0) 
+        }
+        else if (header.ObstacleGfxOffset != 0)
         {
             var obstacleGraphicsAddress = header.Address + header.ObstacleGfxOffset;
             stream.Seek(obstacleGraphicsAddress, SeekOrigin.Begin);
@@ -383,7 +383,7 @@ public class Track
         {
             return new Tileset(tilesetSize, PixelFormat.Bpp4);
         }
-        
+
         stream.Seek(definition.TrackNameGfx);
         Compressor.Decompress(stream, tilesetStream);
 
@@ -515,7 +515,7 @@ public class Track
     private static void WriteDefinition(Stream romStream, Stream trackStream, long trackAddress, TrackDefinition definition, int headerIndex)
     {
         const uint definitionPointerTableAddress = 0x0E7FEC;
-        
+
         romStream.Seek(definitionPointerTableAddress + headerIndex * 4, SeekOrigin.Begin);
         var newDefPtr = new Pointer((uint)(trackAddress + trackStream.Position));
         romStream.Write(newDefPtr);
@@ -534,6 +534,7 @@ public class Track
                 Tilemap[x, y] = 0xC1; // Replacement tile for coin
             }
         }
+
         return coins;
     }
 
@@ -550,6 +551,7 @@ public class Track
         header.TilesetPaletteOffset = (uint)trackStream.Position;
         TilesetPalette.Write(trackStream);
     }
+
     private void WriteTilemap(Stream trackStream, ref TrackHeader header)
     {
         header.Flags |= TrackFlags.SplitTilemap;
@@ -703,7 +705,7 @@ public class Track
         Compressor.Compress(TrackNameGfx.GetData(), trackStream);
         definition.TrackNameGfx = ptr;
     }
-    
+
     private void WriteTargetTimes(long trackAddress, Stream trackStream, ref TrackDefinition definition)
     {
         definition.TargetTimes = new Pointer((uint)(trackAddress + trackStream.Position));

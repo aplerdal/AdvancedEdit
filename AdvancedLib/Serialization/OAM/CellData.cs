@@ -6,10 +6,8 @@ namespace AdvancedLib.Serialization.OAM;
 [MessagePackObject]
 public class CellData : ISerializable, IEquatable<CellData>
 {
-    [Key(0)]
-    public List<OAMCellEntry> Entries { get; set; } = [];
-    [IgnoreMember]
-    public byte SortPriority => Entries.Count > 0 ? Entries[0].Priority : (byte)0;
+    [Key(0)] public List<OAMCellEntry> Entries { get; set; } = [];
+    [IgnoreMember] public byte SortPriority => Entries.Count > 0 ? Entries[0].Priority : (byte)0;
 
     public void Deserialize(Stream stream)
     {
@@ -29,7 +27,7 @@ public class CellData : ISerializable, IEquatable<CellData>
         foreach (var entry in Entries)
             entry.Serialize(stream);
     }
-    
+
     public bool Equals(CellData? other)
         => other != null && Entries.SequenceEqual(other.Entries);
 
