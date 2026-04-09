@@ -46,13 +46,11 @@ public class TrackAi : ISerializable
     {
         var aiMapSize = trackWidth * 64;
         var aiMap = new byte[aiMapSize * aiMapSize];
+        // Might want 0x7F instead, but with that placing objects outside the track crashes
         Array.Fill(aiMap, (byte)0x7F);
         for (var i = 0; i < Checkpoints.Count; i++)
         {
-            var id = i;
-            if (id == 0 || id == Checkpoints.Count - 1)
-                id |= 0x80;
-            Checkpoints[i].WriteZoneMap((byte)id, ref aiMap, aiMapSize);
+            Checkpoints[i].WriteZoneMap((byte)i, ref aiMap, aiMapSize);
         }
 
         return aiMap;

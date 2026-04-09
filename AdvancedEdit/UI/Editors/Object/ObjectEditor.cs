@@ -282,9 +282,18 @@ public class ObjectEditor : Editor
         {
             var viewportCenter = new Vector2(Raylib.GetScreenWidth() * (3 / 4f), Raylib.GetScreenHeight()) * 0.5f;
             var worldPos = Raylib.GetScreenToWorld2D(viewportCenter, _view.Camera);
-            var newPlacement = new ObjectPlacement((byte)_selectedIndex, (byte)(worldPos.X / 8), (byte)(worldPos.Y / 8), 0);
-            _track.Objects.ObstaclePlacements.Add(newPlacement);
-            _selectedPlacement = newPlacement;
+            if (_selectedIndex == 1)
+            {
+                var newPlacement = new ObjectPlacement((byte)_selectedIndex, (byte)(worldPos.X / 8), (byte)(worldPos.Y / 8), 0);
+                _track.Objects.ItemBoxes.Add(newPlacement);
+                _selectedPlacement = newPlacement;
+            }
+            else
+            {
+                var newPlacement = new ObjectPlacement((byte)_selectedIndex, (byte)(worldPos.X / 8), (byte)(worldPos.Y / 8), 0);
+                _track.Objects.ObstaclePlacements.Add(newPlacement);
+                _selectedPlacement = newPlacement;
+            }
         }
 
         ImGui.EndDisabled();

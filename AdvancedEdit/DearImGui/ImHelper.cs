@@ -82,5 +82,8 @@ public static class ImHelper
         style.FrameRounding = 4f;
         var colors = style.Colors;
         colors[(int)ImGuiCol.FrameBg] = new Vector4(0.9f, 0.9f, 0.9f, 1.0f);
+        colors[(int)ImGuiCol.Header] = new Vector4(0.26f, 0.59f, 0.98f, 0.00f);
+        colors[(int)ImGuiCol.HeaderHovered] = new Vector4(0.52f, 0.72f, 0.97f, 0.80f);
+
     }
 }

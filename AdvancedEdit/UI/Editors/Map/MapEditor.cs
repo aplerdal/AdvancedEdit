@@ -112,7 +112,8 @@ public class MapEditor : Editor, IToolEditable
         var panelRect = new Rectangle(windowSize.X - panelWidth, ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2, panelWidth, windowSize.Y);
         Focused = Raylib.CheckCollisionPointRec(mousePos, panelRect);
 
-        Raylib.DrawRectangleRec(panelRect, Color.White);
+        Raylib.DrawRectangleRec(panelRect, Color.RayWhite);
+        Raylib.DrawRectangleLinesEx(panelRect, 2, Color.LightGray);
         var scale = (panelWidth - 6) / 128f;
         UpdateTilePicker(panelRect.Position + new Vector2(3), scale);
         var toolPickerPos = panelRect.Position + new Vector2(3, scale * 128 + 3);

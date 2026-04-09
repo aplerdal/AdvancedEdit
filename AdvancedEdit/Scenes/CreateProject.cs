@@ -10,7 +10,7 @@ namespace AdvEditRework.Scenes;
 public class CreateProject : Scene
 {
     public static readonly Dictionary<string, string> RomFilter = new() { { "MKSC Rom", "gba" }, { "All files", "*" } };
-    private string _path = string.Empty;
+    private string _path = Settings.Shared.BaseRomPath ?? string.Empty;
     private string _name = string.Empty;
 
     private Task<Project>? _loadTask;
@@ -60,6 +60,7 @@ public class CreateProject : Scene
                 _progress = 0f;
                 _progressLabel = "Extracting...";
                 var romPath = _path;
+                Settings.Shared.BaseRomPath = romPath;
                 var projectName = _name;
                 _loadTask = Task.Run(async () =>
                 {

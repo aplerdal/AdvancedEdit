@@ -426,7 +426,7 @@ public class Track
     /// </summary>
     /// <param name="romStream">A <see cref="Stream"/> object over the ROM</param>
     /// <param name="headerIndex">header index of the track</param>
-    public void WriteTrack(Stream romStream, int headerIndex)
+    public void WriteTrack(Stream romStream, int headerIndex, string name)
     {
         var trackAddress = romStream.Position;
         var trackStream = new MemoryStream();
@@ -454,7 +454,7 @@ public class Track
         AlignStream(trackStream);
         WriteObstacleTable(romStream, trackAddress, trackStream, headerIndex, Objects);
         AlignStream(trackStream);
-        WriteObjects(trackStream, ref trackHeader, Objects);
+        WriteObjects(trackStream, ref trackHeader, Objects, name);
         AlignStream(trackStream);
         WriteCoins(trackStream, ref trackHeader, coins);
         AlignStream(trackStream);
@@ -589,13 +589,14 @@ public class Track
         trackObjects.ObstacleTable.OverrideExistingTable(romStream, trackStream, new Pointer((uint)(trackAddress + trackStream.Position)), headerIndex);
     }
 
-    private void WriteObjects(Stream trackStream, ref TrackHeader header, TrackObjects trackObjects)
+    private void WriteObjects(Stream trackStream, ref TrackHeader header, TrackObjects trackObjects, string track)
     {
         var aiMap = Ai.GenerateCheckpointMap(header.TrackWidth);
         header.ObstaclesOffset = (uint)trackStream.Position;
         foreach (var obsPlacement in trackObjects.ObstaclePlacements)
         {
             obsPlacement.Checkpoint = aiMap[obsPlacement.X / 2 + obsPlacement.Y / 2 * header.TrackWidth * 64];
+            // if (obsPlacement.Checkpoint == 0x7f) throw new InvalidOperationException($"In track {track}:\n Object not in checkpoint. All objects must be inside a checkpoint.");
             obsPlacement.Serialize(trackStream);
         }
 
@@ -611,6 +612,7 @@ public class Track
                 Y = (byte)boxPosition.Y,
                 Checkpoint = aiMap[boxPosition.X / 2 + boxPosition.Y / 2 * header.TrackWidth * 64]
             };
+            // if (objPlacement.Checkpoint == 0x7f) throw new InvalidOperationException($"In track {track}:\n Item box not in checkpoint. All item boxes must be inside a checkpoint.");
             objPlacement.Serialize(trackStream);
         }
 
@@ -619,6 +621,8 @@ public class Track
         header.StartPositionOffset = (uint)trackStream.Position;
         foreach (var startPosition in trackObjects.StartPositions)
         {
+            startPosition.Checkpoint = aiMap[startPosition.X / 2 + startPosition.Y / 2 * header.TrackWidth * 64];
+            // if (startPosition.Checkpoint == 0x7f) throw new InvalidOperationException($"In track {track}:\n Starting position not in checkpoint. All starting positions must be inside a checkpoint.");
             startPosition.Serialize(trackStream);
         }
 
@@ -639,6 +643,7 @@ public class Track
             };
             coin.Serialize(trackStream);
         }
+        trackStream.WriteByte(0x00);
     }
 
     private void WriteAi(Stream trackStream, ref TrackHeader header)

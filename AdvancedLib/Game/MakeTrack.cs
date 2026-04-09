@@ -10,7 +10,7 @@ namespace AdvancedLib.Game;
 public static class MakeTrack
 {
     // TODO: Custom object importing. We have track themes, so this should be doable with a little asm hacking.
-    public static Track ModifyFromStream(Stream stream, Project.Project project)
+    public static Track ModifyFromStream(Stream stream, Project.Project project, Track originalTrack)
     {
         using var reader = new StreamReader(stream);
         byte[]? map = null, aiData = null;
@@ -95,6 +95,12 @@ public static class MakeTrack
         baseTrack.Ai.TargetSets.AddRange([aiTargets, aiTargets, aiTargets]); // Clone base set 3 times to match SC's format
         baseTrack.Tilemap = new AffineTilemap(map, 128, 128);
         baseTrack.Config.Size = new Vec2I(1, 1);
+
+        baseTrack.CoverArt = originalTrack.CoverArt;
+        baseTrack.Minimap = originalTrack.Minimap;
+        baseTrack.TrackNameGfx = originalTrack.TrackNameGfx;
+
+        baseTrack.Objects = originalTrack.Objects;
 
         return baseTrack;
     }

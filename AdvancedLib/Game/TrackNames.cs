@@ -34,7 +34,6 @@ public static class TrackNames
         "Retro Lightning Cup",
         "Retro Star Cup",
         "Retro Special Cup",
-        "Retro Battle",
         "Battle"
     ];
 

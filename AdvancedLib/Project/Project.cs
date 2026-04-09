@@ -55,20 +55,50 @@ public class Project(string name)
         Patcher.Apply("Resources/Patches/fixMinimapScale.ips", stream);
 
         var headerIdx = 0;
-        stream.Seek(new Pointer(0x08400000));
+        var trackBaseAddress = (uint)(0x80000000 | ((stream.Length + 3) & ~3));
+        stream.Seek(new Pointer(trackBaseAddress));
         for (var cupIdx = 0; cupIdx < Config.Cups.Count; cupIdx++)
         {
             var cup = Config.Cups[cupIdx];
-            foreach (var projectTrack in cup.Tracks)
+
+            for (var i = 0; i < cup.Tracks.Length; i++)
             {
+                var projectTrack = cup.Tracks[i];
                 var track = projectTrack.LoadTrackData();
                 var trackAddress = stream.Position;
-                track.WriteTrack(stream, headerIdx);
+                track.WriteTrack(stream, headerIdx, projectTrack.Name);
                 var trackEnd = stream.Position;
-                var addr = RomData.Cups.Address + headerIdx * 4;
-                if (cupIdx > 4) addr += 16;
-                stream.Seek(addr, SeekOrigin.Begin);
-                stream.Write(headerIdx);
+                if (cup.Name == "Battle")
+                {
+                    var addr = RomData.BattleCup.Address + i * 4;
+                    stream.Seek(addr, SeekOrigin.Begin);
+                    stream.Write(headerIdx);
+                    addr = RomData.BattleOrder.Address + 4 * i switch
+                    {
+                        0 => 3,
+                        1 => 1,
+                        2 => 0,
+                        3 => 2,
+                        _ => throw new IndexOutOfRangeException("To many tracks in battle cup!")
+                    };
+                    stream.Seek(addr, SeekOrigin.Begin);
+                    stream.Write(headerIdx);
+                }
+                else
+                {
+                    var addr = RomData.Cups.Address + headerIdx * 4;
+                    if (cupIdx > 4) addr += 16;
+                    stream.Seek(addr, SeekOrigin.Begin);
+                    stream.Write(headerIdx);
+                    if (cup.Name == "Retro Mushroom Cup")
+                    {
+                        // We also need to write this to single-pak tracks
+                        var spAddr = RomData.SinglePakCup.Address + i * 4;
+                        stream.Seek(spAddr, SeekOrigin.Begin);
+                        stream.Write(headerIdx);
+                    }
+                }
+                
                 stream.Seek(RomData.TrackOffsets.Address + headerIdx * 4, SeekOrigin.Begin);
                 stream.Write((uint)trackAddress - RomData.TrackOffsets.Address);
                 stream.Seek(trackEnd, SeekOrigin.Begin);
@@ -82,7 +112,7 @@ public class Project(string name)
             projectTrack.ResolveFolder(Folder);
             var track = projectTrack.LoadTrackData();
             var trackAddress = stream.Position;
-            track.WriteTrack(stream, headerIdx);
+            track.WriteTrack(stream, headerIdx, "Podium");
             var trackEnd = stream.Position;
             var addr = RomData.Cups.Address + 5 * 16;
             stream.Seek(addr, SeekOrigin.Begin);
@@ -117,7 +147,6 @@ public class Project(string name)
                 await podiumTrack.SaveTrackDataAsync(Track.FromRom(romStream, headerIdx));
                 continue;
             }
-            if (cupName == "Retro Battle") continue;
             
             var cupTracks = new ProjectTrack[4];
             for (var j = 0; j < 4; j++)

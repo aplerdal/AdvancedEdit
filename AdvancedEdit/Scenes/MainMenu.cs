@@ -184,10 +184,19 @@ public class MainMenu : Scene
     private static void PatchNotes()
     {
         // This is a dumb system, but it will do.
+        ImGui.SeparatorText("1.0.0 Release Candidate 4");
+        ImGui.TextWrapped("- Added setting for default base rom"u8);
+        ImGui.TextWrapped("- Added optional track overlay when editing minimap"u8);
+        ImGui.TextWrapped("- Fixed various issues with .smkc file imports"u8);
+        ImGui.TextWrapped("- Fixed battle tracks crashing upon viewing"u8);
+        ImGui.TextWrapped("- Fixed adding item boxes"u8);
+        ImGui.TextWrapped("- Fixed issue where item boxes in first or last zone could cause a crash"u8);
+        ImGui.TextWrapped("- Moved track imports and exports to \"Track\" menu"u8);
+        ImGui.NewLine();
         ImGui.SeparatorText("1.0.0 Release Candidate 3");
         ImGui.TextWrapped("- Fixed themes for imported SMKC files"u8);
         ImGui.TextWrapped("- Fixed crash when deleting objects"u8);
-        ImGui.TextWrapped("- Added error checking when loading projects"u8);
+        ImGui.TextWrapped("- Added error checking when loading projects and other files"u8);
         ImGui.NewLine();
         ImGui.SeparatorText("1.0.0 Release Candidate 2");
         ImGui.TextWrapped("- Fixed DPI scaling issues"u8);

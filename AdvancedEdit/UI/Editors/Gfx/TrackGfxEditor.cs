@@ -26,14 +26,16 @@ public class TrackGfxEditor : Editor
     public static readonly Dictionary<string, string> ImageFilter = new() { { "GIF Image", "gif" }, { "All files", "*" } };
 
     private readonly Track _track;
-    private TrackGraphic _activeGraphic;
+    private readonly TrackView _view;
     private TilesetEditor _tileEditor;
-    private bool _lockedPalette;
-
-    private ExceptionPopup? _exceptionPopup;
-
     private BgrColor _oldPaletteColor;
+    private ExceptionPopup? _exceptionPopup;
+    private TrackGraphic _activeGraphic;
+    private bool _lockedPalette;
     private bool _modifyingColor;
+
+    private bool _overlayVisible;
+    private RenderTexture2D? _overlay;
 
     private readonly Palette _uiPalette = new(
         [
@@ -53,9 +55,10 @@ public class TrackGfxEditor : Editor
         ]
     );
 
-    public TrackGfxEditor(Track track)
+    public TrackGfxEditor(TrackView view)
     {
-        _track = track;
+        _view = view;
+        _track = view.Track;
         _activeGraphic = TrackGraphic.Tileset;
         _tileEditor = new TilesetEditor(_track.Tileset, _track.TilesetPalette);
     }
@@ -113,6 +116,16 @@ public class TrackGfxEditor : Editor
                             _ => throw new ArgumentOutOfRangeException(nameof(graphic))
                         };
                         _lockedPalette = graphic == TrackGraphic.Minimap || graphic == TrackGraphic.TrackName;
+                        if (_overlay.HasValue)
+                            Raylib.UnloadRenderTexture(_overlay.Value);
+                        _overlay = null;
+                        _overlayVisible = false;
+                        if (_activeGraphic == TrackGraphic.Minimap)
+                        {
+                            // Generate map overlay.
+                            _overlay = Raylib.LoadRenderTexture(512, 512);
+                            _view.DrawInTrack = null;
+                        }
                     }
                 }
 
@@ -189,6 +202,34 @@ public class TrackGfxEditor : Editor
         ImGui.SeparatorText("Options");
         ImGui.Checkbox("Show Grid?", ref _tileEditor.ShowGrid);
 
+        if (!_overlay.HasValue) {
+            ImGui.Checkbox("Show track overlay?", ref _overlayVisible);
+            if (_overlayVisible && _overlay.HasValue)
+            {
+                var overlay = _overlay.Value;
+                var src = new Rectangle(0, 0, overlay.Texture.Width, -overlay.Texture.Height);
+                var quarterScreen = Raylib.GetScreenWidth() / 4f;
+                var windowSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
+                var menuBarHeight = ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2;
+                var position = new Vector2(0, menuBarHeight);
+                var viewportArea = new Rectangle(position, quarterScreen * 2, windowSize.Y - position.Y);
+                var dest = new Rectangle(viewportArea.Position, new Vector2(MathF.Min(viewportArea.Width, viewportArea.Height)));
+
+                var trackSize = _track.Config.Size.AsVector2();
+                
+                _view.Camera.Offset = Vector2.Zero;
+                _view.Camera.Rotation = 0.0f;
+                _view.Camera.Target = Vector2.Zero + _tileEditor.ViewCamera.Target * 32;
+                _view.Camera.Zoom = 0.125f * trackSize.X * _tileEditor.ViewCamera.Zoom * 0.125f;
+
+                Raylib.BeginTextureMode(_overlay.Value);
+                _view.Draw();
+                Raylib.EndTextureMode();
+                
+                Raylib.DrawTexturePro(overlay.Texture, src, dest, Vector2.Zero, 0.0f, Color.White with {A = 128});
+            }
+        }
+        
         if (ImGui.Button("Import"))
         {
             var status = Nfd.OpenDialog(out var path, ImageFilter, "tiles.gif");
@@ -222,5 +263,7 @@ public class TrackGfxEditor : Editor
     public override void Dispose()
     {
         _tileEditor.Dispose();
+        if (_overlay.HasValue)
+            Raylib.UnloadRenderTexture(_overlay.Value);
     }
 }

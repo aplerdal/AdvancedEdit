@@ -5,7 +5,7 @@ namespace AdvancedLib;
 [MessagePackObject]
 public struct Pointer(uint value)
 {
-    [Key(0)] public uint Raw { get; set; } = (value & 0xffffff) | 0x08000000;
+    [Key(0)] public uint Raw { get; set; } = value == 0 ? 0 : ((value & 0xffffff) | 0x08000000);
 
     [IgnoreMember]
     public uint Address

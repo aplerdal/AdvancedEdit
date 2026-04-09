@@ -3,6 +3,7 @@ using AdvancedLib.RaylibExt;
 using AdvancedLib.Serialization.AI;
 using AdvEditRework.DearImGui;
 using AdvEditRework.UI.Undo;
+using AuroraLib.Core;
 using Hexa.NET.ImGui;
 using Raylib_cs;
 
@@ -147,9 +148,9 @@ public class AiEditor : Editor
         var area = ImGui.GetContentRegionAvail();
         var scale = area.X / optionsCount;
         ImGui.Dummy(new Vector2(scale * optionsCount, scale));
-        if (CheckpointOptionsButton(position + new Vector2(0 * 32, 0), scale, AiEditorIcon.NewCheckpoint)) _undoManager.Push(CreateCheckpointUndoable());
+        if (CheckpointOptionsButton(position + new Vector2(0 * scale, 0), scale, AiEditorIcon.NewCheckpoint)) _undoManager.Push(CreateCheckpointUndoable());
 
-        if (CheckpointOptionsButton(position + new Vector2(1 * 32, 0), scale, AiEditorIcon.DeleteCheckpoint) || Raylib.IsKeyPressed(KeyboardKey.Delete))
+        if (CheckpointOptionsButton(position + new Vector2(1 * scale, 0), scale, AiEditorIcon.DeleteCheckpoint) || Raylib.IsKeyPressed(KeyboardKey.Delete))
             if (_selectedCheckpoint is not null)
             {
                 _undoManager.Push(DeleteCheckpointUndoable(_selectedCheckpoint));
@@ -162,11 +163,11 @@ public class AiEditor : Editor
         var mousePos = Raylib.GetMousePosition();
         var windowSize = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
 
-        var panelWidth = 290;
+        var panelWidth = windowSize.X / 4;
         var panelRect = new Rectangle(windowSize.X - panelWidth, ImGui.GetFontSize() + ImGui.GetStyle().FramePadding.Y * 2, panelWidth, windowSize.Y);
 
-        Raylib.DrawRectangleRec(panelRect, ImHelper.Color(ImGuiCol.WindowBg));
-        Raylib.DrawRectangleLinesEx(panelRect, 1, ImHelper.Color(ImGuiCol.Border));
+        Raylib.DrawRectangleRec(panelRect, Color.RayWhite);
+        Raylib.DrawRectangleLinesEx(panelRect, 2, Color.LightGray);
         ImHelper.BeginEmptyWindow("AiEditorOptions", panelRect);
 
         if (ImGui.BeginTabBar("AiModeTabBar"))

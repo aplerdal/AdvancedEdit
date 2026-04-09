@@ -21,7 +21,7 @@ public class TilesetEditor : IDisposable, IToolEditable
     private readonly MapEditorTool[] _tools = [new DrawTool(), new SelectionTool(), new Eyedropper(), new RectangleTool(), new BucketTool(), new StampTool()];
     private MapEditorToolType _activeTool = MapEditorToolType.Draw;
 
-    private Camera2D _viewCamera;
+    public Camera2D ViewCamera;
     private Vector2 _position;
 
     public readonly int[,] Layout;
@@ -40,11 +40,11 @@ public class TilesetEditor : IDisposable, IToolEditable
     {
         get
         {
-            var old = _viewCamera.Zoom;
+            var old = ViewCamera.Zoom;
             var scale = (float)_viewportSize / TargetSize;
-            _viewCamera.Zoom *= scale;
-            var vec = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition() - _position, _viewCamera);
-            _viewCamera.Zoom = old;
+            ViewCamera.Zoom *= scale;
+            var vec = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition() - _position, ViewCamera);
+            ViewCamera.Zoom = old;
             return new Vector2((int)vec.X, (int)vec.Y);
         }
     }
@@ -78,7 +78,7 @@ public class TilesetEditor : IDisposable, IToolEditable
         _tilesetImage = Raylib.LoadImageFromTexture(_texture);
         _paletteIvec = palette.ToIVec3();
         _viewport = Raylib.LoadRenderTexture(TargetSize, TargetSize);
-        _viewCamera = new Camera2D(Vector2.Zero, Vector2.Zero, 0, 4);
+        ViewCamera = new Camera2D(Vector2.Zero, Vector2.Zero, 0, 4);
         UndoManager = new UndoManager();
     }
 
@@ -98,7 +98,7 @@ public class TilesetEditor : IDisposable, IToolEditable
 
         ReloadTileset();
         _viewport = Raylib.LoadRenderTexture(TargetSize, TargetSize);
-        _viewCamera = new Camera2D(Vector2.Zero, Vector2.Zero, 0, 4);
+        ViewCamera = new Camera2D(Vector2.Zero, Vector2.Zero, 0, 4);
         UndoManager = new UndoManager();
     }
 
@@ -111,7 +111,7 @@ public class TilesetEditor : IDisposable, IToolEditable
         Layout = layout;
         ReloadTileset();
         _viewport = Raylib.LoadRenderTexture(TargetSize, TargetSize);
-        _viewCamera = new Camera2D(Vector2.Zero, Vector2.Zero, 0, 4);
+        ViewCamera = new Camera2D(Vector2.Zero, Vector2.Zero, 0, 4);
         UndoManager = new UndoManager();
     }
 
@@ -151,7 +151,7 @@ public class TilesetEditor : IDisposable, IToolEditable
 
     private Vector2 WorldToViewport(Vector2 pos)
     {
-        return Raylib.GetWorldToScreen2D(pos, _viewCamera) * ((float)_viewportSize / TargetSize) + _position;
+        return Raylib.GetWorldToScreen2D(pos, ViewCamera) * ((float)_viewportSize / TargetSize) + _position;
     }
 
     private void UpdateViewport(Vector2 position)
@@ -164,7 +164,7 @@ public class TilesetEditor : IDisposable, IToolEditable
 
         Raylib.BeginTextureMode(_viewport);
         Raylib.ClearBackground(Color.Blank);
-        Raylib.BeginMode2D(_viewCamera);
+        Raylib.BeginMode2D(ViewCamera);
         {
             PaletteShader.SetPalette(_paletteIvec);
             PaletteShader.Begin();
@@ -221,10 +221,10 @@ public class TilesetEditor : IDisposable, IToolEditable
         if (wheel != 0.0f && hovered)
         {
             var zoomFactor = 1.05f;
-            var mouseWorldPosBeforeZoom = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition(), _viewCamera) * (TargetSize / (float)_viewportSize);
-            _viewCamera.Zoom *= wheel > 0 ? zoomFactor : 1.0f / zoomFactor;
-            var mouseWorldPosAfterZoom = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition(), _viewCamera) * (TargetSize / (float)_viewportSize);
-            _viewCamera.Target += mouseWorldPosBeforeZoom - mouseWorldPosAfterZoom;
+            var mouseWorldPosBeforeZoom = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition(), ViewCamera) * (TargetSize / (float)_viewportSize);
+            ViewCamera.Zoom *= wheel > 0 ? zoomFactor : 1.0f / zoomFactor;
+            var mouseWorldPosAfterZoom = Raylib.GetScreenToWorld2D(Raylib.GetMousePosition(), ViewCamera) * (TargetSize / (float)_viewportSize);
+            ViewCamera.Target += mouseWorldPosBeforeZoom - mouseWorldPosAfterZoom;
         }
 
         // Handle pan
@@ -241,17 +241,17 @@ public class TilesetEditor : IDisposable, IToolEditable
         if (_isPanning)
         {
             var currentMousePosition = Raylib.GetMousePosition();
-            var delta = Raylib.GetScreenToWorld2D(_lastMousePosition, _viewCamera) - Raylib.GetScreenToWorld2D(currentMousePosition, _viewCamera);
-            _viewCamera.Target += delta * (TargetSize / (float)_viewportSize);
+            var delta = Raylib.GetScreenToWorld2D(_lastMousePosition, ViewCamera) - Raylib.GetScreenToWorld2D(currentMousePosition, ViewCamera);
+            ViewCamera.Target += delta * (TargetSize / (float)_viewportSize);
             _lastMousePosition = currentMousePosition;
         }
 
         // Limit camera position to size of tileset
         // First, make sure it can all fit with current zoom level
-        _viewCamera.Zoom = _viewCamera.Zoom.Clamp(TargetSize / (float)(Math.Max(TilesetWidth, TilesetHeight) * 8), float.MaxValue);
+        ViewCamera.Zoom = ViewCamera.Zoom.Clamp(TargetSize / (float)(Math.Max(TilesetWidth, TilesetHeight) * 8), float.MaxValue);
         // Clamp view target to texture
-        var viewportSizePx = new Vector2(TargetSize / _viewCamera.Zoom);
-        _viewCamera.Target = Vector2.Clamp(_viewCamera.Target, Vector2.Zero, new Vector2(Math.Max(TilesetWidth, TilesetHeight)) * 8 - viewportSizePx);
+        var viewportSizePx = new Vector2(TargetSize / ViewCamera.Zoom);
+        ViewCamera.Target = Vector2.Clamp(ViewCamera.Target, Vector2.Zero, new Vector2(Math.Max(TilesetWidth, TilesetHeight)) * 8 - viewportSizePx);
     }
 
     private void PaletteView(Rectangle area)

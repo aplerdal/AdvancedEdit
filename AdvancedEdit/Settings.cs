@@ -20,6 +20,7 @@ public class Settings
     [Key(4)] public KeyboardKey BucketBind = KeyboardKey.B;
 
     [Key(5)] public List<string> RecentProjectFiles = new();
+    [Key(6)] public string? BaseRomPath;
 
     private static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AdvancedEdit");
     private static string SettingsFile => Path.Combine(SettingsDirectory, "config.msp");

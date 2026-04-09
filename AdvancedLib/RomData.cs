@@ -17,6 +17,24 @@ public static class RomData
         _ => throw new IndexOutOfRangeException("Pointer not available for this region")
     };
 
+    public static Pointer SinglePakCup => Region switch
+    {
+        Region.USA => new Pointer(0x080e7514),
+        _ => throw new IndexOutOfRangeException("Pointer not available for this region")
+    };
+
+    public static Pointer BattleCup => Region switch
+    {
+        Region.USA => new Pointer(0x080e7524),
+        _ => throw new IndexOutOfRangeException("Pointer not available for this region")
+    };
+
+    public static Pointer BattleOrder => Region switch
+    {
+        Region.USA => new Pointer(0x080d9490),
+        _ => throw new IndexOutOfRangeException("Pointer not available for this region")
+    };
+
     public static Pointer PodiumHeaderIdx => Region switch
     {
         Region.USA => new Pointer(0x08028e0e),

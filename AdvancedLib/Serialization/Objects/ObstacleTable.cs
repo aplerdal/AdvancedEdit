@@ -1,10 +1,11 @@
+using AuroraLib.Core;
 using AuroraLib.Core.IO;
 using MessagePack;
 
 namespace AdvancedLib.Serialization.Objects;
 
 [MessagePackObject]
-public class ObstacleTable
+public class ObstacleTable : ICloneable<ObstacleTable>
 {
     private const uint CaseTableAddress = 0x53de8;
 
@@ -57,17 +58,14 @@ public class ObstacleTable
             reader.Seek(casePtr.Address + 4, SeekOrigin.Begin);
             if (casePtr.Address == 0x53ed4) // Default case, use global table
             {
-                reader.Seek(new Pointer(0x080f1008));
+                return new ObstacleTable { Obstacles = [new Obstacle(0, 0), new Obstacle(-1, 0), new Obstacle(0, 0)] };
             }
-            else
-            {
-                var obstacleTablePtr = new Pointer(reader.ReadUInt32());
-                reader.Seek(obstacleTablePtr);
-            }
+            var obstacleTablePtr = new Pointer(reader.ReadUInt32());
+            reader.Seek(obstacleTablePtr);
         }
         else
         {
-            reader.Seek(new Pointer(0x080f1008));
+            return new ObstacleTable { Obstacles = [new Obstacle(0, 0), new Obstacle(-1, 0), new Obstacle(0, 0)] };
         }
 
         var table = new ObstacleTable();
@@ -88,5 +86,14 @@ public class ObstacleTable
 
         table.Obstacles.Add(new Obstacle(0, 0));
         return table;
+    }
+
+    public ObstacleTable Clone()
+    {
+        List<Obstacle> oldList = Obstacles;
+        List<Obstacle> newList = new List<Obstacle>(oldList.Count);
+
+        oldList.ForEach((item) => { newList.Add(item.Clone()); });
+        return new ObstacleTable { Obstacles = newList };
     }
 }

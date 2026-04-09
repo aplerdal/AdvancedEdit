@@ -134,87 +134,34 @@ public class TrackEditorScene : Scene
                 }
 
                 ImGui.Separator();
-
-                ImGui.BeginDisabled(_currentTrack is null || _projectTrack is null);
-                if (ImGui.BeginMenu("Import"))
-                {
-                    if (ImGui.MenuItem("SMK Track (.smkc)"))
-                    {
-                        var status = Nfd.OpenDialog(out var path, MAKEFilter);
-                        if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
-                        {
-                            try
-                            {
-                                using var file = File.OpenRead(path);
-                                var track = MakeTrack.ModifyFromStream(file, project!);
-                                _projectTrack!.SaveTrackDataAsync(track).Wait();
-                                _currentTrack = _projectTrack.LoadTrackData();
-                                SetView(new TrackView(_currentTrack));
-                            }
-                            catch (Exception e)
-                            {
-                                _exceptionPopup = new ExceptionPopup("Error opening track", e);
-                            }
-                        }
-                    }
-
-                    ImGui.BeginDisabled(_projectTrack is null || _currentTrack is null);
-                    if (ImGui.MenuItem("MKSC Track (.amkt)"))
-                    {
-                        Debug.Assert(_projectTrack is not null && _currentTrack is not null);
-                        var status = Nfd.OpenDialog(out var path, TrackFilter);
-                        if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
-                        {
-                            try
-                            {
-                                TarFile.ExtractToDirectory(path, _projectTrack.Folder, true);
-                                _currentTrack = _projectTrack.LoadTrackData();
-                                SetView(new TrackView(_currentTrack));
-                            }
-                            catch (Exception e)
-                            {
-                                _exceptionPopup = new ExceptionPopup("Error opening track", e);
-                            }
-                        }
-                    }
-
-                    ImGui.EndDisabled();
-                    ImGui.EndMenu();
-                }
+                
 
                 if (ImGui.BeginMenu("Export"))
                 {
-                    ImGui.BeginDisabled(_projectTrack is null || _currentTrack is null);
-                    if (ImGui.MenuItem("MKSC Track (.amkt)"))
-                    {
-                        Debug.Assert(_projectTrack is not null && _currentTrack is not null);
-                        _projectTrack.SaveTrackDataAsync(_currentTrack).Wait();
-                        var trackFolder = _projectTrack.Folder;
-                        var status = Nfd.SaveDialog(out var path, TrackFilter, $"{_projectTrack.Name}.amkt");
-                        if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
-                        {
-                            TarFile.CreateFromDirectory(trackFolder, path, false);
-                        }
-                    }
-
-                    ImGui.EndDisabled();
-
                     if (ImGui.MenuItem("Rom (.gba)"))
                     {
                         try
                         {
                             Debug.Assert(project is not null);
                             if (_currentTrack is not null) _projectTrack?.SaveTrackDataAsync(_currentTrack).Wait();
+                            var baseRom = Settings.Shared.BaseRomPath;
 
-                            var openStatus = Nfd.OpenDialog(out var romPath, CreateProject.RomFilter);
-                            if (openStatus == NfdStatus.Ok && !string.IsNullOrEmpty(romPath))
+                            if (baseRom is null)
+                            {
+                                var openStatus = Nfd.OpenDialog(out var romPath, CreateProject.RomFilter);
+                                if (openStatus == NfdStatus.Ok && !string.IsNullOrEmpty(romPath))
+                                {
+                                    baseRom = romPath;
+                                }
+                            }
+                            if (baseRom is not null)
                             {
                                 var name = new string(project.Name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray());
                                 if (string.IsNullOrWhiteSpace(name)) name = "mksc_hack";
                                 var status = Nfd.SaveDialog(out var savePath, CreateProject.RomFilter, name + ".gba");
                                 if (status == NfdStatus.Ok && !string.IsNullOrEmpty(savePath))
                                 {
-                                    File.Copy(romPath, savePath, true);
+                                    File.Copy(baseRom, savePath, true);
                                     using var fileStream = File.Open(savePath, FileMode.Open);
                                     project.ToRom(fileStream);
                                 }
@@ -225,11 +172,8 @@ public class TrackEditorScene : Scene
                             _exceptionPopup = new ExceptionPopup("Error exporting ROM", e);
                         }
                     }
-
                     ImGui.EndMenu();
                 }
-
-                ImGui.EndDisabled();
 
                 ImGui.Separator();
 
@@ -241,6 +185,7 @@ public class TrackEditorScene : Scene
             isActive |= TrackSelectorMenu(project);
 
             isActive |= ModeSelector(project);
+
 
             ImGui.EndMainMenuBar();
         }
@@ -288,7 +233,7 @@ public class TrackEditorScene : Scene
         if (ImGui.MenuItem("Graphics", "", _mode == EditMode.Graphics))
         {
             Debug.Assert(_view != null);
-            SetEditor(new TrackGfxEditor(_view.Track));
+            SetEditor(new TrackGfxEditor(_view));
             _mode = EditMode.Graphics;
         }
 
@@ -364,6 +309,74 @@ public class TrackEditorScene : Scene
                 openSettings = true;
             }
 
+            ImGui.Separator();
+            
+            if (ImGui.BeginMenu("Import"))
+            {
+                ImGui.BeginDisabled(_projectTrack is null || _currentTrack is null);
+                if (ImGui.MenuItem("SMK Track (.smkc)"))
+                {
+                    var status = Nfd.OpenDialog(out var path, MAKEFilter);
+                    if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
+                    {
+                        try
+                        {
+                            using var file = File.OpenRead(path);
+                            var track = MakeTrack.ModifyFromStream(file, project!, _currentTrack);
+                            _projectTrack!.SaveTrackDataAsync(track).Wait();
+                            _currentTrack = _projectTrack.LoadTrackData();
+                            SetView(new TrackView(_currentTrack));
+                        }
+                        catch (Exception e)
+                        {
+                            _exceptionPopup = new ExceptionPopup("Error opening track", e);
+                        }
+                    }
+                }
+                
+                if (ImGui.MenuItem("MKSC Track (.amkt)"))
+                {
+                    Debug.Assert(_projectTrack is not null && _currentTrack is not null);
+                    var status = Nfd.OpenDialog(out var path, TrackFilter);
+                    if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
+                    {
+                        try
+                        {
+                            TarFile.ExtractToDirectory(path, _projectTrack.Folder, true);
+                            _currentTrack = _projectTrack.LoadTrackData();
+                            SetView(new TrackView(_currentTrack));
+                        }
+                        catch (Exception e)
+                        {
+                            _exceptionPopup = new ExceptionPopup("Error opening track", e);
+                        }
+                    }
+                }
+                ImGui.EndDisabled();
+                ImGui.EndMenu();
+            }
+
+            if (ImGui.BeginMenu("Export"))
+            {
+                ImGui.BeginDisabled(_projectTrack is null || _currentTrack is null);
+                if (ImGui.MenuItem("MKSC Track (.amkt)"))
+                {
+                    Debug.Assert(_projectTrack is not null && _currentTrack is not null);
+                    _projectTrack.SaveTrackDataAsync(_currentTrack).Wait();
+                    var trackFolder = _projectTrack.Folder;
+                    var status = Nfd.SaveDialog(out var path, TrackFilter, $"{_projectTrack.Name}.amkt");
+                    if (status == NfdStatus.Ok && !string.IsNullOrEmpty(path))
+                    {
+                        TarFile.CreateFromDirectory(trackFolder, path, false);
+                    }
+                }
+
+                ImGui.EndDisabled();
+                ImGui.EndMenu();
+            }
+            
+            ImGui.Separator();
+            
             ImGui.EndDisabled();
             if (ImGui.MenuItem("Close"))
             {
