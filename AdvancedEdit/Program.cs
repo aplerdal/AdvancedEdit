@@ -23,7 +23,7 @@ internal static class Program
 
     private static Project? _project;
 
-    private static void Main()
+    private static void Main(string[] args)
     {
 #if !DEBUG
         Raylib.SetTraceLogLevel(TraceLogLevel.Error);
@@ -46,6 +46,21 @@ internal static class Program
         TextureManager = new TextureManager();
         FontLoader.LoadOpenSansImGui();
 
+        if (args.Length > 0)
+        {
+            if (File.Exists(args[0]))
+            {
+                try
+                {
+                    var project = Project.Unpack(args[0]);
+                    _project = project;
+                }
+                catch
+                {
+                    _project = null;
+                }
+            }
+        }
         _scene.Init(ref _project);
         while (!(Raylib.WindowShouldClose() || ShouldClose))
         {
@@ -74,6 +89,7 @@ internal static class Program
 
     private static void Close()
     {
+        _scene.Dispose();
         TextureManager.Dispose();
         RlImGui.Shutdown();
         Raylib.CloseWindow();
