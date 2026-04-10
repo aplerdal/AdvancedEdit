@@ -1,5 +1,5 @@
 # Advanced Edit
-![A Rainbow-colored shell](AdvancedEdit/Resources/icon.png)
+![A Rainbow-colored shell](AdvancedEdit/Resources/icon.ico)
 
 A track editor for Mario Kart: Super Circuit.
 
