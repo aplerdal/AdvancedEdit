@@ -33,7 +33,7 @@ internal static class Program
         // Setup Raylib
         Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
         Raylib.InitWindow(800, 600, "AdvancedEdit");
-        Raylib.SetWindowIcon(Raylib.LoadImage("Resources/icon.png"));
+        Raylib.SetWindowIcon(Raylib.LoadImage("Resources/icon.ico"));
         Raylib.SetTargetFPS(144);
         Raylib.SetExitKey(KeyboardKey.Null);
         PaletteShader.Load();

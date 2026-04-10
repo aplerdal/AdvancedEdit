@@ -57,7 +57,7 @@
         <None Update="Resources\Patches\fixMinimapScale.ips">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="Resources\icon.png">
+        <None Update="Resources\icon.ico">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="LICENSES.txt">
