@@ -187,6 +187,7 @@ public class MainMenu : Scene
         ImGui.SeparatorText("1.0.0 Release Candidate 5");
         ImGui.TextWrapped("- Fixed battle track cup loading"u8);
         ImGui.TextWrapped("- Added windows installer option. "u8);
+        ImGui.NewLine();
         ImGui.SeparatorText("1.0.0 Release Candidate 4");
         ImGui.TextWrapped("- Added setting for default base rom"u8);
         ImGui.TextWrapped("- Added optional track overlay when editing minimap"u8);
