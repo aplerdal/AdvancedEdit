@@ -60,6 +60,9 @@
         <None Update="Resources\icon.ico">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Update="Resources\icon.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
         <None Update="LICENSES.txt">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
