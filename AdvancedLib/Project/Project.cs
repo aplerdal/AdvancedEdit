@@ -46,13 +46,15 @@ public class Project(string name)
         TarFile.CreateFromDirectory(Folder, path, false);
     }
 
+    private string GetRelPath(string path) => Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, path);
+
     public void ToRom(Stream stream)
     {
         // Apply Patches
-        Patcher.Apply("Resources/Patches/objRework.ips", stream);
-        Patcher.Apply("Resources/Patches/headerLaps.ips", stream);
-        Patcher.Apply("Resources/Patches/fixFinalTrackCheck.ips", stream);
-        Patcher.Apply("Resources/Patches/fixMinimapScale.ips", stream);
+        Patcher.Apply(GetRelPath("Resources/Patches/objRework.ips"), stream);
+        Patcher.Apply(GetRelPath("Resources/Patches/headerLaps.ips"), stream);
+        Patcher.Apply(GetRelPath("Resources/Patches/fixFinalTrackCheck.ips"), stream);
+        Patcher.Apply(GetRelPath("Resources/Patches/fixMinimapScale.ips"), stream);
 
         var headerIdx = 0;
         var trackBaseAddress = (uint)(0x80000000 | ((stream.Length + 3) & ~3));

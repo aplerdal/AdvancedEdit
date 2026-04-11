@@ -180,7 +180,6 @@ public class AiEditor : Editor
                 if (_selectedCheckpoint is not null)
                 {
                     ImGui.SeparatorText("Selection Options");
-                    ImGui.Text("Test");
                     ShapeSelector(ImGui.GetCursorScreenPos(), panelWidth - 12);
                 }
 

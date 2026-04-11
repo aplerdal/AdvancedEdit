@@ -17,9 +17,9 @@ public class TextureManager : IDisposable
 
     private void LoadTexture(string file)
     {
-        Debug.Assert(File.Exists(Path.Combine("Resources/", file)), $"Resource \"{file}\" not found.");
-        var texture = Raylib.LoadTexture(Path.Combine("Resources/", file));
-        if (!Raylib.IsTextureValid(texture)) throw new Exception();
+        Debug.Assert(File.Exists(Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "Resources/", file)), $"Resource \"{file}\" not found.");
+        var texture = Raylib.LoadTexture(Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "Resources/", file));
+        if (!Raylib.IsTextureValid(texture)) throw new Exception($"Error loading resource {Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "Resources/", file)}");
         _textures.Add(file, texture);
     }
 

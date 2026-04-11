@@ -18,7 +18,7 @@ public static class FontLoader
     public static unsafe Font LoadMkscFont()
     {
         var font = Raylib.GetFontDefault();
-        var image = Raylib.LoadImage("Resources/font.png");
+        var image = Raylib.LoadImage(Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!,"Resources/font.png"));
 
         font.Texture = Raylib.LoadTextureFromImage(image);
         Raylib.SetTextureFilter(font.Texture, TextureFilter.Point);
@@ -59,16 +59,17 @@ public static class FontLoader
 
     public static Font LoadOpenSans()
     {
-        return Raylib.LoadFontEx("Resources/OpenSans.ttf", 16, null, 0);
+        return Raylib.LoadFontEx(Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "Resources/OpenSans.ttf"), 16, null, 0);
     }
 
+    private static string GetPath(string path) => Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, path);
     public static unsafe void LoadOpenSansImGui()
     {
         var dpiScale = Raylib.GetWindowScaleDPI();
         var scale = (dpiScale.X + dpiScale.Y) / 2;
         var config = ImGui.ImFontConfig();
         config.FontDataOwnedByAtlas = false;
-        var font = new ImFontPtr(ImGui.GetIO().Fonts.AddFontFromFileTTF("Resources/OpenSans.ttf", config));
+        var font = new ImFontPtr(ImGui.GetIO().Fonts.AddFontFromFileTTF(GetPath("Resources/OpenSans.ttf"), config));
         ImGui.GetIO().FontDefault = font;
         ImGui.GetStyle().FontSizeBase = MathF.Round(18 * scale);
     }

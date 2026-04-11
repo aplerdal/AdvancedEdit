@@ -33,7 +33,7 @@ internal static class Program
         // Setup Raylib
         Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
         Raylib.InitWindow(800, 600, "AdvancedEdit");
-        Raylib.SetWindowIcon(Raylib.LoadImage("Resources/icon.ico"));
+        Raylib.SetWindowIcon(Raylib.LoadImage(Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "Resources/icon.ico")));
         Raylib.SetTargetFPS(144);
         Raylib.SetExitKey(KeyboardKey.Null);
         PaletteShader.Load();
@@ -54,8 +54,9 @@ internal static class Program
                 {
                     var project = Project.Unpack(args[0]);
                     _project = project;
+                    SetScene(new TrackEditorScene());
                 }
-                catch
+                catch (Exception e)
                 {
                     _project = null;
                 }

@@ -534,21 +534,12 @@ public class TrackEditorScene : Scene
                 }
             }
             ImGui.TableSetColumnIndex(1);
-            ImGui.Text("Test");
-            ImGui.Separator();
-
             ImGui.TableSetColumnIndex(2);
-            ImGui.Text("Info");
-            ImGui.Separator();
 
             ImGui.EndTable();
         }
 
         ImHelper.EndEmptyWindow();
-    }
-
-    private void ShowErrorMessage()
-    {
     }
 
     public override void Update(ref Project? project)
