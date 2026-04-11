@@ -93,6 +93,23 @@ public static class MakeTrack
         }
 
         baseTrack.Ai.TargetSets.AddRange([aiTargets, aiTargets, aiTargets]); // Clone base set 3 times to match SC's format
+
+        // Some tracks need tile 0 swapped with another tile to function properly
+        var rTheme = (RetroTheme)(theme.Value >> 1);
+        if (rTheme == RetroTheme.DonutPlains || rTheme == RetroTheme.ChocoIsland || rTheme == RetroTheme.VanillaLake)
+        {
+            byte themeNewTile = rTheme switch
+            {
+                RetroTheme.DonutPlains or RetroTheme.VanillaLake => 128,
+                RetroTheme.ChocoIsland => 112,
+            };
+            for (var i = 0; i < map.Length; i++)
+            {
+                var data = map[i];
+                if (data == 0) map[i] = themeNewTile;
+            }
+        }
+
         baseTrack.Tilemap = new AffineTilemap(map, 128, 128);
         baseTrack.Config.Size = new Vec2I(1, 1);
 
