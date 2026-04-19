@@ -202,7 +202,7 @@ public class TrackGfxEditor : Editor
         ImGui.SeparatorText("Options");
         ImGui.Checkbox("Show Grid?", ref _tileEditor.ShowGrid);
 
-        if (!_overlay.HasValue) {
+        if (_overlay.HasValue) {
             ImGui.Checkbox("Show track overlay?", ref _overlayVisible);
             if (_overlayVisible && _overlay.HasValue)
             {

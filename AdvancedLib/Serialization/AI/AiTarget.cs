@@ -1,10 +1,11 @@
+using AuroraLib.Core;
 using AuroraLib.Core.IO;
 using MessagePack;
 
 namespace AdvancedLib.Serialization.AI;
 
 [MessagePackObject]
-public class AiTarget : ISerializable, IEquatable<AiTarget>
+public class AiTarget : ISerializable, IEquatable<AiTarget>, ICloneable<AiTarget>
 {
     [Key(0)] public ushort X { get; set; }
 
@@ -52,5 +53,10 @@ public class AiTarget : ISerializable, IEquatable<AiTarget>
     public override int GetHashCode()
     {
         return HashCode.Combine(X, Y, Speed, Intersection);
+    }
+
+    public AiTarget Clone()
+    {
+        return new AiTarget {Intersection = Intersection, Speed = Speed, X = X, Y = Y};
     }
 }

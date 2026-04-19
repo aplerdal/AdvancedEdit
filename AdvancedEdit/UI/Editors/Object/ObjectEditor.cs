@@ -315,7 +315,7 @@ public class ObjectEditor : Editor
 
         ImGui.SameLine();
         bindPressed = Raylib.IsKeyPressed(KeyboardKey.Delete);
-        if (ImGui.Button("Delete") || bindPressed)
+        if (ImGui.Button("Delete") || (bindPressed && _selectedPlacement is not null))
         {
             Debug.Assert(_selectedPlacement is not null);
             if (!_track.Objects.ObstaclePlacements.Remove(_selectedPlacement))

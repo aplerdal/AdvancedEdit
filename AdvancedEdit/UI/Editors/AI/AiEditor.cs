@@ -232,6 +232,19 @@ public class AiEditor : Editor
                         ImGui.EndDisabled();
                     }
 
+                    int item = 0;
+                    if (ImGui.Combo("Clone set", ref item, "Select...\0Slow Set\0Medium Set\0Fast Set\0\0"))
+                    {
+                        if (item != 0 && item != i)
+                        {
+                            var baseSet = View.Track.Ai.TargetSets[item-1];
+                            for (var j = 0; j < baseSet.Count; j++)
+                            {
+                                View.Track.Ai.TargetSets[i-1][j] = baseSet[j].Clone();
+                            }
+                        }
+                    }
+
                     ImGui.EndTabItem();
                 }
             }
@@ -639,7 +652,9 @@ public class AiEditor : Editor
         }
 
         ai.Checkpoints.Insert(newIndex, newCheckpoint);
-        foreach (var set in ai.TargetSets) set.Insert(newIndex, AiTarget.Default);
+        var cpRect = newCheckpoint.GetRect();
+        var cpCenter = cpRect.Position + cpRect.Size / 2;
+        foreach (var set in ai.TargetSets) set.Insert(newIndex, new AiTarget{X = (byte)cpCenter.X, Y = (byte)cpCenter.Y, Intersection = false, Speed = 1});
 
         _selectedCheckpoint = newCheckpoint;
 
