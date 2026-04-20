@@ -121,9 +121,7 @@ public class TilesetEditor : IDisposable, IToolEditable
         {
             Raylib.UnloadTexture(_texture);
         }
-
         RefreshPalette();
-        Raylib.UnloadTexture(_texture);
         _texture = Tileset.TilePaletteTexture(1, Tileset.Length);
         Raylib.UnloadImage(_tilesetImage);
         _tilesetImage = Raylib.LoadImageFromTexture(_texture);
