@@ -219,8 +219,8 @@ public class TrackGfxEditor : Editor
                 
                 _view.Camera.Offset = Vector2.Zero;
                 _view.Camera.Rotation = 0.0f;
-                _view.Camera.Target = Vector2.Zero + _tileEditor.ViewCamera.Target * 32;
-                _view.Camera.Zoom = 0.125f * trackSize.X * _tileEditor.ViewCamera.Zoom * 0.125f;
+                _view.Camera.Target = Vector2.Zero + _tileEditor.ViewCamera.Target * (16 * trackSize.X);
+                _view.Camera.Zoom = (0.5f / trackSize.X) * _tileEditor.ViewCamera.Zoom * 0.125f;
 
                 Raylib.BeginTextureMode(_overlay.Value);
                 _view.Draw();
