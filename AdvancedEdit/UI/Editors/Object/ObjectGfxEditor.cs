@@ -4,6 +4,7 @@ using AdvancedLib.RaylibExt;
 using AdvancedLib.Serialization.Objects;
 using AdvEditRework.DearImGui;
 using AdvEditRework.UI.Editors.Gfx;
+using AdvEditRework.UI.Undo;
 using GifLib;
 using Hexa.NET.ImGui;
 using NativeFileDialogs.Net;
@@ -16,6 +17,8 @@ public class ObjectGfxEditor : Editor
     private TilesetEditor _editor;
     private Palette _basePalette;
     private byte _palette;
+    private BgrColor _oldPaletteColor;
+    private bool _modifyingColor;
 
     private ExceptionPopup? _exceptionPopup;
 
@@ -81,13 +84,10 @@ public class ObjectGfxEditor : Editor
         var area = new Rectangle(0, menuBarHeight, 2 * quarterScreen, height);
         _editor.Update(area, hasFocus);
         var paletteArea = new Rectangle(2 * quarterScreen + 4, menuBarHeight, quarterScreen - 8, height / 2);
-        _editor.UpdatePaletteView(paletteArea);
-        var optionsArea = new Rectangle(2 * quarterScreen + 4, menuBarHeight + height / 2, quarterScreen - 8, height / 2);
-        if (ImHelper.BeginEmptyWindow("gfxEditorOptions", optionsArea))
-        {
-            ShowOptions();
-        }
-
+        var paletteEditPos = _editor.UpdatePaletteView(paletteArea);
+        ImHelper.BeginEmptyWindow("gfxEditorOptions", new Rectangle(paletteEditPos, quarterScreen - 8, (height-menuBarHeight) - paletteEditPos.Y));
+        ShowPaletteOptions();
+        ShowOptions();
         ImHelper.EndEmptyWindow();
     }
 
@@ -125,6 +125,68 @@ public class ObjectGfxEditor : Editor
                 gif.Save(path);
             }
         }
+    }
+
+    private void ShowPaletteOptions()
+    {
+        ImGui.SeparatorText("Palette");
+        if (!_editor.ActiveIndex.HasValue)
+        {
+            ImGui.BeginDisabled();
+            float _ = 0;
+            ImGui.ColorPicker3("Edit Selected Color:", ref _);
+            ImGui.EndDisabled();
+            return;
+        }
+
+        var color = _editor.Palette[_editor.ActiveIndex.Value];
+        float[] colors = [color.R5 * 8 / 255f, color.G5 * 8 / 255f, color.B5 * 8 / 255f];
+        float[] colorsOld = [color.R5 * 8 / 255f, color.G5 * 8 / 255f, color.B5 * 8 / 255f];
+        unsafe
+        {
+            fixed (float* colorPtr = colors)
+            {
+                ImGui.ColorPicker3("Edit Selected Color:", colorPtr);
+            }
+        }
+
+        var newColor = new BgrColor(colors[0], colors[1], colors[2]);
+        if (colorsOld[0] == colors[0] && colorsOld[1] == colors[1] && colorsOld[2] == colors[2])
+        {
+            if (_modifyingColor)
+            {
+                var capturedOld = _oldPaletteColor; // capture the value now
+                var capturedNew = newColor;
+                var capturedIndex = _editor.ActiveIndex.Value;
+                _editor.UndoManager.Push(new UndoActions(
+                    () =>
+                    {
+                        _editor.Palette[_editor.ActiveIndex.Value] = newColor;
+                        _basePalette[_editor.ActiveIndex.Value] = newColor;
+                        _editor.RefreshPalette();
+                    },
+                    () =>
+                    {
+                        _editor.Palette[_editor.ActiveIndex.Value] = newColor;
+                        _basePalette[_editor.ActiveIndex.Value] = newColor;
+                        _editor.RefreshPalette();
+                    }
+                ));
+                _modifyingColor = false;
+            }
+
+            return;
+        }
+
+        if (!_modifyingColor)
+        {
+            _oldPaletteColor = color;
+            _modifyingColor = true;
+        }
+
+        _editor.Palette[_editor.ActiveIndex.Value] = newColor;
+        _basePalette[_editor.ActiveIndex.Value] = newColor;
+        _editor.RefreshPalette();
     }
 
     private void UpdatePalette()

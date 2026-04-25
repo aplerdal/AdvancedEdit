@@ -28,11 +28,11 @@ public class TrackGfxEditor : Editor
     private readonly Track _track;
     private readonly TrackView _view;
     private TilesetEditor _tileEditor;
-    private BgrColor _oldPaletteColor;
     private ExceptionPopup? _exceptionPopup;
     private TrackGraphic _activeGraphic;
-    private bool _lockedPalette;
+    private BgrColor _oldPaletteColor;
     private bool _modifyingColor;
+    private bool _lockedPalette;
 
     private bool _overlayVisible;
     private RenderTexture2D? _overlay;

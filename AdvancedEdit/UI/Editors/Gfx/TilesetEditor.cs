@@ -141,10 +141,11 @@ public class TilesetEditor : IDisposable, IToolEditable
         UpdateViewport(_position);
     }
 
-    public void UpdatePaletteView(Rectangle area)
+    public Vector2 UpdatePaletteView(Rectangle area)
     {
         PaletteView(area);
         ToolPicker.Draw(area.Position + new Vector2(0, 8 + Palette.Length / 8 * _iconSize), area.Width, ref _activeTool);
+        return area.Position + new Vector2(0, 8 + Palette.Length / 8 * _iconSize) + new Vector2(0, area.Width / 8);
     }
 
     private Vector2 WorldToViewport(Vector2 pos)
