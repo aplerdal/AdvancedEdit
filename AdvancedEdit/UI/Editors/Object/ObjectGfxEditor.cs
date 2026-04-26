@@ -167,8 +167,8 @@ public class ObjectGfxEditor : Editor
                     },
                     () =>
                     {
-                        _editor.Palette[_editor.ActiveIndex.Value] = newColor;
-                        _basePalette[_editor.ActiveIndex.Value] = newColor;
+                        _editor.Palette[_editor.ActiveIndex.Value] = capturedOld;
+                        _basePalette[_editor.ActiveIndex.Value] = capturedOld;
                         _editor.RefreshPalette();
                     }
                 ));
